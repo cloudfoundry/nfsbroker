@@ -58,7 +58,7 @@ var _ = Describe("Broker", func() {
 			)
 		})
 
-		FContext(".Services", func() {
+		Context(".Services", func() {
 			It("returns the service catalog as appropriate", func() {
 				result := broker.Services(ctx)[0]
 				Expect(result.ID).To(Equal("service-id"))
@@ -99,20 +99,20 @@ var _ = Describe("Broker", func() {
 				spec, err = broker.Provision(ctx, instanceID, provisionDetails, asyncAllowed)
 			})
 
-			FIt("should not error", func() {
+			It("should not error", func() {
 				Expect(err).NotTo(HaveOccurred())
 			})
 
-			FIt("should provision the service instance synchronously", func() {
+			It("should provision the service instance synchronously", func() {
 				Expect(spec.IsAsync).To(Equal(false))
 			})
 
-			FIt("should write state", func() {
+			It("should write state", func() {
 				_, data, _ := fakeIoutil.WriteFileArgsForCall(fakeIoutil.WriteFileCallCount() - 1)
 				Expect(string(data)).To(Equal(`{"InstanceMap":{"some-instance-id":{"service_id":"","plan_id":"Existing","organization_guid":"","space_guid":"","Share":"server:/some-share"}},"BindingMap":{}}`))
 			})
 
-			FContext("create-service was given invalid JSON", func() {
+			Context("create-service was given invalid JSON", func() {
 				BeforeEach(func() {
 					badJson := []byte("{this is not json")
 					provisionDetails = brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(badJson)}
@@ -123,7 +123,7 @@ var _ = Describe("Broker", func() {
 				})
 
 			})
-			FContext("create-service was given valid JSON but no 'share' key", func() {
+			Context("create-service was given valid JSON but no 'share' key", func() {
 				BeforeEach(func() {
 					configuration := map[string]interface{}{"unknown key": "server:/some-share"}
 					buf := &bytes.Buffer{}
@@ -178,45 +178,12 @@ var _ = Describe("Broker", func() {
 					Expect(err).To(Equal(brokerapi.ErrInstanceDoesNotExist))
 				})
 			})
-
-			Context("when the client doesnt support async", func() {
-				BeforeEach(func() {
-					asyncAllowed = false
-				})
-
-				It("should not error", func() {
-					Expect(err).NotTo(HaveOccurred())
-				})
-			})
 		})
 
 		Context(".LastOperation", func() {
-			var (
-				instanceID string
-				fsID       string
-
-				mountID string
-
-				op  brokerapi.LastOperation
-				err error
-			)
-
-			BeforeEach(func() {
-				instanceID = "some-instance-id"
-				fsID = "12345"
-
-				mountID = "some-mount-id"
-			})
-
-			JustBeforeEach(func() {
-				op, err = broker.LastOperation(ctx, instanceID, "provision")
-			})
-
-			Context("when the instance doesn't exist", func() {
-				It("errors", func() {
-					op, err = broker.LastOperation(ctx, "non-existant", "provision")
-					Expect(err).To(Equal(brokerapi.ErrInstanceDoesNotExist))
-				})
+			It("errors", func() {
+				_, err := broker.LastOperation(ctx, "non-existant", "provision")
+				Expect(err).To(HaveOccurred())
 			})
 		})
 
@@ -229,11 +196,20 @@ var _ = Describe("Broker", func() {
 			BeforeEach(func() {
 				instanceID = "some-instance-id"
 
+				configuration := map[string]interface{}{"share": "server:/some-share"}
+
+				buf := &bytes.Buffer{}
+				_ = json.NewEncoder(buf).Encode(configuration)
+				provisionDetails := brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
+
+				_, err := broker.Provision(ctx, instanceID, provisionDetails, false)
+				Expect(err).NotTo(HaveOccurred())
+
 				bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{}}
 			})
 
 			It("includes empty credentials to prevent CAPI crash", func() {
-				binding, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
+				binding, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(binding.Credentials).NotTo(BeNil())
@@ -271,7 +247,7 @@ var _ = Describe("Broker", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				_, data, _ := fakeIoutil.WriteFileArgsForCall(fakeIoutil.WriteFileCallCount() - 1)
-				Expect(string(data)).To(Equal(`{"InstanceMap":{"some-instance-id":{"service_id":"","plan_id":"","organization_guid":"","space_guid":"","EfsId":"foo","FsState":"available","MountId":"bar","MountState":"available","MountPermsSet":true,"MountIp":"1.2.3.4","Err":null}},"BindingMap":{"binding-id":{"app_guid":"guid","plan_id":"","service_id":""}}}`))
+				Expect(string(data)).To(Equal(`{"InstanceMap":{"some-instance-id":{"service_id":"","plan_id":"Existing","organization_guid":"","space_guid":"","Share":"server:/some-share"}},"BindingMap":{"binding-id":{"app_guid":"guid","plan_id":"","service_id":""}}}`))
 			})
 
 			It("errors if mode is not a boolean", func() {
@@ -331,17 +307,26 @@ var _ = Describe("Broker", func() {
 			BeforeEach(func() {
 				instanceID = "some-instance-id"
 
+				configuration := map[string]interface{}{"share": "server:/some-share"}
+
+				buf := &bytes.Buffer{}
+				_ = json.NewEncoder(buf).Encode(configuration)
+				provisionDetails := brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
+
+				_, err = broker.Provision(ctx, instanceID, provisionDetails, false)
+				Expect(err).NotTo(HaveOccurred())
+
 				_, err = broker.Bind(ctx, "some-instance-id", "binding-id", brokerapi.BindDetails{AppGUID: "guid"})
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("unbinds a bound service instance from an app", func() {
-				err := broker.Unbind(ctx, "some-instance-id", "binding-id", brokerapi.UnbindDetails{})
+				err = broker.Unbind(ctx, "some-instance-id", "binding-id", brokerapi.UnbindDetails{})
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("fails when trying to unbind a instance that has not been provisioned", func() {
-				err := broker.Unbind(ctx, "some-other-instance-id", "binding-id", brokerapi.UnbindDetails{})
+				err = broker.Unbind(ctx, "some-other-instance-id", "binding-id", brokerapi.UnbindDetails{})
 				Expect(err).To(Equal(brokerapi.ErrInstanceDoesNotExist))
 			})
 
@@ -354,7 +339,7 @@ var _ = Describe("Broker", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				_, data, _ := fakeIoutil.WriteFileArgsForCall(fakeIoutil.WriteFileCallCount() - 1)
-				Expect(string(data)).To(Equal(`{"InstanceMap":{"some-instance-id":{"service_id":"","plan_id":"","organization_guid":"","space_guid":"","EfsId":"foo","FsState":"available","MountId":"bar","MountState":"available","MountPermsSet":true,"MountIp":"1.2.3.4","Err":null}},"BindingMap":{}}`))
+				Expect(string(data)).To(Equal(`{"InstanceMap":{"some-instance-id":{"service_id":"","plan_id":"Existing","organization_guid":"","space_guid":"","Share":"server:/some-share"}},"BindingMap":{}}`))
 			})
 		})
 
