@@ -12,12 +12,12 @@ var binaryPath string
 
 func TestLocalbroker(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Efsbroker Main Suite")
+	RunSpecs(t, "Knfsbroker Main Suite")
 }
 
 var _ = SynchronizedBeforeSuite(func() []byte {
 	var err error
-	binaryPath, err = gexec.Build("code.cloudfoundry.org/efsbroker/cmd/efsbroker", "-race")
+	binaryPath, err = gexec.Build("github.com/lds-cf/knfsbroker/cmd/knfsbroker", "-race")
 	Expect(err).NotTo(HaveOccurred())
 
 	return []byte(binaryPath)

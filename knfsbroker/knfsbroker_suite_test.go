@@ -1,4 +1,4 @@
-package efsbroker_test
+package knfsbroker_test
 
 import (
 	. "github.com/onsi/ginkgo"

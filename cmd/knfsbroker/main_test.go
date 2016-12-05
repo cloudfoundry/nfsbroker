@@ -112,12 +112,12 @@ func (r failRunner) Run(sigChan <-chan os.Signal, ready chan<- struct{}) error {
 	}
 }
 
-var _ = Describe("Efsbroker Main", func() {
+var _ = Describe("Knfsbroker Main", func() {
 	Context("Missing required args", func() {
 		It("shows usage", func() {
 			var args []string
 			volmanRunner := failRunner{
-				Name:       "efsbroker",
+				Name:       "knfsbroker",
 				Command:    exec.Command(binaryPath, args...),
 				StartCheck: "ERROR: Required parameter dataDir not defined.",
 			}
@@ -142,19 +142,17 @@ var _ = Describe("Efsbroker Main", func() {
 			username = "admin"
 			password = "password"
 			tempDir = os.TempDir()
-			awsSubnetIds = "subnet-ajwe8912,subnet-olj23e"
 
 			args = append(args, "-listenAddr", listenAddr)
 			args = append(args, "-username", username)
 			args = append(args, "-password", password)
 			args = append(args, "-dataDir", tempDir)
-			args = append(args, "-awsSubnetIds", awsSubnetIds)
 
 		})
 
 		JustBeforeEach(func() {
 			volmanRunner := ginkgomon.New(ginkgomon.Config{
-				Name:       "efsbroker",
+				Name:       "knfsbroker",
 				Command:    exec.Command(binaryPath, args...),
 				StartCheck: "started",
 			})

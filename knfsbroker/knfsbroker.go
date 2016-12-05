@@ -1,6 +1,7 @@
-package efsbroker
+package knfsbroker
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,12 +16,9 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/clock"
-	"code.cloudfoundry.org/efsdriver/efsvoltools"
 	"code.cloudfoundry.org/goshims/ioutilshim"
 	"code.cloudfoundry.org/goshims/osshim"
 	"code.cloudfoundry.org/lager"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/pivotal-cf/brokerapi"
 )
 
@@ -39,19 +37,16 @@ type staticState struct {
 	ServiceId   string `json:"ServiceId"`
 }
 
-type EFSInstance struct {
-	brokerapi.ProvisionDetails
-	EfsId         string `json:"EfsId"`
-	FsState       string `json:"FsState"`
-	MountId       string `json:"MountId"`
-	MountState    string `json:"MountState"`
-	MountPermsSet bool   `json:"MountPermsSet"`
-	MountIp       string `json:"MountIp"`
-	Err           error  `json:"Err"`
+type ServiceInstance struct {
+	ServiceID        string `json:"service_id"`
+	PlanID           string `json:"plan_id"`
+	OrganizationGUID string `json:"organization_guid"`
+	SpaceGUID        string `json:"space_guid"`
+	Share            string
 }
 
 type dynamicState struct {
-	InstanceMap map[string]EFSInstance
+	InstanceMap map[string]ServiceInstance
 	BindingMap  map[string]brokerapi.BindDetails
 }
 
@@ -61,18 +56,18 @@ type lock interface {
 }
 
 type Broker struct {
-	logger               lager.Logger
-	efsService           EFSService
-	subnetIds            []string
-	securityGroup        string
-	dataDir              string
-	os                   osshim.Os
-	ioutil               ioutilshim.Ioutil
-	mutex                lock
-	clock                clock.Clock
-	efsTools             efsvoltools.VolTools
-	ProvisionOperation   func(logger lager.Logger, instanceID string, planID string, efsService EFSService, efsTools efsvoltools.VolTools, subnetIds []string, securityGroup string, clock Clock, updateCb func(*OperationState)) Operation
-	DeprovisionOperation func(logger lager.Logger, efsService EFSService, clock Clock, spec DeprovisionOperationSpec, updateCb func(*OperationState)) Operation
+	logger lager.Logger
+	//efsService           EFSService
+	//subnetIds     []string
+	//securityGroup string
+	dataDir string
+	os      osshim.Os
+	ioutil  ioutilshim.Ioutil
+	mutex   lock
+	clock   clock.Clock
+	//efsTools             efsvoltools.VolTools
+	//ProvisionOperation   func(logger lager.Logger, instanceID string, planID string, efsService EFSService, efsTools efsvoltools.VolTools, subnetIds []string, securityGroup string, clock Clock, updateCb func(*OperationState)) Operation
+	//DeprovisionOperation func(logger lager.Logger, efsService EFSService, clock Clock, spec DeprovisionOperationSpec, updateCb func(*OperationState)) Operation
 
 	static  staticState
 	dynamic dynamicState
@@ -84,31 +79,25 @@ func New(
 	os osshim.Os,
 	ioutil ioutilshim.Ioutil,
 	clock clock.Clock,
-	efsService EFSService, subnetIds []string, securityGroup string,
-	efsTools efsvoltools.VolTools,
-	provisionOperation func(logger lager.Logger, instanceID string, planID string, efsService EFSService, efsTools efsvoltools.VolTools, subnetIds []string, securityGroup string, clock Clock, updateCb func(*OperationState)) Operation,
-	deprovisionOperation func(logger lager.Logger, efsService EFSService, clock Clock, spec DeprovisionOperationSpec, updateCb func(*OperationState)) Operation,
+	a0 interface{}, a1 interface{}, a2 interface{},
+	a3 interface{},
+	a4 interface{},
+	a5 interface{},
 ) *Broker {
 
 	theBroker := Broker{
-		logger:               logger,
-		dataDir:              dataDir,
-		os:                   os,
-		ioutil:               ioutil,
-		efsService:           efsService,
-		subnetIds:            subnetIds,
-		securityGroup:        securityGroup,
-		mutex:                &sync.Mutex{},
-		clock:                clock,
-		efsTools:             efsTools,
-		ProvisionOperation:   provisionOperation,
-		DeprovisionOperation: deprovisionOperation,
+		logger:  logger,
+		dataDir: dataDir,
+		os:      os,
+		ioutil:  ioutil,
+		mutex:   &sync.Mutex{},
+		clock:   clock,
 		static: staticState{
 			ServiceName: serviceName,
 			ServiceId:   serviceId,
 		},
 		dynamic: dynamicState{
-			InstanceMap: map[string]EFSInstance{},
+			InstanceMap: map[string]ServiceInstance{},
 			BindingMap:  map[string]brokerapi.BindDetails{},
 		},
 	}
@@ -126,49 +115,60 @@ func (b *Broker) Services(_ context.Context) []brokerapi.Service {
 	return []brokerapi.Service{{
 		ID:            b.static.ServiceId,
 		Name:          b.static.ServiceName,
-		Description:   "Local service docs: https://code.cloudfoundry.org/efs-volume-release/",
+		Description:   "NFS volumes secured with Kerberos (see: https://example.com/knfs-volume-release/)",
 		Bindable:      true,
 		PlanUpdatable: false,
-		Tags:          []string{"efs"},
+		Tags:          []string{"knfs"},
 		Requires:      []brokerapi.RequiredPermission{PermissionVolumeMount},
 
 		Plans: []brokerapi.ServicePlan{
 			{
-				Name:        "generalPurpose",
-				ID:          "generalPurpose",
-				Description: "recommended for most file systems",
-			}, {
-				Name:        "maxIO",
-				ID:          "maxIO",
-				Description: "scales to higher levels of aggregate throughput and operations per second with a tradeoff of slightly higher latencies for most file operations",
+				Name:        "Existing",
+				ID:          "Existing",
+				Description: "a filesystem you have already provisioned by contacting <URL>",
 			},
 		},
 	}}
 }
 
+// cf cs knfs myshare -c { "share": "server:/share" }
 func (b *Broker) Provision(context context.Context, instanceID string, details brokerapi.ProvisionDetails, asyncAllowed bool) (brokerapi.ProvisionedServiceSpec, error) {
 	logger := b.logger.Session("provision").WithData(lager.Data{"instanceID": instanceID})
 	logger.Info("start")
 	defer logger.Info("end")
 
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-
-	if !asyncAllowed {
-		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrAsyncRequired
-	}
-
 	if b.instanceConflicts(details, instanceID) {
 		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrInstanceAlreadyExists
 	}
 
-	b.dynamic.InstanceMap[instanceID] = EFSInstance{details, "", "", "", "", false, "", nil}
+	type Configuration struct {
+		Share string `json:"share"`
+	}
+	var configuration Configuration
 
-	operation := b.ProvisionOperation(logger, instanceID, details.PlanID, b.efsService, b.efsTools, b.subnetIds, b.securityGroup, b.clock, b.ProvisionEvent)
+	var decoder *json.Decoder = json.NewDecoder(bytes.NewBuffer(details.RawParameters))
+	err := decoder.Decode(&configuration)
+	if err != nil {
+		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrRawParamsInvalid
+	}
 
-	go operation.Execute()
+	if configuration.Share == "" {
+		return brokerapi.ProvisionedServiceSpec{}, errors.New("config requires a \"share\" key")
+	}
 
-	return brokerapi.ProvisionedServiceSpec{IsAsync: true, OperationData: "provision"}, nil
+	b.dynamic.InstanceMap[instanceID] = ServiceInstance{
+		details.ServiceID,
+		details.PlanID,
+		details.OrganizationGUID,
+		details.SpaceGUID,
+		configuration.Share}
+
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+
+	b.persist(b.dynamic)
+
+	return brokerapi.ProvisionedServiceSpec{IsAsync: false}, nil
 }
 
 func (b *Broker) Deprovision(context context.Context, instanceID string, details brokerapi.DeprovisionDetails, asyncAllowed bool) (brokerapi.DeprovisionServiceSpec, error) {
@@ -179,35 +179,17 @@ func (b *Broker) Deprovision(context context.Context, instanceID string, details
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 
-	instance, instanceExists := b.dynamic.InstanceMap[instanceID]
+	_, instanceExists := b.dynamic.InstanceMap[instanceID]
 	if !instanceExists {
 		return brokerapi.DeprovisionServiceSpec{}, brokerapi.ErrInstanceDoesNotExist
 	}
 
-	spec := DeprovisionOperationSpec{
-		InstanceID:    instanceID,
-		FsID:          instance.EfsId,
-		MountTargetID: instance.MountId,
-	}
-	operation := b.DeprovisionOperation(logger, b.efsService, b.clock, spec, b.DeprovisionEvent)
-
-	go operation.Execute()
+	panic("not implemented")
 
 	return brokerapi.DeprovisionServiceSpec{IsAsync: true, OperationData: "deprovision"}, nil
 }
 
-func (b *Broker) setErrorOnInstance(instanceId string, err error) {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-
-	instance, instanceExists := b.dynamic.InstanceMap[instanceId]
-	if instanceExists {
-		instance.Err = err
-		b.dynamic.InstanceMap[instanceId] = instance
-	}
-	return
-}
-
+// cf bs myapp myshare -c { "kerberosPrincipal": "tommy", "kerberosKeytab": "<base64 data>", "mode": "ro", "container_path": "/path/inside/container" }
 func (b *Broker) Bind(context context.Context, instanceID string, bindingID string, details brokerapi.BindDetails) (brokerapi.Binding, error) {
 	logger := b.logger.Session("bind")
 	logger.Info("start")
@@ -218,7 +200,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 
 	defer b.persist(b.dynamic)
 
-	fs, ok := b.dynamic.InstanceMap[instanceID]
+	_, ok := b.dynamic.InstanceMap[instanceID]
 	if !ok {
 		return brokerapi.Binding{}, brokerapi.ErrInstanceDoesNotExist
 	}
@@ -238,10 +220,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 
 	b.dynamic.BindingMap[bindingID] = details
 
-	ip, err := b.getMountIp(fs.EfsId)
-	if err != nil {
-		return brokerapi.Binding{}, err
-	}
+	ip := "1.2.3.4"
 	mountConfig := map[string]interface{}{"ip": ip}
 
 	return brokerapi.Binding{
@@ -259,6 +238,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 	}, nil
 }
 
+/*
 func (b *Broker) getMountIp(fsId string) (string, error) {
 	// get mount point details from ews to return in bind response
 	mtOutput, err := b.efsService.DescribeMountTargets(&efs.DescribeMountTargetsInput{
@@ -283,6 +263,7 @@ func (b *Broker) getMountIp(fsId string) (string, error) {
 
 	return mountConfig, nil
 }
+*/
 
 func (b *Broker) Unbind(context context.Context, instanceID string, bindingID string, details brokerapi.UnbindDetails) error {
 	logger := b.logger.Session("unbind")
@@ -320,120 +301,9 @@ func (b *Broker) LastOperation(_ context.Context, instanceID string, operationDa
 	defer b.mutex.Unlock()
 
 	switch operationData {
-	case "provision":
-		instance, instanceExists := b.dynamic.InstanceMap[instanceID]
-		if !instanceExists {
-			logger.Info("instance-not-found")
-			return brokerapi.LastOperation{}, brokerapi.ErrInstanceDoesNotExist
-		}
-
-		if instance.Err != nil {
-			logger.Info(fmt.Sprintf("last-operation-error %#v", instance.Err))
-			return brokerapi.LastOperation{State: brokerapi.Failed, Description: instance.Err.Error()}, nil
-		}
-
-		logger.Debug(fmt.Sprintf("Instance data %#v", instance))
-		return stateToLastOperation(instance), nil
-	case "deprovision":
-		instance, instanceExists := b.dynamic.InstanceMap[instanceID]
-		if !instanceExists {
-			return brokerapi.LastOperation{State: brokerapi.Succeeded}, nil
-		} else {
-			if instance.Err != nil {
-				return brokerapi.LastOperation{State: brokerapi.Failed}, nil
-			} else {
-				return brokerapi.LastOperation{State: brokerapi.InProgress}, nil
-			}
-		}
 	default:
 		return brokerapi.LastOperation{}, errors.New("unrecognized operationData")
 	}
-}
-
-//callbacks
-func (b *Broker) ProvisionEvent(opState *OperationState) {
-	logger := b.logger.Session("provision-event").WithData(lager.Data{"state": opState})
-	logger.Info("start")
-	defer logger.Info("end")
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-
-	defer b.persist(b.dynamic)
-
-	if opState.Err != nil {
-		logger.Error("Last provision failed", opState.Err)
-	}
-
-	efsInstance, _ := b.dynamic.InstanceMap[opState.InstanceID]
-	efsInstance.EfsId = opState.FsID
-	efsInstance.FsState = opState.FsState
-	efsInstance.MountId = opState.MountTargetID
-	efsInstance.MountIp = opState.MountTargetIp
-	efsInstance.MountState = opState.MountTargetState
-	efsInstance.MountPermsSet = opState.MountPermsSet
-	efsInstance.Err = opState.Err
-	b.dynamic.InstanceMap[opState.InstanceID] = efsInstance
-}
-
-func (b *Broker) DeprovisionEvent(opState *OperationState) {
-	logger := b.logger.Session("deprovision-event").WithData(lager.Data{"state": opState})
-	logger.Info("start")
-	defer logger.Info("end")
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-
-	defer b.persist(b.dynamic)
-
-	if opState.Err == nil {
-		delete(b.dynamic.InstanceMap, opState.InstanceID)
-	} else {
-		efsInstance := b.dynamic.InstanceMap[opState.InstanceID]
-		efsInstance.Err = opState.Err
-		b.dynamic.InstanceMap[opState.InstanceID] = efsInstance
-	}
-}
-
-func stateToLastOperation(instance EFSInstance) brokerapi.LastOperation {
-	desc := stateToDescription(instance)
-
-	if instance.Err != nil {
-		return brokerapi.LastOperation{State: brokerapi.Failed, Description: desc}
-	}
-
-	switch instance.FsState {
-	case "":
-		return brokerapi.LastOperation{State: brokerapi.InProgress, Description: desc}
-	case efs.LifeCycleStateCreating:
-		return brokerapi.LastOperation{State: brokerapi.InProgress, Description: desc}
-	case efs.LifeCycleStateAvailable:
-
-		switch instance.MountState {
-		case "":
-			return brokerapi.LastOperation{State: brokerapi.InProgress, Description: desc}
-		case efs.LifeCycleStateCreating:
-			return brokerapi.LastOperation{State: brokerapi.InProgress, Description: desc}
-		case efs.LifeCycleStateAvailable:
-			// TODO check if the permissions have been opened up.
-			if instance.MountPermsSet {
-				return brokerapi.LastOperation{State: brokerapi.Succeeded, Description: desc}
-			} else {
-				return brokerapi.LastOperation{State: brokerapi.InProgress, Description: desc}
-			}
-		default:
-			return brokerapi.LastOperation{State: brokerapi.Failed, Description: desc}
-		}
-
-	default:
-		return brokerapi.LastOperation{State: brokerapi.Failed, Description: desc}
-	}
-}
-
-func stateToDescription(instance EFSInstance) string {
-	desc := fmt.Sprintf("FsID: %s, FsState: %s, MountID: %s, MountState: %s, MountAddress: %s", instance.EfsId, instance.FsState, instance.MountId, instance.MountState, instance.MountIp)
-	if instance.Err != nil {
-		desc = fmt.Sprintf("%s, Error: %s", desc, instance.Err.Error())
-	}
-	return desc
 }
 
 func (b *Broker) instanceConflicts(details brokerapi.ProvisionDetails, instanceID string) bool {
@@ -474,13 +344,6 @@ func (b *Broker) persist(state interface{}) {
 	}
 
 	logger.Info("state-saved", lager.Data{"state-file": stateFile})
-}
-
-func planIDToPerformanceMode(planID string) *string {
-	if planID == "maxIO" {
-		return aws.String(efs.PerformanceModeMaxIo)
-	}
-	return aws.String(efs.PerformanceModeGeneralPurpose)
 }
 
 func evaluateContainerPath(parameters map[string]interface{}, volId string) string {

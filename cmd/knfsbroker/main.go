@@ -9,16 +9,12 @@ import (
 	"code.cloudfoundry.org/cflager"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/debugserver"
-	"code.cloudfoundry.org/efsbroker/efsbroker"
-	"code.cloudfoundry.org/efsbroker/utils"
-	"code.cloudfoundry.org/efsdriver/efsvoltools/voltoolshttp"
 	"code.cloudfoundry.org/goshims/ioutilshim"
 	"code.cloudfoundry.org/goshims/osshim"
 	"code.cloudfoundry.org/lager"
+	"github.com/lds-cf/knfsbroker/knfsbroker"
+	"github.com/lds-cf/knfsbroker/utils"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
@@ -36,14 +32,10 @@ var atAddress = flag.String(
 	"0.0.0.0:8999",
 	"host:port to serve service broker API",
 )
-var efsToolsAddress = flag.String(
-	"efsToolsAddress",
-	"127.0.0.1:7090",
-	"host:port to reach the efsdriver when creating volumes",
-)
+
 var serviceName = flag.String(
 	"serviceName",
-	"efsvolume",
+	"knfsvolume",
 	"name of the service to register with cloud controller",
 )
 var serviceId = flag.String(
@@ -61,23 +53,13 @@ var password = flag.String(
 	"admin",
 	"basic auth password to verify on incoming requests",
 )
-var awsSubnetIds = flag.String(
-	"awsSubnetIds",
-	"",
-	"list of comma-seperated aws subnet ids where mount targets will be created for each efs",
-)
-var awsSecurityGroup = flag.String(
-	"awsSecurityGroup",
-	"",
-	"aws security group to assign to the mount point",
-)
 
 func main() {
 	parseCommandLine()
 
 	checkParams()
 
-	logger, logSink := cflager.New("efsbroker")
+	logger, logSink := cflager.New("knfsbroker")
 	logger.Info("starting")
 	defer logger.Info("ends")
 
@@ -127,17 +109,10 @@ func createServer(logger lager.Logger) ifrit.Runner {
 
 	config := aws.NewConfig()
 
-	efsClient := efs.New(session, config)
-
-	efsTools, err := voltoolshttp.NewRemoteClient("http://" + *efsToolsAddress)
-	if err != nil {
-		panic(err)
-	}
-
-	serviceBroker := efsbroker.New(logger,
+	serviceBroker := knfsbroker.New(logger,
 		*serviceName, *serviceId,
 		*dataDir, &osshim.OsShim{}, &ioutilshim.IoutilShim{}, clock.NewClock(),
-		efsClient, parseSubnets(*awsSubnetIds), *awsSecurityGroup, efsTools, efsbroker.NewProvisionOperation, efsbroker.NewDeprovisionOperation)
+		nil, nil, nil, nil, nil, nil)
 
 	credentials := brokerapi.BrokerCredentials{Username: *username, Password: *password}
 	handler := brokerapi.New(serviceBroker, logger.Session("broker-api"), credentials)
