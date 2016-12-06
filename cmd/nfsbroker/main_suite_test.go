@@ -12,7 +12,7 @@ var binaryPath string
 
 func TestLocalbroker(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Knfsbroker Main Suite")
+	RunSpecs(t, "Nfsbroker Main Suite")
 }
 
 var _ = SynchronizedBeforeSuite(func() []byte {
