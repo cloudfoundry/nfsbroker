@@ -1,2 +1,2 @@
-# nfs-broker
+# nfsbroker
 NFS broker for existing repos
