@@ -1,4 +1,4 @@
-package knfsbroker_test
+package nfsbroker_test
 
 import (
 	"bytes"
@@ -14,19 +14,19 @@ import (
 	"code.cloudfoundry.org/goshims/ioutilshim/ioutil_fake"
 	"code.cloudfoundry.org/goshims/osshim/os_fake"
 	"code.cloudfoundry.org/lager"
-	"github.com/lds-cf/knfsbroker/knfsbroker"
+	"github.com/cloudfoundry-community/nfsbroker/nfsbroker"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 type dynamicState struct {
-	InstanceMap map[string]knfsbroker.ServiceInstance
+	InstanceMap map[string]nfsbroker.ServiceInstance
 	BindingMap  map[string]brokerapi.BindDetails
 }
 
 var _ = Describe("Broker", func() {
 	var (
-		broker     *knfsbroker.Broker
+		broker     *nfsbroker.Broker
 		fakeOs     *os_fake.FakeOs
 		fakeIoutil *ioutil_fake.FakeIoutil
 		logger     lager.Logger
@@ -43,7 +43,7 @@ var _ = Describe("Broker", func() {
 
 	Context("when creating first time", func() {
 		BeforeEach(func() {
-			broker = knfsbroker.New(
+			broker = nfsbroker.New(
 				logger,
 				"service-name", "service-id", "/fake-dir",
 				fakeOs,
@@ -205,7 +205,7 @@ var _ = Describe("Broker", func() {
 				_, err := broker.Provision(ctx, instanceID, provisionDetails, false)
 				Expect(err).NotTo(HaveOccurred())
 
-				bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{knfsbroker.Username: "principal name", knfsbroker.Secret: "some keytab data"}}
+				bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{nfsbroker.Username: "principal name", nfsbroker.Secret: "some keytab data"}}
 			})
 
 			It("passes `share` from create-service into `mountConfig.ip` on the bind response", func() {
@@ -223,11 +223,11 @@ var _ = Describe("Broker", func() {
 				_, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
 				Expect(err).To(HaveOccurred())
 
-				bindDetails.Parameters = map[string]interface{}{knfsbroker.Username: "hello"}
+				bindDetails.Parameters = map[string]interface{}{nfsbroker.Username: "hello"}
 				_, err = broker.Bind(ctx, instanceID, "binding-id", bindDetails)
 				Expect(err).To(HaveOccurred())
 
-				bindDetails.Parameters = map[string]interface{}{knfsbroker.Secret: "hello"}
+				bindDetails.Parameters = map[string]interface{}{nfsbroker.Secret: "hello"}
 				_, err = broker.Bind(ctx, instanceID, "binding-id", bindDetails)
 				Expect(err).To(HaveOccurred())
 
@@ -238,11 +238,11 @@ var _ = Describe("Broker", func() {
 				Expect(err).NotTo(HaveOccurred())
 				mc := binding.VolumeMounts[0].Device.MountConfig
 
-				user, ok := mc[knfsbroker.Username]
+				user, ok := mc[nfsbroker.Username]
 				Expect(ok).To(BeTrue())
 				Expect(user).To(Equal("principal name"))
 
-				secret, ok := mc[knfsbroker.Secret]
+				secret, ok := mc[nfsbroker.Secret]
 				Expect(ok).To(BeTrue())
 				Expect(secret).To(Equal("some keytab data"))
 			})
@@ -357,7 +357,7 @@ var _ = Describe("Broker", func() {
 				_, err = broker.Provision(ctx, instanceID, provisionDetails, false)
 				Expect(err).NotTo(HaveOccurred())
 
-				bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{knfsbroker.Username: "principal name", knfsbroker.Secret: "some keytab data"}}
+				bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{nfsbroker.Username: "principal name", nfsbroker.Secret: "some keytab data"}}
 
 				_, err = broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
 				Expect(err).NotTo(HaveOccurred())
@@ -392,11 +392,11 @@ var _ = Describe("Broker", func() {
 		var bindDetails brokerapi.BindDetails
 
 		BeforeEach(func() {
-			bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{knfsbroker.Username: "principal name", knfsbroker.Secret: "some keytab data"}}
+			bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{nfsbroker.Username: "principal name", nfsbroker.Secret: "some keytab data"}}
 		})
 		It("should be able to bind to previously created service", func() {
 			fileContents, err := json.Marshal(dynamicState{
-				InstanceMap: map[string]knfsbroker.ServiceInstance{
+				InstanceMap: map[string]nfsbroker.ServiceInstance{
 					"service-name": {
 						Share: "server:/some-share",
 					},
@@ -406,7 +406,7 @@ var _ = Describe("Broker", func() {
 			Expect(err).NotTo(HaveOccurred())
 			fakeIoutil.ReadFileReturns(fileContents, nil)
 
-			broker = knfsbroker.New(
+			broker = nfsbroker.New(
 				logger,
 				"service-name", "service-id", "/fake-dir",
 				fakeOs,
@@ -428,7 +428,7 @@ var _ = Describe("Broker", func() {
 			filecontents := "{serviceName: [some invalid state]}"
 			fakeIoutil.ReadFileReturns([]byte(filecontents[:]), nil)
 
-			broker = knfsbroker.New(
+			broker = nfsbroker.New(
 				logger,
 				"service-name", "service-id", "/fake-dir",
 				fakeOs,

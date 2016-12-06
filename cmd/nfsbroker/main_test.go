@@ -117,7 +117,7 @@ var _ = Describe("Knfsbroker Main", func() {
 		It("shows usage", func() {
 			var args []string
 			volmanRunner := failRunner{
-				Name:       "knfsbroker",
+				Name:       "nfsbroker",
 				Command:    exec.Command(binaryPath, args...),
 				StartCheck: "ERROR: Required parameter dataDir not defined.",
 			}
@@ -152,7 +152,7 @@ var _ = Describe("Knfsbroker Main", func() {
 
 		JustBeforeEach(func() {
 			volmanRunner := ginkgomon.New(ginkgomon.Config{
-				Name:       "knfsbroker",
+				Name:       "nfsbroker",
 				Command:    exec.Command(binaryPath, args...),
 				StartCheck: "started",
 			})

@@ -1,4 +1,4 @@
-package knfsbroker
+package nfsbroker
 
 import (
 	"bytes"

@@ -12,8 +12,8 @@ import (
 	"code.cloudfoundry.org/goshims/ioutilshim"
 	"code.cloudfoundry.org/goshims/osshim"
 	"code.cloudfoundry.org/lager"
-	"github.com/lds-cf/knfsbroker/knfsbroker"
-	"github.com/lds-cf/knfsbroker/utils"
+	"github.com/cloudfoundry-community/nfsbroker/nfsbroker"
+	"github.com/cloudfoundry-community/nfsbroker/utils"
 
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/tedsuo/ifrit"
@@ -59,7 +59,7 @@ func main() {
 
 	checkParams()
 
-	logger, logSink := cflager.New("knfsbroker")
+	logger, logSink := cflager.New("nfsbroker")
 	logger.Info("starting")
 	defer logger.Info("ends")
 
@@ -90,11 +90,6 @@ func checkParams() {
 		os.Exit(1)
 	}
 
-	if *awsSubnetIds == "" {
-		fmt.Fprint(os.Stderr, "\nERROR: Required parameter awsSubnetIds not defined.\n\n")
-		flag.Usage()
-		os.Exit(1)
-	}
 }
 
 func parseSubnets(subnetsFlag string) []string {
@@ -102,14 +97,8 @@ func parseSubnets(subnetsFlag string) []string {
 }
 
 func createServer(logger lager.Logger) ifrit.Runner {
-	session, err := session.NewSession()
-	if err != nil {
-		panic(err)
-	}
 
-	config := aws.NewConfig()
-
-	serviceBroker := knfsbroker.New(logger,
+	serviceBroker := nfsbroker.New(logger,
 		*serviceName, *serviceId,
 		*dataDir, &osshim.OsShim{}, &ioutilshim.IoutilShim{}, clock.NewClock(),
 		nil, nil, nil, nil, nil, nil)
