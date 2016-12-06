@@ -205,7 +205,46 @@ var _ = Describe("Broker", func() {
 				_, err := broker.Provision(ctx, instanceID, provisionDetails, false)
 				Expect(err).NotTo(HaveOccurred())
 
-				bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{}}
+				bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{knfsbroker.Username: "principal name", knfsbroker.Secret: "some keytab data"}}
+			})
+
+			It("passes `share` from create-service into `mountConfig.ip` on the bind response", func() {
+				binding, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
+				Expect(err).NotTo(HaveOccurred())
+				mc := binding.VolumeMounts[0].Device.MountConfig
+				ip, ok := mc["ip"]
+				Expect(ok).To(BeTrue())
+				Expect(ip).To(Equal("server:/some-share"))
+
+			})
+
+			It("enforces that kerberosPrincipal, kerberosKeytab were supplied on the bind request", func() {
+				bindDetails.Parameters = make(map[string]interface{})
+				_, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
+				Expect(err).To(HaveOccurred())
+
+				bindDetails.Parameters = map[string]interface{}{knfsbroker.Username: "hello"}
+				_, err = broker.Bind(ctx, instanceID, "binding-id", bindDetails)
+				Expect(err).To(HaveOccurred())
+
+				bindDetails.Parameters = map[string]interface{}{knfsbroker.Secret: "hello"}
+				_, err = broker.Bind(ctx, instanceID, "binding-id", bindDetails)
+				Expect(err).To(HaveOccurred())
+
+			})
+
+			It("passes kerberosPrincipal, kerberosKeytab in to MountConfig on the bind response", func() {
+				binding, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
+				Expect(err).NotTo(HaveOccurred())
+				mc := binding.VolumeMounts[0].Device.MountConfig
+
+				user, ok := mc[knfsbroker.Username]
+				Expect(ok).To(BeTrue())
+				Expect(user).To(Equal("principal name"))
+
+				secret, ok := mc[knfsbroker.Secret]
+				Expect(ok).To(BeTrue())
+				Expect(secret).To(Equal("some keytab data"))
 			})
 
 			It("includes empty credentials to prevent CAPI crash", func() {
@@ -247,7 +286,7 @@ var _ = Describe("Broker", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				_, data, _ := fakeIoutil.WriteFileArgsForCall(fakeIoutil.WriteFileCallCount() - 1)
-				Expect(string(data)).To(Equal(`{"InstanceMap":{"some-instance-id":{"service_id":"","plan_id":"Existing","organization_guid":"","space_guid":"","Share":"server:/some-share"}},"BindingMap":{"binding-id":{"app_guid":"guid","plan_id":"","service_id":""}}}`))
+				Expect(string(data)).To(Equal(`{"InstanceMap":{"some-instance-id":{"service_id":"","plan_id":"Existing","organization_guid":"","space_guid":"","Share":"server:/some-share"}},"BindingMap":{"binding-id":{"app_guid":"guid","plan_id":"","service_id":"","parameters":{"kerberosKeytab":"some keytab data","kerberosPrincipal":"principal name"}}}}`))
 			})
 
 			It("errors if mode is not a boolean", func() {
@@ -260,7 +299,7 @@ var _ = Describe("Broker", func() {
 				binding, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(binding.VolumeMounts[0].Driver).To(Equal("efsdriver"))
+				Expect(binding.VolumeMounts[0].Driver).To(Equal("knfsdriver"))
 			})
 
 			It("fills in the group id", func() {
@@ -272,17 +311,18 @@ var _ = Describe("Broker", func() {
 
 			Context("when the binding already exists", func() {
 				BeforeEach(func() {
-					_, err := broker.Bind(ctx, "some-instance-id", "binding-id", brokerapi.BindDetails{AppGUID: "guid"})
+					_, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
 				It("doesn't error when binding the same details", func() {
-					_, err := broker.Bind(ctx, "some-instance-id", "binding-id", brokerapi.BindDetails{AppGUID: "guid"})
+					_, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
 				It("errors when binding different details", func() {
-					_, err := broker.Bind(ctx, "some-instance-id", "binding-id", brokerapi.BindDetails{AppGUID: "different"})
+					bindDetails.AppGUID = "different"
+					_, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
 					Expect(err).To(Equal(brokerapi.ErrBindingAlreadyExists))
 				})
 			})
@@ -300,8 +340,9 @@ var _ = Describe("Broker", func() {
 
 		Context(".Unbind", func() {
 			var (
-				instanceID string
-				err        error
+				instanceID  string
+				err         error
+				bindDetails brokerapi.BindDetails
 			)
 
 			BeforeEach(func() {
@@ -316,7 +357,9 @@ var _ = Describe("Broker", func() {
 				_, err = broker.Provision(ctx, instanceID, provisionDetails, false)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = broker.Bind(ctx, "some-instance-id", "binding-id", brokerapi.BindDetails{AppGUID: "guid"})
+				bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{knfsbroker.Username: "principal name", knfsbroker.Secret: "some keytab data"}}
+
+				_, err = broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -346,6 +389,11 @@ var _ = Describe("Broker", func() {
 	})
 
 	Context("when recreating", func() {
+		var bindDetails brokerapi.BindDetails
+
+		BeforeEach(func() {
+			bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{knfsbroker.Username: "principal name", knfsbroker.Secret: "some keytab data"}}
+		})
 		It("should be able to bind to previously created service", func() {
 			fileContents, err := json.Marshal(dynamicState{
 				InstanceMap: map[string]knfsbroker.ServiceInstance{
@@ -372,7 +420,7 @@ var _ = Describe("Broker", func() {
 				nil,
 			)
 
-			_, err = broker.Bind(ctx, "service-name", "whatever", brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{}})
+			_, err = broker.Bind(ctx, "service-name", "whatever", bindDetails)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -394,7 +442,7 @@ var _ = Describe("Broker", func() {
 				nil,
 			)
 
-			_, err := broker.Bind(ctx, "service-name", "whatever", brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{}})
+			_, err := broker.Bind(ctx, "service-name", "whatever", bindDetails)
 			Expect(err).To(HaveOccurred())
 		})
 	})

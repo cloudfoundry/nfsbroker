@@ -27,6 +27,11 @@ const (
 	DefaultContainerPath  = "/var/vcap/data"
 )
 
+const (
+	Username string = "kerberosPrincipal"
+	Secret   string = "kerberosKeytab"
+)
+
 var (
 	ErrNoMountTargets         = errors.New("no mount targets found")
 	ErrMountTargetUnavailable = errors.New("mount target not in available state")
@@ -189,7 +194,7 @@ func (b *Broker) Deprovision(context context.Context, instanceID string, details
 	return brokerapi.DeprovisionServiceSpec{IsAsync: true, OperationData: "deprovision"}, nil
 }
 
-// cf bs myapp myshare -c { "kerberosPrincipal": "tommy", "kerberosKeytab": "<base64 data>", "mode": "ro", "container_path": "/path/inside/container" }
+// cf bs myapp myshare -c { "kerberosPrincipal": "tommy", "kerberosKeytab": "<base64 data>", "readonly": "true", "mount": "/path/inside/container" }
 func (b *Broker) Bind(context context.Context, instanceID string, bindingID string, details brokerapi.BindDetails) (brokerapi.Binding, error) {
 	logger := b.logger.Session("bind")
 	logger.Info("start")
@@ -200,7 +205,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 
 	defer b.persist(b.dynamic)
 
-	_, ok := b.dynamic.InstanceMap[instanceID]
+	instanceDetails, ok := b.dynamic.InstanceMap[instanceID]
 	if !ok {
 		return brokerapi.Binding{}, brokerapi.ErrInstanceDoesNotExist
 	}
@@ -220,15 +225,26 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 
 	b.dynamic.BindingMap[bindingID] = details
 
-	ip := "1.2.3.4"
-	mountConfig := map[string]interface{}{"ip": ip}
+	ip := instanceDetails.Share
+
+	username, ok := details.Parameters[Username]
+	if !ok {
+		return brokerapi.Binding{}, fmt.Errorf("bind requires a %s key", Username)
+	}
+
+	secret, ok := details.Parameters[Secret]
+	if !ok {
+		return brokerapi.Binding{}, fmt.Errorf("bind requires a %s key", Secret)
+	}
+
+	mountConfig := map[string]interface{}{"ip": ip, Username: username, Secret: secret}
 
 	return brokerapi.Binding{
 		Credentials: struct{}{}, // if nil, cloud controller chokes on response
 		VolumeMounts: []brokerapi.VolumeMount{{
 			ContainerDir: evaluateContainerPath(details.Parameters, instanceID),
 			Mode:         mode,
-			Driver:       "efsdriver",
+			Driver:       "knfsdriver",
 			DeviceType:   "shared",
 			Device: brokerapi.SharedDevice{
 				VolumeId:    instanceID,
