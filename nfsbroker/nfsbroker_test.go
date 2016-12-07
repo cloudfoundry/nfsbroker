@@ -160,7 +160,7 @@ var _ = Describe("Broker", func() {
 
 			BeforeEach(func() {
 				instanceID = "some-instance-id"
-				provisionDetails = brokerapi.ProvisionDetails{PlanID: "generalPurpose"}
+				provisionDetails = brokerapi.ProvisionDetails{PlanID: "Existing"}
 				asyncAllowed = true
 
 			})
