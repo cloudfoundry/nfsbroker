@@ -62,18 +62,11 @@ type lock interface {
 
 type Broker struct {
 	logger lager.Logger
-	//efsService           EFSService
-	//subnetIds     []string
-	//securityGroup string
 	dataDir string
 	os      osshim.Os
 	ioutil  ioutilshim.Ioutil
 	mutex   lock
 	clock   clock.Clock
-	//efsTools             efsvoltools.VolTools
-	//ProvisionOperation   func(logger lager.Logger, instanceID string, planID string, efsService EFSService, efsTools efsvoltools.VolTools, subnetIds []string, securityGroup string, clock Clock, updateCb func(*OperationState)) Operation
-	//DeprovisionOperation func(logger lager.Logger, efsService EFSService, clock Clock, spec DeprovisionOperationSpec, updateCb func(*OperationState)) Operation
-
 	static  staticState
 	dynamic dynamicState
 }
@@ -136,7 +129,6 @@ func (b *Broker) Services(_ context.Context) []brokerapi.Service {
 	}}
 }
 
-// cf cs knfs myshare -c { "share": "server:/share" }
 func (b *Broker) Provision(context context.Context, instanceID string, details brokerapi.ProvisionDetails, asyncAllowed bool) (brokerapi.ProvisionedServiceSpec, error) {
 	logger := b.logger.Session("provision").WithData(lager.Data{"instanceID": instanceID})
 	logger.Info("start")
@@ -192,7 +184,6 @@ func (b *Broker) Deprovision(context context.Context, instanceID string, details
 	return brokerapi.DeprovisionServiceSpec{IsAsync: false, OperationData: "deprovision"}, nil
 }
 
-// cf bs myapp myshare -c { "kerberosPrincipal": "tommy", "kerberosKeytab": "<base64 data>", "readonly": "true", "mount": "/path/inside/container" }
 func (b *Broker) Bind(context context.Context, instanceID string, bindingID string, details brokerapi.BindDetails) (brokerapi.Binding, error) {
 	logger := b.logger.Session("bind")
 	logger.Info("start")
@@ -223,26 +214,14 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 
 	b.dynamic.BindingMap[bindingID] = details
 
-	ip := instanceDetails.Share
-
-	username, ok := details.Parameters[Username]
-	if !ok {
-		return brokerapi.Binding{}, fmt.Errorf("bind requires a %s key", Username)
-	}
-
-	secret, ok := details.Parameters[Secret]
-	if !ok {
-		return brokerapi.Binding{}, fmt.Errorf("bind requires a %s key", Secret)
-	}
-
-	mountConfig := map[string]interface{}{"ip": ip, Username: username, Secret: secret}
+	mountConfig := map[string]interface{}{"source": `nfs://` + instanceDetails.Share + `?uid=1000&gid=1000`}
 
 	return brokerapi.Binding{
 		Credentials: struct{}{}, // if nil, cloud controller chokes on response
 		VolumeMounts: []brokerapi.VolumeMount{{
 			ContainerDir: evaluateContainerPath(details.Parameters, instanceID),
 			Mode:         mode,
-			Driver:       "knfsdriver",
+			Driver:       "nfsv3driver",
 			DeviceType:   "shared",
 			Device: brokerapi.SharedDevice{
 				VolumeId:    instanceID,
@@ -251,33 +230,6 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 		}},
 	}, nil
 }
-
-/*
-func (b *Broker) getMountIp(fsId string) (string, error) {
-	// get mount point details from ews to return in bind response
-	mtOutput, err := b.efsService.DescribeMountTargets(&efs.DescribeMountTargetsInput{
-		FileSystemId: aws.String(fsId),
-	})
-	if err != nil {
-		b.logger.Error("err-getting-mount-target-status", err)
-		return "", err
-	}
-	if len(mtOutput.MountTargets) < 1 {
-		b.logger.Error("found-no-mount-targets", ErrNoMountTargets)
-		return "", ErrNoMountTargets
-	}
-
-	if mtOutput.MountTargets[0].LifeCycleState == nil ||
-		*mtOutput.MountTargets[0].LifeCycleState != efs.LifeCycleStateAvailable {
-		b.logger.Error("mount-point-unavailable", ErrMountTargetUnavailable)
-		return "", ErrMountTargetUnavailable
-	}
-
-	mountConfig := *mtOutput.MountTargets[0].IpAddress
-
-	return mountConfig, nil
-}
-*/
 
 func (b *Broker) Unbind(context context.Context, instanceID string, bindingID string, details brokerapi.UnbindDetails) error {
 	logger := b.logger.Session("unbind")
