@@ -189,7 +189,7 @@ func (b *Broker) Deprovision(context context.Context, instanceID string, details
 		return brokerapi.DeprovisionServiceSpec{}, brokerapi.ErrInstanceDoesNotExist
 	}
 
-	return brokerapi.DeprovisionServiceSpec{IsAsync: true, OperationData: "deprovision"}, nil
+	return brokerapi.DeprovisionServiceSpec{IsAsync: false, OperationData: "deprovision"}, nil
 }
 
 // cf bs myapp myshare -c { "kerberosPrincipal": "tommy", "kerberosKeytab": "<base64 data>", "readonly": "true", "mount": "/path/inside/container" }
