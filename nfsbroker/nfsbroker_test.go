@@ -178,6 +178,7 @@ var _ = Describe("Broker", func() {
 					Expect(err).To(Equal(brokerapi.ErrInstanceDoesNotExist))
 				})
 			})
+
 		})
 
 		Context(".LastOperation", func() {
