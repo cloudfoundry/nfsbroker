@@ -213,39 +213,9 @@ var _ = Describe("Broker", func() {
 				binding, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
 				Expect(err).NotTo(HaveOccurred())
 				mc := binding.VolumeMounts[0].Device.MountConfig
-				ip, ok := mc["ip"]
+				share, ok := mc["source"].(string)
 				Expect(ok).To(BeTrue())
-				Expect(ip).To(Equal("server:/some-share"))
-
-			})
-
-			It("enforces that kerberosPrincipal, kerberosKeytab were supplied on the bind request", func() {
-				bindDetails.Parameters = make(map[string]interface{})
-				_, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
-				Expect(err).To(HaveOccurred())
-
-				bindDetails.Parameters = map[string]interface{}{nfsbroker.Username: "hello"}
-				_, err = broker.Bind(ctx, instanceID, "binding-id", bindDetails)
-				Expect(err).To(HaveOccurred())
-
-				bindDetails.Parameters = map[string]interface{}{nfsbroker.Secret: "hello"}
-				_, err = broker.Bind(ctx, instanceID, "binding-id", bindDetails)
-				Expect(err).To(HaveOccurred())
-
-			})
-
-			It("passes kerberosPrincipal, kerberosKeytab in to MountConfig on the bind response", func() {
-				binding, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
-				Expect(err).NotTo(HaveOccurred())
-				mc := binding.VolumeMounts[0].Device.MountConfig
-
-				user, ok := mc[nfsbroker.Username]
-				Expect(ok).To(BeTrue())
-				Expect(user).To(Equal("principal name"))
-
-				secret, ok := mc[nfsbroker.Secret]
-				Expect(ok).To(BeTrue())
-				Expect(secret).To(Equal("some keytab data"))
+				Expect(share).To(Equal("nfs://server:/some-share?uid=1000&gid=1000"))
 			})
 
 			It("includes empty credentials to prevent CAPI crash", func() {
@@ -300,7 +270,7 @@ var _ = Describe("Broker", func() {
 				binding, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(binding.VolumeMounts[0].Driver).To(Equal("knfsdriver"))
+				Expect(binding.VolumeMounts[0].Driver).To(Equal("nfsv3driver"))
 			})
 
 			It("fills in the group id", func() {
