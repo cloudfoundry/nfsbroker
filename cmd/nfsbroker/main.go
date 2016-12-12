@@ -12,8 +12,8 @@ import (
 	"code.cloudfoundry.org/goshims/ioutilshim"
 	"code.cloudfoundry.org/goshims/osshim"
 	"code.cloudfoundry.org/lager"
-	"github.com/cloudfoundry-community/nfsbroker/nfsbroker"
-	"github.com/cloudfoundry-community/nfsbroker/utils"
+	"code.cloudfoundry.org/nfsbroker/nfsbroker"
+	"code.cloudfoundry.org/nfsbroker/utils"
 
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/tedsuo/ifrit"

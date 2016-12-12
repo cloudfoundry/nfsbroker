@@ -14,7 +14,7 @@ import (
 	"code.cloudfoundry.org/goshims/ioutilshim/ioutil_fake"
 	"code.cloudfoundry.org/goshims/osshim/os_fake"
 	"code.cloudfoundry.org/lager"
-	"github.com/cloudfoundry-community/nfsbroker/nfsbroker"
+	"code.cloudfoundry.org/nfsbroker/nfsbroker"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
