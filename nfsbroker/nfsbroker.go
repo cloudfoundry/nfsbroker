@@ -218,7 +218,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 
 	mountConfig := map[string]interface{}{"source": `nfs://` + instanceDetails.Share + `?uid=1000&gid=1000`}
 
-	logger.Info(EscapedToString(mountConfig["source"].(string)))
+	logger.Info("HELLO_REALLY " + EscapedToString(mountConfig["source"].(string)))
 
 	return brokerapi.Binding{
 		Credentials: struct{}{}, // if nil, cloud controller chokes on response
