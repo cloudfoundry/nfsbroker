@@ -216,6 +216,8 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 
 	mountConfig := map[string]interface{}{"source": `nfs://` + instanceDetails.Share + `?uid=1000&gid=1000`}
 
+	logger.Info(fmt.Sprintf("MountConfigBind-%s", mountConfig))
+
 	return brokerapi.Binding{
 		Credentials: struct{}{}, // if nil, cloud controller chokes on response
 		VolumeMounts: []brokerapi.VolumeMount{{
