@@ -20,6 +20,7 @@ import (
 	"code.cloudfoundry.org/goshims/osshim"
 	"code.cloudfoundry.org/lager"
 	"github.com/pivotal-cf/brokerapi"
+	"strings"
 )
 
 const (
@@ -217,7 +218,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 
 	mountConfig := map[string]interface{}{"source": `nfs://` + instanceDetails.Share + `?uid=1000&gid=1000`}
 
-	logger.Info(fmt.Sprintf("blah - %s", mountConfig["source"]))
+	logger.Info(EscapedToString(mountConfig["source"]))
 
 	return brokerapi.Binding{
 		Credentials: struct{}{}, // if nil, cloud controller chokes on response
@@ -363,4 +364,16 @@ func (b *Broker) restoreDynamicState() {
 	}
 	logger.Info("state-restored", lager.Data{"state-file": stateFile})
 	b.dynamic = dynamicState
+}
+
+func EscapedToString(source string) string {
+	if strings.Contains(source, "\\u0026") {
+		return "Double Escaped"
+	} else if strings.Contains(source, "\u0026") {
+		return "Single Escaped"
+	} else if strings.Contains(source, "&") {
+		return "UnEscaped"
+	} else {
+		return "Not Found"
+	}
 }
