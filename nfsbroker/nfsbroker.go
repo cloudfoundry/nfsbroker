@@ -194,6 +194,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 
 	defer b.persist(b.dynamic)
 
+	logger.Info("Starting nfsbroker bind")
 	instanceDetails, ok := b.dynamic.InstanceMap[instanceID]
 	if !ok {
 		return brokerapi.Binding{}, brokerapi.ErrInstanceDoesNotExist
