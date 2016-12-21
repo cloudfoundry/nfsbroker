@@ -62,7 +62,7 @@ type lock interface {
 }
 
 type Broker struct {
-	logger lager.Logger
+	logger  lager.Logger
 	dataDir string
 	os      osshim.Os
 	ioutil  ioutilshim.Ioutil
@@ -216,7 +216,18 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 
 	b.dynamic.BindingMap[bindingID] = details
 
-	mountConfig := map[string]interface{}{"source": `nfs://` + instanceDetails.Share + `?uid=1000&gid=1000`}
+	var uid interface{}
+	var exist bool
+	if uid, exist = details.Parameters["uid"]; !exist {
+		return brokerapi.Binding{}, errors.New("config requires a \"uid\"")
+	}
+
+	var gid interface{}
+	if gid, exist = details.Parameters["gid"]; !exist {
+		return brokerapi.Binding{}, errors.New("config requires a \"gid\"")
+	}
+
+	mountConfig := map[string]interface{}{"source": fmt.Sprintf("nfs://%s?uid=%s&gid=%s", instanceDetails.Share, uid.(string), gid.(string))}
 
 	logger.Info("HELLO_REALLY " + EscapedToString(mountConfig["source"].(string)))
 

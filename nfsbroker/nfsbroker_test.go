@@ -11,6 +11,8 @@ import (
 
 	"encoding/json"
 
+	"fmt"
+
 	"code.cloudfoundry.org/goshims/ioutilshim/ioutil_fake"
 	"code.cloudfoundry.org/goshims/osshim/os_fake"
 	"code.cloudfoundry.org/lager"
@@ -192,10 +194,14 @@ var _ = Describe("Broker", func() {
 			var (
 				instanceID  string
 				bindDetails brokerapi.BindDetails
+
+				uid, gid string
 			)
 
 			BeforeEach(func() {
 				instanceID = "some-instance-id"
+				uid = "1234"
+				gid = "5678"
 
 				configuration := map[string]interface{}{"share": "server:/some-share"}
 
@@ -206,7 +212,13 @@ var _ = Describe("Broker", func() {
 				_, err := broker.Provision(ctx, instanceID, provisionDetails, false)
 				Expect(err).NotTo(HaveOccurred())
 
-				bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{nfsbroker.Username: "principal name", nfsbroker.Secret: "some keytab data"}}
+				bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{
+					nfsbroker.Username: "principal name",
+					nfsbroker.Secret:   "some keytab data",
+					"uid":              uid,
+					"gid":              gid,
+				},
+				}
 			})
 
 			It("passes `share` from create-service into `mountConfig.ip` on the bind response", func() {
@@ -215,7 +227,39 @@ var _ = Describe("Broker", func() {
 				mc := binding.VolumeMounts[0].Device.MountConfig
 				share, ok := mc["source"].(string)
 				Expect(ok).To(BeTrue())
-				Expect(share).To(Equal("nfs://server:/some-share?uid=1000&gid=1000"))
+				Expect(share).To(Equal(fmt.Sprintf("nfs://server:/some-share?uid=%s&gid=%s", uid, gid)))
+			})
+
+			Context("given the uid is not supplied", func() {
+				BeforeEach(func() {
+					bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{
+						nfsbroker.Username: "principal name",
+						nfsbroker.Secret:   "some keytab data",
+						"gid":              gid,
+					},
+					}
+				})
+
+				It("should return with an error", func() {
+					_, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
+					Expect(err).To(HaveOccurred())
+				})
+			})
+
+			Context("given the gid is not supplied", func() {
+				BeforeEach(func() {
+					bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{
+						nfsbroker.Username: "principal name",
+						nfsbroker.Secret:   "some keytab data",
+						"uid":              uid,
+					},
+					}
+				})
+
+				It("should return with an error", func() {
+					_, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
+					Expect(err).To(HaveOccurred())
+				})
 			})
 
 			It("includes empty credentials to prevent CAPI crash", func() {
@@ -257,7 +301,7 @@ var _ = Describe("Broker", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				_, data, _ := fakeIoutil.WriteFileArgsForCall(fakeIoutil.WriteFileCallCount() - 1)
-				Expect(string(data)).To(Equal(`{"InstanceMap":{"some-instance-id":{"service_id":"","plan_id":"Existing","organization_guid":"","space_guid":"","Share":"server:/some-share"}},"BindingMap":{"binding-id":{"app_guid":"guid","plan_id":"","service_id":"","parameters":{"kerberosKeytab":"some keytab data","kerberosPrincipal":"principal name"}}}}`))
+				Expect(string(data)).To(Equal(fmt.Sprintf(`{"InstanceMap":{"some-instance-id":{"service_id":"","plan_id":"Existing","organization_guid":"","space_guid":"","Share":"server:/some-share"}},"BindingMap":{"binding-id":{"app_guid":"guid","plan_id":"","service_id":"","parameters":{"gid":"%s","kerberosKeytab":"some keytab data","kerberosPrincipal":"principal name","uid":"%s"}}}}`, gid, uid)))
 			})
 
 			It("errors if mode is not a boolean", func() {
@@ -328,7 +372,7 @@ var _ = Describe("Broker", func() {
 				_, err = broker.Provision(ctx, instanceID, provisionDetails, false)
 				Expect(err).NotTo(HaveOccurred())
 
-				bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{nfsbroker.Username: "principal name", nfsbroker.Secret: "some keytab data"}}
+				bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{nfsbroker.Username: "principal name", nfsbroker.Secret: "some keytab data", "uid": "1000", "gid": "1000"}}
 
 				_, err = broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
 				Expect(err).NotTo(HaveOccurred())
@@ -363,7 +407,7 @@ var _ = Describe("Broker", func() {
 		var bindDetails brokerapi.BindDetails
 
 		BeforeEach(func() {
-			bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{nfsbroker.Username: "principal name", nfsbroker.Secret: "some keytab data"}}
+			bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{nfsbroker.Username: "principal name", nfsbroker.Secret: "some keytab data", "uid": "1000", "gid": "1000"}}
 		})
 		It("should be able to bind to previously created service", func() {
 			fileContents, err := json.Marshal(dynamicState{
