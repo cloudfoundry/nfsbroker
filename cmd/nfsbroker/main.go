@@ -100,8 +100,7 @@ func createServer(logger lager.Logger) ifrit.Runner {
 
 	serviceBroker := nfsbroker.New(logger,
 		*serviceName, *serviceId,
-		*dataDir, &osshim.OsShim{}, &ioutilshim.IoutilShim{}, clock.NewClock(),
-		nil, nil, nil, nil, nil, nil)
+		*dataDir, &osshim.OsShim{}, &ioutilshim.IoutilShim{}, clock.NewClock())
 
 	credentials := brokerapi.BrokerCredentials{Username: *username, Password: *password}
 	handler := brokerapi.New(serviceBroker, logger.Session("broker-api"), credentials)

@@ -21,10 +21,86 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-type dynamicState struct {
-	InstanceMap map[string]nfsbroker.ServiceInstance
-	BindingMap  map[string]brokerapi.BindDetails
-}
+var _ = Describe("FileStore", func() {
+	var (
+		store      nfsbroker.Store
+		fakeIoutil *ioutil_fake.FakeIoutil
+		logger     lager.Logger
+		state      nfsbroker.DynamicState
+	)
+
+	BeforeEach(func() {
+		logger = lagertest.NewTestLogger("test-broker")
+		fakeIoutil = &ioutil_fake.FakeIoutil{}
+		store = nfsbroker.NewFileStore("/tmp/whatever", fakeIoutil)
+		state = nfsbroker.DynamicState{
+			InstanceMap: map[string]nfsbroker.ServiceInstance{
+				"service-name": {
+					Share: "server:/some-share",
+				},
+			},
+			BindingMap: map[string]brokerapi.BindDetails{},
+		}
+	})
+
+	Describe("Restore", func() {
+		var (
+			err error
+		)
+
+		Context("when it succeeds", func() {
+			BeforeEach(func() {
+				fakeIoutil.ReadFileReturns([]byte(`{"InstanceMap":{},"BindingMap":{}}`), nil)
+				err = store.Restore(logger, &state)
+			})
+
+			It("reads the file", func() {
+				Expect(fakeIoutil.ReadFileCallCount()).To(Equal(1))
+				Expect(err).ToNot(HaveOccurred())
+			})
+		})
+
+		Context("when the file system is failing", func() {
+			BeforeEach(func() {
+				fakeIoutil.ReadFileReturns(nil, errors.New("badness"))
+				err = store.Restore(logger, &state)
+			})
+
+			It("returns an error", func() {
+				Expect(err).To(MatchError("badness"))
+			})
+		})
+	})
+
+	Describe("Save", func() {
+		var (
+			err error
+		)
+
+		Context("when it succeeds", func() {
+			BeforeEach(func() {
+				fakeIoutil.WriteFileReturns(nil)
+				err = store.Save(logger, &state, "", "")
+			})
+
+			It("writes the file", func() {
+				Expect(fakeIoutil.WriteFileCallCount()).To(Equal(1))
+				Expect(err).ToNot(HaveOccurred())
+			})
+		})
+
+		Context("when the file system is failing", func() {
+			BeforeEach(func() {
+				fakeIoutil.WriteFileReturns(errors.New("badness"))
+				err = store.Save(logger, &state, "", "")
+			})
+
+			It("returns an error", func() {
+				Expect(err).To(MatchError("badness"))
+			})
+		})
+	})
+})
 
 var _ = Describe("Broker", func() {
 	var (
@@ -50,12 +126,6 @@ var _ = Describe("Broker", func() {
 				"service-name", "service-id", "/fake-dir",
 				fakeOs,
 				fakeIoutil,
-				nil,
-				nil,
-				nil,
-				nil,
-				nil,
-				nil,
 				nil,
 			)
 		})
@@ -410,7 +480,7 @@ var _ = Describe("Broker", func() {
 			bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{nfsbroker.Username: "principal name", nfsbroker.Secret: "some keytab data", "uid": "1000", "gid": "1000"}}
 		})
 		It("should be able to bind to previously created service", func() {
-			fileContents, err := json.Marshal(dynamicState{
+			fileContents, err := json.Marshal(nfsbroker.DynamicState{
 				InstanceMap: map[string]nfsbroker.ServiceInstance{
 					"service-name": {
 						Share: "server:/some-share",
@@ -427,12 +497,6 @@ var _ = Describe("Broker", func() {
 				fakeOs,
 				fakeIoutil,
 				nil,
-				nil,
-				nil,
-				nil,
-				nil,
-				nil,
-				nil,
 			)
 
 			_, err = broker.Bind(ctx, "service-name", "whatever", bindDetails)
@@ -448,12 +512,6 @@ var _ = Describe("Broker", func() {
 				"service-name", "service-id", "/fake-dir",
 				fakeOs,
 				fakeIoutil,
-				nil,
-				nil,
-				nil,
-				nil,
-				nil,
-				nil,
 				nil,
 			)
 

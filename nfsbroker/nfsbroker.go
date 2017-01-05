@@ -15,12 +15,13 @@ import (
 
 	"context"
 
+	"strings"
+
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/goshims/ioutilshim"
 	"code.cloudfoundry.org/goshims/osshim"
 	"code.cloudfoundry.org/lager"
 	"github.com/pivotal-cf/brokerapi"
-	"strings"
 )
 
 const (
@@ -31,11 +32,6 @@ const (
 const (
 	Username string = "kerberosPrincipal"
 	Secret   string = "kerberosKeytab"
-)
-
-var (
-	ErrNoMountTargets         = errors.New("no mount targets found")
-	ErrMountTargetUnavailable = errors.New("mount target not in available state")
 )
 
 type staticState struct {
@@ -51,9 +47,74 @@ type ServiceInstance struct {
 	Share            string
 }
 
-type dynamicState struct {
+type DynamicState struct {
 	InstanceMap map[string]ServiceInstance
 	BindingMap  map[string]brokerapi.BindDetails
+}
+
+// todo--extract into a separate file
+// todo add fakes
+type Store interface {
+	Restore(logger lager.Logger, state *DynamicState) error
+	Save(logger lager.Logger, state *DynamicState, instanceId, bindingId string) error
+}
+
+type FileStore struct {
+	fileName string
+	ioutil   ioutilshim.Ioutil
+}
+
+func NewFileStore(
+	fileName string,
+	ioutil ioutilshim.Ioutil,
+) Store {
+	return &FileStore{
+		fileName: fileName,
+		ioutil:   ioutil,
+	}
+}
+
+func (s *FileStore) Restore(logger lager.Logger, state *DynamicState) error {
+	logger = logger.Session("restore-state")
+	logger.Info("start")
+	defer logger.Info("end")
+
+	serviceData, err := s.ioutil.ReadFile(s.fileName)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed-to-read-state-file: %s", s.fileName), err)
+		return err
+	}
+
+	err = json.Unmarshal(serviceData, state)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed-to-unmarshall-state from state-file: %s", s.fileName), err)
+		return err
+	}
+	logger.Info("state-restored", lager.Data{"state-file": s.fileName})
+
+	return err
+}
+
+func (s *FileStore) Save(logger lager.Logger, state *DynamicState, _, _ string) error {
+	logger = logger.Session("serialize-state")
+	logger.Info("start")
+	defer logger.Info("end")
+
+	stateData, err := json.Marshal(state)
+	if err != nil {
+		logger.Error("failed-to-marshall-state", err)
+		return err
+	}
+
+	err = s.ioutil.WriteFile(s.fileName, stateData, os.ModePerm)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed-to-write-state-file: %s", s.fileName), err)
+		return err
+	}
+
+	logger.Info("state-saved", lager.Data{"state-file": s.fileName})
+
+	return nil
 }
 
 type lock interface {
@@ -69,7 +130,7 @@ type Broker struct {
 	mutex   lock
 	clock   clock.Clock
 	static  staticState
-	dynamic dynamicState
+	dynamic DynamicState
 }
 
 func New(
@@ -78,10 +139,6 @@ func New(
 	os osshim.Os,
 	ioutil ioutilshim.Ioutil,
 	clock clock.Clock,
-	a0 interface{}, a1 interface{}, a2 interface{},
-	a3 interface{},
-	a4 interface{},
-	a5 interface{},
 ) *Broker {
 
 	theBroker := Broker{
@@ -95,7 +152,7 @@ func New(
 			ServiceName: serviceName,
 			ServiceId:   serviceId,
 		},
-		dynamic: dynamicState{
+		dynamic: DynamicState{
 			InstanceMap: map[string]ServiceInstance{},
 			BindingMap:  map[string]brokerapi.BindDetails{},
 		},
@@ -367,7 +424,7 @@ func (b *Broker) restoreDynamicState() {
 		return
 	}
 
-	dynamicState := dynamicState{}
+	dynamicState := DynamicState{}
 	err = json.Unmarshal(serviceData, &dynamicState)
 	if err != nil {
 		b.logger.Error(fmt.Sprintf("failed-to-unmarshall-state from state-file: %s", stateFile), err)
