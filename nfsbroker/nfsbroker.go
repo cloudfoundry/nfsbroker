@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"reflect"
 
 	"sync"
@@ -53,7 +52,7 @@ type DynamicState struct {
 }
 
 // todo--extract into a separate file
-// todo add fakes
+//go:generate counterfeiter -o ../nfsbrokerfakes/fake_store.go . Store
 type Store interface {
 	Restore(logger lager.Logger, state *DynamicState) error
 	Save(logger lager.Logger, state *DynamicState, instanceId, bindingId string) error
@@ -126,28 +125,28 @@ type Broker struct {
 	logger  lager.Logger
 	dataDir string
 	os      osshim.Os
-	ioutil  ioutilshim.Ioutil
 	mutex   lock
 	clock   clock.Clock
 	static  staticState
 	dynamic DynamicState
+	store   Store
 }
 
 func New(
 	logger lager.Logger,
 	serviceName, serviceId, dataDir string,
 	os osshim.Os,
-	ioutil ioutilshim.Ioutil,
 	clock clock.Clock,
+	store Store,
 ) *Broker {
 
 	theBroker := Broker{
 		logger:  logger,
 		dataDir: dataDir,
 		os:      os,
-		ioutil:  ioutil,
 		mutex:   &sync.Mutex{},
 		clock:   clock,
+		store:   store,
 		static: staticState{
 			ServiceName: serviceName,
 			ServiceId:   serviceId,
@@ -158,7 +157,7 @@ func New(
 		},
 	}
 
-	theBroker.restoreDynamicState()
+	theBroker.store.Restore(logger, &theBroker.dynamic)
 
 	return &theBroker
 }
@@ -221,7 +220,7 @@ func (b *Broker) Provision(context context.Context, instanceID string, details b
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 
-	b.persist(b.dynamic)
+	defer b.store.Save(logger, &b.dynamic, instanceID, "")
 
 	return brokerapi.ProvisionedServiceSpec{IsAsync: false}, nil
 }
@@ -250,7 +249,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 
-	defer b.persist(b.dynamic)
+	defer b.store.Save(logger, &b.dynamic, instanceID, bindingID)
 
 	logger.Info("Starting nfsbroker bind")
 	instanceDetails, ok := b.dynamic.InstanceMap[instanceID]
@@ -311,7 +310,7 @@ func (b *Broker) Unbind(context context.Context, instanceID string, bindingID st
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 
-	defer b.persist(b.dynamic)
+	defer b.store.Save(logger, &b.dynamic, instanceID, bindingID)
 
 	if _, ok := b.dynamic.InstanceMap[instanceID]; !ok {
 		return brokerapi.ErrInstanceDoesNotExist
@@ -362,28 +361,6 @@ func (b *Broker) bindingConflicts(bindingID string, details brokerapi.BindDetail
 	return false
 }
 
-func (b *Broker) persist(state interface{}) {
-	logger := b.logger.Session("serialize-state")
-	logger.Info("start")
-	defer logger.Info("end")
-
-	stateFile := filepath.Join(b.dataDir, fmt.Sprintf("%s-services.json", b.static.ServiceName))
-
-	stateData, err := json.Marshal(state)
-	if err != nil {
-		b.logger.Error("failed-to-marshall-state", err)
-		return
-	}
-
-	err = b.ioutil.WriteFile(stateFile, stateData, os.ModePerm)
-	if err != nil {
-		b.logger.Error(fmt.Sprintf("failed-to-write-state-file: %s", stateFile), err)
-		return
-	}
-
-	logger.Info("state-saved", lager.Data{"state-file": stateFile})
-}
-
 func evaluateContainerPath(parameters map[string]interface{}, volId string) string {
 	if containerPath, ok := parameters["mount"]; ok && containerPath != "" {
 		return containerPath.(string)
@@ -409,29 +386,6 @@ func readOnlyToMode(ro bool) string {
 		return "r"
 	}
 	return "rw"
-}
-
-func (b *Broker) restoreDynamicState() {
-	logger := b.logger.Session("restore-services")
-	logger.Info("start")
-	defer logger.Info("end")
-
-	stateFile := filepath.Join(b.dataDir, fmt.Sprintf("%s-services.json", b.static.ServiceName))
-
-	serviceData, err := b.ioutil.ReadFile(stateFile)
-	if err != nil {
-		b.logger.Error(fmt.Sprintf("failed-to-read-state-file: %s", stateFile), err)
-		return
-	}
-
-	dynamicState := DynamicState{}
-	err = json.Unmarshal(serviceData, &dynamicState)
-	if err != nil {
-		b.logger.Error(fmt.Sprintf("failed-to-unmarshall-state from state-file: %s", stateFile), err)
-		return
-	}
-	logger.Info("state-restored", lager.Data{"state-file": stateFile})
-	b.dynamic = dynamicState
 }
 
 func EscapedToString(source string) string {

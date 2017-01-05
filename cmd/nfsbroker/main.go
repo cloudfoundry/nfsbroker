@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strings"
 
 	"code.cloudfoundry.org/cflager"
 	"code.cloudfoundry.org/clock"
@@ -14,6 +13,8 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/nfsbroker/nfsbroker"
 	"code.cloudfoundry.org/nfsbroker/utils"
+
+	"path/filepath"
 
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/tedsuo/ifrit"
@@ -92,15 +93,12 @@ func checkParams() {
 
 }
 
-func parseSubnets(subnetsFlag string) []string {
-	return strings.Split(subnetsFlag, ",")
-}
-
 func createServer(logger lager.Logger) ifrit.Runner {
-
+	fileName := filepath.Join(*dataDir, fmt.Sprintf("%s-services.json", *serviceName))
+	store := nfsbroker.NewFileStore(fileName, &ioutilshim.IoutilShim{})
 	serviceBroker := nfsbroker.New(logger,
 		*serviceName, *serviceId,
-		*dataDir, &osshim.OsShim{}, &ioutilshim.IoutilShim{}, clock.NewClock())
+		*dataDir, &osshim.OsShim{}, clock.NewClock(), store)
 
 	credentials := brokerapi.BrokerCredentials{Username: *username, Password: *password}
 	handler := brokerapi.New(serviceBroker, logger.Session("broker-api"), credentials)
