@@ -103,21 +103,41 @@ var _ = Describe("FileStore", func() {
 			})
 		})
 	})
+
+	Describe("Cleanup", func() {
+		var (
+			err error
+		)
+
+		Context("when it succeeds", func() {
+			BeforeEach(func() {
+				err = store.Cleanup()
+			})
+
+			It("doesn't error", func() {
+				Expect(err).ToNot(HaveOccurred())
+			})
+		})
+	})
+
 })
 
 var _ = Describe("SqlStore", func() {
 	var (
-		store   nfsbroker.Store
-		logger  lager.Logger
-		state   nfsbroker.DynamicState
-		fakeSQL *sql_fake.FakeSql
-		err     error
+		store     nfsbroker.Store
+		logger    lager.Logger
+		state     nfsbroker.DynamicState
+		fakeSql   *sql_fake.FakeSql
+		fakeSqlDb *sql_fake.FakeSqlDB
+		err       error
 	)
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test-broker")
-		fakeSQL = &sql_fake.FakeSql{}
-		store, err = nfsbroker.NewSqlStore(logger, fakeSQL, "postgres", "foo")
+		fakeSql = &sql_fake.FakeSql{}
+		fakeSqlDb = &sql_fake.FakeSqlDB{}
+		fakeSql.OpenReturns(fakeSqlDb, nil)
+		store, err = nfsbroker.NewSqlStore(logger, fakeSql, "postgres", "foo")
 		Expect(err).ToNot(HaveOccurred())
 		state = nfsbroker.DynamicState{
 			InstanceMap: map[string]nfsbroker.ServiceInstance{
@@ -131,14 +151,42 @@ var _ = Describe("SqlStore", func() {
 	})
 
 	It("should open a db connection", func() {
-		Expect(fakeSQL.OpenCallCount()).To(Equal(1))
+		Expect(fakeSql.OpenCallCount()).To(Equal(1))
 	})
-	It("should create tables if they don't exist", func() {})
+
+	It("should ping the connection to make sure it works", func() {
+		Expect(fakeSqlDb.PingCallCount()).To(Equal(1))
+	})
+
+	It("should create tables if they don't exist", func() {
+		Expect(fakeSqlDb.ExecCallCount()).To(Equal(2))
+		Expect(fakeSqlDb.ExecArgsForCall(0)).To(ContainSubstring("CREATE TABLE IF NOT EXISTS service_instances"))
+		Expect(fakeSqlDb.ExecArgsForCall(1)).To(ContainSubstring("CREATE TABLE IF NOT EXISTS service_bindings"))
+	})
 
 	Describe("Restore", func() {
 		Context("when it succeeds", func() {
 			It("", func() {
 				Expect(true).To(BeTrue())
+			})
+		})
+	})
+
+	Describe("Cleanup", func() {
+		var (
+			err error
+		)
+
+		Context("when it succeeds", func() {
+			BeforeEach(func() {
+				err = store.Cleanup()
+			})
+
+			It("doesn't error", func() {
+				Expect(err).ToNot(HaveOccurred())
+			})
+			It("closes the db connection", func() {
+				Expect(fakeSqlDb.CloseCallCount()).To(Equal(1))
 			})
 		})
 	})

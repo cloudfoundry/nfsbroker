@@ -29,6 +29,12 @@ type FakeStore struct {
 	saveReturns struct {
 		result1 error
 	}
+	CleanupStub        func() error
+	cleanupMutex       sync.RWMutex
+	cleanupArgsForCall []struct{}
+	cleanupReturns     struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -43,9 +49,8 @@ func (fake *FakeStore) Restore(logger lager.Logger, state *nfsbroker.DynamicStat
 	fake.restoreMutex.Unlock()
 	if fake.RestoreStub != nil {
 		return fake.RestoreStub(logger, state)
-	} else {
-		return fake.restoreReturns.result1
 	}
+	return fake.restoreReturns.result1
 }
 
 func (fake *FakeStore) RestoreCallCount() int {
@@ -79,9 +84,8 @@ func (fake *FakeStore) Save(logger lager.Logger, state *nfsbroker.DynamicState, 
 	fake.saveMutex.Unlock()
 	if fake.SaveStub != nil {
 		return fake.SaveStub(logger, state, instanceId, bindingId)
-	} else {
-		return fake.saveReturns.result1
 	}
+	return fake.saveReturns.result1
 }
 
 func (fake *FakeStore) SaveCallCount() int {
@@ -103,6 +107,30 @@ func (fake *FakeStore) SaveReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *FakeStore) Cleanup() error {
+	fake.cleanupMutex.Lock()
+	fake.cleanupArgsForCall = append(fake.cleanupArgsForCall, struct{}{})
+	fake.recordInvocation("Cleanup", []interface{}{})
+	fake.cleanupMutex.Unlock()
+	if fake.CleanupStub != nil {
+		return fake.CleanupStub()
+	}
+	return fake.cleanupReturns.result1
+}
+
+func (fake *FakeStore) CleanupCallCount() int {
+	fake.cleanupMutex.RLock()
+	defer fake.cleanupMutex.RUnlock()
+	return len(fake.cleanupArgsForCall)
+}
+
+func (fake *FakeStore) CleanupReturns(result1 error) {
+	fake.CleanupStub = nil
+	fake.cleanupReturns = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeStore) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -110,6 +138,8 @@ func (fake *FakeStore) Invocations() map[string][][]interface{} {
 	defer fake.restoreMutex.RUnlock()
 	fake.saveMutex.RLock()
 	defer fake.saveMutex.RUnlock()
+	fake.cleanupMutex.RLock()
+	defer fake.cleanupMutex.RUnlock()
 	return fake.invocations
 }
 

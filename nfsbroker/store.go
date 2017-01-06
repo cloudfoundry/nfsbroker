@@ -14,6 +14,7 @@ import (
 type Store interface {
 	Restore(logger lager.Logger, state *DynamicState) error
 	Save(logger lager.Logger, state *DynamicState, instanceId, bindingId string) error
+	Cleanup() error
 }
 
 type FileStore struct {
@@ -34,47 +35,6 @@ func NewFileStore(
 type SqlStore struct {
 	sql   sqlshim.Sql
 	sqlDB sqlshim.SqlDB
-}
-
-func NewSqlStore(logger lager.Logger, sql sqlshim.Sql, dbDriver string, dbConnectionString string) (Store, error) {
-	/*
-		connectionString := appendSSLConnectionStringParam(logger, *databaseDriver, *databaseConnectionString, *sqlCACertFile)
-
-		sqlConn, err = sql.Open(*databaseDriver, connectionString)
-		if err != nil {
-			logger.Fatal("failed-to-open-sql", err)
-		}
-		defer sqlConn.Close()
-		sqlConn.SetMaxOpenConns(*maxDatabaseConnections)
-		sqlConn.SetMaxIdleConns(*maxDatabaseConnections)
-
-		err = sqlConn.Ping()
-		if err != nil {
-			logger.Fatal("sql-failed-to-connect", err)
-		}
-
-		sqlDB = sqldb.NewSQLDB(sqlConn, *convergenceWorkers, *updateWorkers, format.ENCRYPTED_PROTO, cryptor, guidprovider.DefaultGuidProvider, clock, *databaseDriver)
-		err = sqlDB.SetIsolationLevel(logger, sqldb.IsolationLevelReadCommitted)
-		if err != nil {
-			logger.Fatal("sql-failed-to-set-isolation-level", err)
-		}
-
-		err = sqlDB.CreateConfigurationsTable(logger)
-		if err != nil {
-			logger.Fatal("sql-failed-create-configurations-table", err)
-		}
-		activeDB = sqlDB
-	*/
-	sqlDB, err := sql.Open(dbDriver, dbConnectionString)
-	if err != nil {
-		logger.Error("failed-to-open-sql", err)
-		return nil, err
-	}
-
-	return &SqlStore{
-		sql:   sql,
-		sqlDB: sqlDB,
-	}, nil
 }
 
 func (s *FileStore) Restore(logger lager.Logger, state *DynamicState) error {
@@ -120,11 +80,57 @@ func (s *FileStore) Save(logger lager.Logger, state *DynamicState, _, _ string) 
 	return nil
 }
 
-func (s *SqlStore) Restore(logger lager.Logger, state *DynamicState) error {
+func (s *FileStore) Cleanup() error {
+	return nil
+}
 
+func NewSqlStore(logger lager.Logger, sql sqlshim.Sql, dbDriver string, dbConnectionString string) (Store, error) {
+	sqlDB, err := sql.Open(dbDriver, dbConnectionString)
+	if err != nil {
+		logger.Error("failed-to-open-sql", err)
+		return nil, err
+	}
+
+	err = sqlDB.Ping()
+	if err != nil {
+		logger.Error("sql-failed-to-connect", err)
+		return nil, err
+	}
+
+	// TODO: uniqueify table names?
+	_, err = sqlDB.Exec(`
+		CREATE TABLE IF NOT EXISTS service_instances(
+			id VARCHAR(255) PRIMARY KEY,
+			value VARCHAR(4096)
+		)
+	`)
+	if err != nil {
+		return nil, err
+	}
+	_, err = sqlDB.Exec(`
+		CREATE TABLE IF NOT EXISTS service_bindings(
+			id VARCHAR(255) PRIMARY KEY,
+			value VARCHAR(4096)
+		)
+	`)
+	if err != nil {
+		return nil, err
+	}
+
+	return &SqlStore{
+		sql:   sql,
+		sqlDB: sqlDB,
+	}, nil
+}
+
+func (s *SqlStore) Restore(logger lager.Logger, state *DynamicState) error {
 	return nil
 }
 
 func (s *SqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bindingId string) error {
 	return nil
+}
+
+func (s *SqlStore) Cleanup() error {
+	return s.sqlDB.Close()
 }
