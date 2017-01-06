@@ -1,11 +1,13 @@
 package nfsbroker
 
 import (
-	"code.cloudfoundry.org/goshims/ioutilshim"
-	"code.cloudfoundry.org/lager"
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"os"
+
+	"code.cloudfoundry.org/goshims/ioutilshim"
+	"code.cloudfoundry.org/goshims/sqlshim"
+	"code.cloudfoundry.org/lager"
 )
 
 //go:generate counterfeiter -o ../nfsbrokerfakes/fake_store.go . Store
@@ -20,13 +22,59 @@ type FileStore struct {
 }
 
 func NewFileStore(
-fileName string,
-ioutil ioutilshim.Ioutil,
+	fileName string,
+	ioutil ioutilshim.Ioutil,
 ) Store {
 	return &FileStore{
 		fileName: fileName,
 		ioutil:   ioutil,
 	}
+}
+
+type SqlStore struct {
+	sql   sqlshim.Sql
+	sqlDB sqlshim.SqlDB
+}
+
+func NewSqlStore(logger lager.Logger, sql sqlshim.Sql, dbDriver string, dbConnectionString string) (Store, error) {
+	/*
+		connectionString := appendSSLConnectionStringParam(logger, *databaseDriver, *databaseConnectionString, *sqlCACertFile)
+
+		sqlConn, err = sql.Open(*databaseDriver, connectionString)
+		if err != nil {
+			logger.Fatal("failed-to-open-sql", err)
+		}
+		defer sqlConn.Close()
+		sqlConn.SetMaxOpenConns(*maxDatabaseConnections)
+		sqlConn.SetMaxIdleConns(*maxDatabaseConnections)
+
+		err = sqlConn.Ping()
+		if err != nil {
+			logger.Fatal("sql-failed-to-connect", err)
+		}
+
+		sqlDB = sqldb.NewSQLDB(sqlConn, *convergenceWorkers, *updateWorkers, format.ENCRYPTED_PROTO, cryptor, guidprovider.DefaultGuidProvider, clock, *databaseDriver)
+		err = sqlDB.SetIsolationLevel(logger, sqldb.IsolationLevelReadCommitted)
+		if err != nil {
+			logger.Fatal("sql-failed-to-set-isolation-level", err)
+		}
+
+		err = sqlDB.CreateConfigurationsTable(logger)
+		if err != nil {
+			logger.Fatal("sql-failed-create-configurations-table", err)
+		}
+		activeDB = sqlDB
+	*/
+	sqlDB, err := sql.Open(dbDriver, dbConnectionString)
+	if err != nil {
+		logger.Error("failed-to-open-sql", err)
+		return nil, err
+	}
+
+	return &SqlStore{
+		sql:   sql,
+		sqlDB: sqlDB,
+	}, nil
 }
 
 func (s *FileStore) Restore(logger lager.Logger, state *DynamicState) error {
@@ -72,3 +120,11 @@ func (s *FileStore) Save(logger lager.Logger, state *DynamicState, _, _ string) 
 	return nil
 }
 
+func (s *SqlStore) Restore(logger lager.Logger, state *DynamicState) error {
+
+	return nil
+}
+
+func (s *SqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bindingId string) error {
+	return nil
+}

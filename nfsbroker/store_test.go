@@ -9,6 +9,7 @@ import (
 	"code.cloudfoundry.org/nfsbroker/nfsbroker"
 	"github.com/pivotal-cf/brokerapi"
 
+	"code.cloudfoundry.org/goshims/sqlshim/sql_fake"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -99,6 +100,45 @@ var _ = Describe("FileStore", func() {
 
 			It("returns an error", func() {
 				Expect(err).To(MatchError("badness"))
+			})
+		})
+	})
+})
+
+var _ = Describe("SqlStore", func() {
+	var (
+		store   nfsbroker.Store
+		logger  lager.Logger
+		state   nfsbroker.DynamicState
+		fakeSQL *sql_fake.FakeSql
+		err     error
+	)
+
+	BeforeEach(func() {
+		logger = lagertest.NewTestLogger("test-broker")
+		fakeSQL = &sql_fake.FakeSql{}
+		store, err = nfsbroker.NewSqlStore(logger, fakeSQL, "postgres", "foo")
+		Expect(err).ToNot(HaveOccurred())
+		state = nfsbroker.DynamicState{
+			InstanceMap: map[string]nfsbroker.ServiceInstance{
+				"service-name": {
+					Share: "server:/some-share",
+				},
+			},
+			BindingMap: map[string]brokerapi.BindDetails{},
+		}
+
+	})
+
+	It("should open a db connection", func() {
+		Expect(fakeSQL.OpenCallCount()).To(Equal(1))
+	})
+	It("should create tables if they don't exist", func() {})
+
+	Describe("Restore", func() {
+		Context("when it succeeds", func() {
+			It("", func() {
+				Expect(true).To(BeTrue())
 			})
 		})
 	})
