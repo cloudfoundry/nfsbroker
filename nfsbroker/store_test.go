@@ -165,9 +165,36 @@ var _ = Describe("SqlStore", func() {
 	})
 
 	Describe("Restore", func() {
+		BeforeEach(func() {
+			store.Restore(logger, &state)
+		})
+
 		Context("when it succeeds", func() {
 			It("", func() {
-				Expect(true).To(BeTrue())
+				Expect(fakeSqlDb.QueryCallCount()).To(Equal(2))
+			})
+		})
+	})
+
+	Describe("Save", func() {
+		Context("when the row is added", func() {
+			BeforeEach(func() {
+				store.Save(logger, &state, "service-name", "")
+			})
+			It("", func() {
+				Expect(fakeSqlDb.ExecCallCount()).To(Equal(3))
+				query, _ := fakeSqlDb.ExecArgsForCall(2)
+				Expect(query).To(ContainSubstring("INSERT INTO service_instances (id, value) VALUES (?, ?)"))
+			})
+		})
+		Context("when the row is removed", func() {
+			BeforeEach(func() {
+				store.Save(logger, &state, "non-existent-service-name", "")
+			})
+			It("", func() {
+				Expect(fakeSqlDb.ExecCallCount()).To(Equal(3))
+				query, _ := fakeSqlDb.ExecArgsForCall(2)
+				Expect(query).To(ContainSubstring("DELETE FROM service_instances WHERE id=?"))
 			})
 		})
 	})

@@ -8,6 +8,7 @@ import (
 	"code.cloudfoundry.org/goshims/ioutilshim"
 	"code.cloudfoundry.org/goshims/sqlshim"
 	"code.cloudfoundry.org/lager"
+	"github.com/pivotal-cf/brokerapi"
 )
 
 //go:generate counterfeiter -o ../nfsbrokerfakes/fake_store.go . Store
@@ -85,6 +86,10 @@ func (s *FileStore) Cleanup() error {
 }
 
 func NewSqlStore(logger lager.Logger, sql sqlshim.Sql, dbDriver string, dbConnectionString string) (Store, error) {
+	logger = logger.Session("new-sql-store")
+	logger.Info("start")
+	defer logger.Info("end")
+
 	sqlDB, err := sql.Open(dbDriver, dbConnectionString)
 	if err != nil {
 		logger.Error("failed-to-open-sql", err)
@@ -124,10 +129,142 @@ func NewSqlStore(logger lager.Logger, sql sqlshim.Sql, dbDriver string, dbConnec
 }
 
 func (s *SqlStore) Restore(logger lager.Logger, state *DynamicState) error {
+	logger = logger.Session("restore-state")
+	logger.Info("start")
+	defer logger.Info("end")
+
+	query := `SELECT id, value FROM service_instances`
+	rows, err := s.sqlDB.Query(query)
+	if err != nil {
+		logger.Error("failed-query", err)
+		return err
+	}
+	if rows != nil {
+		for rows.Next() {
+			var (
+				id, value       string
+				serviceInstance ServiceInstance
+			)
+
+			err := rows.Scan(
+				&id,
+				&value,
+			)
+			if err != nil {
+				logger.Error("failed-scanning", err)
+				continue
+			}
+
+			err = json.Unmarshal([]byte(value), &serviceInstance)
+			if err != nil {
+				logger.Error("failed-unmarshaling", err)
+				continue
+			}
+			state.InstanceMap[id] = serviceInstance
+		}
+
+		if rows.Err() != nil {
+			logger.Error("failed-getting-next-row", rows.Err())
+		}
+	}
+
+	query = `SELECT id, value FROM service_bindings`
+	_, err = s.sqlDB.Query(query)
+	if err != nil {
+		logger.Error("failed-query", err)
+		return err
+	}
+	if rows != nil {
+		for rows.Next() {
+			var (
+				id, value      string
+				serviceBinding brokerapi.BindDetails
+			)
+
+			err := rows.Scan(
+				&id,
+				&value,
+			)
+			if err != nil {
+				logger.Error("failed-scanning", err)
+				continue
+			}
+
+			err = json.Unmarshal([]byte(value), &serviceBinding)
+			if err != nil {
+				logger.Error("failed-unmarshaling", err)
+				continue
+			}
+			state.BindingMap[id] = serviceBinding
+		}
+
+		if rows.Err() != nil {
+			logger.Error("failed-getting-next-row", rows.Err())
+		}
+	}
+
 	return nil
 }
 
 func (s *SqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bindingId string) error {
+	logger = logger.Session("save-state")
+	logger.Info("start")
+	defer logger.Info("end")
+
+	if instanceId != "" {
+		instance, ok := state.InstanceMap[instanceId]
+		if ok {
+			jsonValue, err := json.Marshal(&instance)
+			if err != nil {
+				logger.Error("failed-marshaling", err)
+				return err
+			}
+
+			// todo--what if the row already exists?
+			query := `INSERT INTO service_instances (id, value) VALUES (?, ?)`
+
+			_, err = s.sqlDB.Exec(query, instanceId, jsonValue)
+			if err != nil {
+				logger.Error("failed-exec", err)
+				return err
+			}
+		} else {
+			query := `DELETE FROM service_instances WHERE id=?`
+			_, err := s.sqlDB.Exec(query, instanceId)
+			if err != nil {
+				logger.Error("failed-exec", err)
+				return err
+			}
+		}
+	}
+
+	if bindingId != "" {
+		binding, ok := state.BindingMap[bindingId]
+		if ok {
+			jsonValue, err := json.Marshal(&binding)
+			if err != nil {
+				logger.Error("failed-marshaling", err)
+				return err
+			}
+
+			// todo--what if the row already exists?
+			query := `INSERT INTO service_bindings (id, value) VALUES (?, ?)`
+
+			_, err = s.sqlDB.Exec(query, bindingId, jsonValue)
+			if err != nil {
+				logger.Error("failed-exec", err)
+				return err
+			}
+		} else {
+			query := `DELETE FROM service_bindings WHERE id=?`
+			_, err := s.sqlDB.Exec(query, bindingId)
+			if err != nil {
+				logger.Error("failed-exec", err)
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 
