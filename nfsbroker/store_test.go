@@ -137,7 +137,7 @@ var _ = Describe("SqlStore", func() {
 		fakeSql = &sql_fake.FakeSql{}
 		fakeSqlDb = &sql_fake.FakeSqlDB{}
 		fakeSql.OpenReturns(fakeSqlDb, nil)
-		store, err = nfsbroker.NewSqlStore(logger, fakeSql, "postgres", "foo")
+		store, err = nfsbroker.NewSqlStore(logger, fakeSql, "postgres", "foo", "foo", "foo", "foo", "foo")
 		Expect(err).ToNot(HaveOccurred())
 		state = nfsbroker.DynamicState{
 			InstanceMap: map[string]nfsbroker.ServiceInstance{

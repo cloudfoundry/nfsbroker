@@ -85,7 +85,18 @@ func (s *FileStore) Cleanup() error {
 	return nil
 }
 
-func NewSqlStore(logger lager.Logger, sql sqlshim.Sql, dbDriver string, dbConnectionString string) (Store, error) {
+func NewSqlStore(logger lager.Logger, sql sqlshim.Sql, dbDriver, username, password, host, port, schema string) (Store, error) {
+	var dbConnectionString string
+	if dbDriver == "mysql" {
+		dbConnectionString = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", username, password, host, port, schema)
+	} else if dbDriver == "postgres" {
+		dbConnectionString = fmt.Sprintf("postgres://%s:%s@%s:%s/%s", username, password, host, port, schema)
+	} else {
+		err := fmt.Errorf("Unrecognized Driver: %s", dbDriver)
+		logger.Error("db-driver-unrecognized", err)
+		return nil, err
+	}
+
 	logger = logger.Session("new-sql-store")
 	logger.Info("start")
 	defer logger.Info("end")

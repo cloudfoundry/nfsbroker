@@ -16,6 +16,7 @@ import (
 
 	"path/filepath"
 
+	"code.cloudfoundry.org/goshims/sqlshim"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
@@ -53,6 +54,38 @@ var password = flag.String(
 	"password",
 	"admin",
 	"basic auth password to verify on incoming requests",
+)
+var dbDriver = flag.String(
+	"dbDriver",
+	"",
+	"(optional) database driver name when using SQL to store broker state",
+)
+
+var dbUsername = flag.String(
+	"dbUsername",
+	"",
+	"(optional) database username when using SQL to store broker state",
+)
+var dbPassword = flag.String(
+	"dbPassword",
+	"",
+	"(optional) database password when using SQL to store broker state",
+)
+var dbHostname = flag.String(
+	"dbHostname",
+	"",
+	"(optional) database hostname when using SQL to store broker state",
+)
+var dbPort = flag.String(
+	"dbPort",
+	"",
+	"(optional) database port when using SQL to store broker state",
+)
+
+var dbName = flag.String(
+	"dbName",
+	"",
+	"(optional) database name when using SQL to store broker state",
 )
 
 func main() {
@@ -95,7 +128,16 @@ func checkParams() {
 
 func createServer(logger lager.Logger) ifrit.Runner {
 	fileName := filepath.Join(*dataDir, fmt.Sprintf("%s-services.json", *serviceName))
-	store := nfsbroker.NewFileStore(fileName, &ioutilshim.IoutilShim{})
+	var store nfsbroker.Store
+	var err error
+	if *dbDriver != "" {
+		store, err = nfsbroker.NewSqlStore(logger, &sqlshim.SqlShim{}, *dbDriver, *dbUsername, *dbPassword, *dbHostname, *dbPort, *dbName)
+		if err != nil {
+			logger.Fatal("failed-creating-sql-store", err)
+		}
+	} else {
+		store = nfsbroker.NewFileStore(fileName, &ioutilshim.IoutilShim{})
+	}
 	serviceBroker := nfsbroker.New(logger,
 		*serviceName, *serviceId,
 		*dataDir, &osshim.OsShim{}, clock.NewClock(), store)
