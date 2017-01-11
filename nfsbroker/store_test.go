@@ -184,7 +184,7 @@ var _ = Describe("SqlStore", func() {
 			It("", func() {
 				Expect(fakeSqlDb.ExecCallCount()).To(Equal(3))
 				query, _ := fakeSqlDb.ExecArgsForCall(2)
-				Expect(query).To(ContainSubstring("INSERT INTO service_instances (id, value) VALUES (?, ?)"))
+				Expect(query).To(ContainSubstring("INSERT INTO service_instances (id, value) VALUES"))
 			})
 		})
 		Context("when the row is removed", func() {
@@ -194,7 +194,7 @@ var _ = Describe("SqlStore", func() {
 			It("", func() {
 				Expect(fakeSqlDb.ExecCallCount()).To(Equal(3))
 				query, _ := fakeSqlDb.ExecArgsForCall(2)
-				Expect(query).To(ContainSubstring("DELETE FROM service_instances WHERE id=?"))
+				Expect(query).To(ContainSubstring("DELETE FROM service_instances WHERE id="))
 			})
 		})
 	})

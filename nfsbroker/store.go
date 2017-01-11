@@ -90,7 +90,8 @@ func NewSqlStore(logger lager.Logger, sql sqlshim.Sql, dbDriver, username, passw
 	if dbDriver == "mysql" {
 		dbConnectionString = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", username, password, host, port, schema)
 	} else if dbDriver == "postgres" {
-		dbConnectionString = fmt.Sprintf("postgres://%s:%s@%s:%s/%s", username, password, host, port, schema)
+		// TODO handle optional SSL
+		dbConnectionString = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", username, password, host, port, schema)
 	} else {
 		err := fmt.Errorf("Unrecognized Driver: %s", dbDriver)
 		logger.Error("db-driver-unrecognized", err)
@@ -219,12 +220,13 @@ func (s *SqlStore) Restore(logger lager.Logger, state *DynamicState) error {
 
 func (s *SqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bindingId string) error {
 	logger = logger.Session("save-state")
-	logger.Info("start")
+	logger.Info("start", lager.Data{"instanceId": instanceId, "bindingId": bindingId})
 	defer logger.Info("end")
 
 	if instanceId != "" {
 		instance, ok := state.InstanceMap[instanceId]
 		if ok {
+			logger.Info("instance-found", lager.Data{"instance": instance})
 			jsonValue, err := json.Marshal(&instance)
 			if err != nil {
 				logger.Error("failed-marshaling", err)
@@ -232,7 +234,7 @@ func (s *SqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bi
 			}
 
 			// todo--what if the row already exists?
-			query := `INSERT INTO service_instances (id, value) VALUES (?, ?)`
+			query := `INSERT INTO service_instances (id, value) VALUES ($1, $2)`
 
 			_, err = s.sqlDB.Exec(query, instanceId, jsonValue)
 			if err != nil {
@@ -240,7 +242,7 @@ func (s *SqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bi
 				return err
 			}
 		} else {
-			query := `DELETE FROM service_instances WHERE id=?`
+			query := `DELETE FROM service_instances WHERE id=$1`
 			_, err := s.sqlDB.Exec(query, instanceId)
 			if err != nil {
 				logger.Error("failed-exec", err)
@@ -259,7 +261,7 @@ func (s *SqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bi
 			}
 
 			// todo--what if the row already exists?
-			query := `INSERT INTO service_bindings (id, value) VALUES (?, ?)`
+			query := `INSERT INTO service_bindings (id, value) VALUES ($1, $2)`
 
 			_, err = s.sqlDB.Exec(query, bindingId, jsonValue)
 			if err != nil {
@@ -267,7 +269,7 @@ func (s *SqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bi
 				return err
 			}
 		} else {
-			query := `DELETE FROM service_bindings WHERE id=?`
+			query := `DELETE FROM service_bindings WHERE id=$1`
 			_, err := s.sqlDB.Exec(query, bindingId)
 			if err != nil {
 				logger.Error("failed-exec", err)

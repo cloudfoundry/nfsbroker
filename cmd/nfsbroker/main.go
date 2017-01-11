@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 
 	"code.cloudfoundry.org/goshims/sqlshim"
+	"github.com/lib/pq"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
@@ -146,4 +147,8 @@ func createServer(logger lager.Logger) ifrit.Runner {
 	handler := brokerapi.New(serviceBroker, logger.Session("broker-api"), credentials)
 
 	return http_server.New(*atAddress, handler)
+}
+
+func ConvertPostgresError(err *pq.Error) string {
+	return ""
 }

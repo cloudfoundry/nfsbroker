@@ -2,14 +2,14 @@ package nfsbroker
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"reflect"
-	"sync"
 	"path"
-	"context"
+	"reflect"
 	"strings"
+	"sync"
 
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/goshims/osshim"
@@ -172,13 +172,13 @@ func (b *Broker) Deprovision(context context.Context, instanceID string, details
 
 func (b *Broker) Bind(context context.Context, instanceID string, bindingID string, details brokerapi.BindDetails) (brokerapi.Binding, error) {
 	logger := b.logger.Session("bind")
-	logger.Info("start")
+	logger.Info("start", lager.Data{"bindingID": bindingID, "details": details})
 	defer logger.Info("end")
 
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 
-	defer b.store.Save(logger, &b.dynamic, instanceID, bindingID)
+	defer b.store.Save(logger, &b.dynamic, "", bindingID)
 
 	logger.Info("Starting nfsbroker bind")
 	instanceDetails, ok := b.dynamic.InstanceMap[instanceID]
@@ -214,8 +214,6 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 
 	mountConfig := map[string]interface{}{"source": fmt.Sprintf("nfs://%s?uid=%s&gid=%s", instanceDetails.Share, uid.(string), gid.(string))}
 
-	logger.Info("HELLO_REALLY " + EscapedToString(mountConfig["source"].(string)))
-
 	return brokerapi.Binding{
 		Credentials: struct{}{}, // if nil, cloud controller chokes on response
 		VolumeMounts: []brokerapi.VolumeMount{{
@@ -239,7 +237,7 @@ func (b *Broker) Unbind(context context.Context, instanceID string, bindingID st
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 
-	defer b.store.Save(logger, &b.dynamic, instanceID, bindingID)
+	defer b.store.Save(logger, &b.dynamic, "", bindingID)
 
 	if _, ok := b.dynamic.InstanceMap[instanceID]; !ok {
 		return brokerapi.ErrInstanceDoesNotExist
