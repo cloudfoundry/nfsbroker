@@ -289,8 +289,7 @@ var _ = Describe("Broker", func() {
 				_, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, data, id, _ := fakeStore.SaveArgsForCall(fakeStore.SaveCallCount() - 1)
-				Expect(id).To(Equal(instanceID))
+				_, data, _, _ := fakeStore.SaveArgsForCall(fakeStore.SaveCallCount() - 1)
 				Expect(data.InstanceMap[instanceID].PlanID).To(Equal("Existing"))
 			})
 
@@ -386,8 +385,7 @@ var _ = Describe("Broker", func() {
 				err := broker.Unbind(ctx, "some-instance-id", "binding-id", brokerapi.UnbindDetails{})
 				Expect(err).NotTo(HaveOccurred())
 
-				_, data, id, _ := fakeStore.SaveArgsForCall(fakeStore.SaveCallCount() - 1)
-				Expect(id).To(Equal(instanceID))
+				_, data, _, _ := fakeStore.SaveArgsForCall(fakeStore.SaveCallCount() - 1)
 				Expect(data.InstanceMap[instanceID].PlanID).To(Equal("Existing"))
 			})
 		})
