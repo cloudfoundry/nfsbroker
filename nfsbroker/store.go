@@ -9,6 +9,7 @@ import (
 	"code.cloudfoundry.org/goshims/sqlshim"
 	"code.cloudfoundry.org/lager"
 	"github.com/pivotal-cf/brokerapi"
+	"strings"
 )
 
 //go:generate counterfeiter -o ../nfsbrokerfakes/fake_store.go . Store
@@ -33,9 +34,16 @@ func NewFileStore(
 	}
 }
 
+type DBType int
+const (
+	MySQL DBType = iota
+	Postgres
+)
+
 type SqlStore struct {
 	sql   sqlshim.Sql
 	sqlDB sqlshim.SqlDB
+	flavor DBType
 }
 
 func (s *FileStore) Restore(logger lager.Logger, state *DynamicState) error {
@@ -85,13 +93,16 @@ func (s *FileStore) Cleanup() error {
 	return nil
 }
 
-func NewSqlStore(logger lager.Logger, sql sqlshim.Sql, dbDriver, username, password, host, port, schema string) (Store, error) {
+func NewSqlStore(logger lager.Logger, sql sqlshim.Sql, dbDriver, username, password, host, port, dbName string) (Store, error) {
+	var flavor DBType
 	var dbConnectionString string
 	if dbDriver == "mysql" {
-		dbConnectionString = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", username, password, host, port, schema)
+		flavor = MySQL
+		dbConnectionString = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", username, password, host, port, dbName)
 	} else if dbDriver == "postgres" {
 		// TODO handle optional SSL
-		dbConnectionString = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", username, password, host, port, schema)
+		flavor = Postgres
+		dbConnectionString = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", username, password, host, port, dbName)
 	} else {
 		err := fmt.Errorf("Unrecognized Driver: %s", dbDriver)
 		logger.Error("db-driver-unrecognized", err)
@@ -103,7 +114,7 @@ func NewSqlStore(logger lager.Logger, sql sqlshim.Sql, dbDriver, username, passw
 	defer logger.Info("end")
 
 	sqlDB, err := sql.Open(dbDriver, dbConnectionString)
-	if err != nil {
+		if err != nil {
 		logger.Error("failed-to-open-sql", err)
 		return nil, err
 	}
@@ -137,6 +148,7 @@ func NewSqlStore(logger lager.Logger, sql sqlshim.Sql, dbDriver, username, passw
 	return &SqlStore{
 		sql:   sql,
 		sqlDB: sqlDB,
+		flavor: flavor,
 	}, nil
 }
 
@@ -234,7 +246,8 @@ func (s *SqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bi
 			}
 
 			// todo--what if the row already exists?
-			query := `INSERT INTO service_instances (id, value) VALUES ($1, $2)`
+
+			query := Flavorify(`INSERT INTO service_instances (id, value) VALUES (?, ?)`, s.flavor)
 
 			_, err = s.sqlDB.Exec(query, instanceId, jsonValue)
 			if err != nil {
@@ -242,7 +255,7 @@ func (s *SqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bi
 				return err
 			}
 		} else {
-			query := `DELETE FROM service_instances WHERE id=$1`
+			query := Flavorify(`DELETE FROM service_instances WHERE id=?`, s.flavor)
 			_, err := s.sqlDB.Exec(query, instanceId)
 			if err != nil {
 				logger.Error("failed-exec", err)
@@ -261,15 +274,14 @@ func (s *SqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bi
 			}
 
 			// todo--what if the row already exists?
-			query := `INSERT INTO service_bindings (id, value) VALUES ($1, $2)`
-
+			query := Flavorify(`INSERT INTO service_bindings (id, value) VALUES (?, ?)`, s.flavor)
 			_, err = s.sqlDB.Exec(query, bindingId, jsonValue)
 			if err != nil {
 				logger.Error("failed-exec", err)
 				return err
 			}
 		} else {
-			query := `DELETE FROM service_bindings WHERE id=$1`
+			query := Flavorify(`DELETE FROM service_bindings WHERE id=?`, s.flavor)
 			_, err := s.sqlDB.Exec(query, bindingId)
 			if err != nil {
 				logger.Error("failed-exec", err)
@@ -283,4 +295,18 @@ func (s *SqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bi
 
 func (s *SqlStore) Cleanup() error {
 	return s.sqlDB.Close()
+}
+
+func Flavorify(query string, flavor DBType) string {
+	if flavor == MySQL {
+		return query
+	}
+	if flavor != Postgres {
+		panic(fmt.Sprintf("Unrecognized DB flavor '%s'", flavor))
+	}
+	strParts := strings.Split(query, "?")
+	for i := 1; i < len(strParts); i++ {
+		strParts[i-1] = fmt.Sprintf("%s$%d", strParts[i-1], i)
+	}
+	return strings.Join(strParts, "")
 }

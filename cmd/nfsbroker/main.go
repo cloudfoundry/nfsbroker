@@ -18,6 +18,7 @@ import (
 
 	"code.cloudfoundry.org/goshims/sqlshim"
 	"github.com/lib/pq"
+  "github.com/go-sql-driver/mysql"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
@@ -150,5 +151,9 @@ func createServer(logger lager.Logger) ifrit.Runner {
 }
 
 func ConvertPostgresError(err *pq.Error) string {
+	return ""
+}
+
+func ConvertMySqlError(err mysql.MySQLError) string {
 	return ""
 }

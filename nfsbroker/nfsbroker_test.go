@@ -170,6 +170,37 @@ var _ = Describe("Broker", func() {
 				})
 			})
 
+			Context("given an existing instance", func() {
+				var (
+					spec brokerapi.ProvisionedServiceSpec
+				)
+
+				BeforeEach(func() {
+					instanceID = "some-instance-id"
+
+					configuration := map[string]interface{}{"share": "server:/some-share"}
+					buf := &bytes.Buffer{}
+					_ = json.NewEncoder(buf).Encode(configuration)
+					provisionDetails = brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
+					asyncAllowed = false
+
+					spec, err = broker.Provision(ctx, instanceID, provisionDetails, asyncAllowed)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("should succeed", func() {
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("save state", func() {
+					Expect(fakeStore.SaveCallCount()).To(Equal(2))
+					_, data, id, _ := fakeStore.SaveArgsForCall(fakeStore.SaveCallCount() - 1)
+					Expect(id).To(Equal(instanceID))
+					_, exists := data.InstanceMap[instanceID]
+					Expect(exists).To(BeFalse())
+				})
+			})
+
 		})
 
 		Context(".LastOperation", func() {

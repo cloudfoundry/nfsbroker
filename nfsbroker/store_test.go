@@ -217,4 +217,25 @@ var _ = Describe("SqlStore", func() {
 			})
 		})
 	})
+
+	Describe("Flavorify", func() {
+		var query string
+
+		BeforeEach(func() {
+			query = `INSERT INTO service_instances (id, value) VALUES (?, ?)`
+		})
+		Context("when using mysql", func() {
+			It("uses a mysql-flavored query", func() {
+				expectedQuery := `INSERT INTO service_instances (id, value) VALUES (?, ?)`
+				Expect(nfsbroker.Flavorify(query, nfsbroker.MySQL)).To(Equal(expectedQuery))
+			})
+		})
+
+		Context("when using postgres", func() {
+			It("uses a postgres-flavored query", func() {
+				expectedQuery := `INSERT INTO service_instances (id, value) VALUES ($1, $2)`
+				Expect(nfsbroker.Flavorify(query, nfsbroker.Postgres)).To(Equal(expectedQuery))
+			})
+		})
+	})
 })

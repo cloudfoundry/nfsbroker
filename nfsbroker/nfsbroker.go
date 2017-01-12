@@ -165,6 +165,9 @@ func (b *Broker) Deprovision(context context.Context, instanceID string, details
 	_, instanceExists := b.dynamic.InstanceMap[instanceID]
 	if !instanceExists {
 		return brokerapi.DeprovisionServiceSpec{}, brokerapi.ErrInstanceDoesNotExist
+	} else {
+		delete(b.dynamic.InstanceMap, instanceID)
+		b.store.Save(logger, &b.dynamic, instanceID, "")
 	}
 
 	return brokerapi.DeprovisionServiceSpec{IsAsync: false, OperationData: "deprovision"}, nil
