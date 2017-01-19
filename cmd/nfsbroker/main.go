@@ -8,7 +8,6 @@ import (
 	"code.cloudfoundry.org/cflager"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/debugserver"
-	"code.cloudfoundry.org/goshims/ioutilshim"
 	"code.cloudfoundry.org/goshims/osshim"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/nfsbroker/nfsbroker"
@@ -16,9 +15,8 @@ import (
 
 	"path/filepath"
 
-	"code.cloudfoundry.org/goshims/sqlshim"
+	"github.com/go-sql-driver/mysql"
 	"github.com/lib/pq"
-  "github.com/go-sql-driver/mysql"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
@@ -130,16 +128,9 @@ func checkParams() {
 
 func createServer(logger lager.Logger) ifrit.Runner {
 	fileName := filepath.Join(*dataDir, fmt.Sprintf("%s-services.json", *serviceName))
-	var store nfsbroker.Store
-	var err error
-	if *dbDriver != "" {
-		store, err = nfsbroker.NewSqlStore(logger, &sqlshim.SqlShim{}, *dbDriver, *dbUsername, *dbPassword, *dbHostname, *dbPort, *dbName)
-		if err != nil {
-			logger.Fatal("failed-creating-sql-store", err)
-		}
-	} else {
-		store = nfsbroker.NewFileStore(fileName, &ioutilshim.IoutilShim{})
-	}
+
+	store := nfsbroker.NewStore(logger, *dbDriver, *dbUsername, *dbPassword, *dbHostname, *dbPort, *dbName, fileName)
+
 	serviceBroker := nfsbroker.New(logger,
 		*serviceName, *serviceId,
 		*dataDir, &osshim.OsShim{}, clock.NewClock(), store)
