@@ -39,7 +39,7 @@ var _ = Describe("SqlStore", func() {
 	})
 
 	It("should open a db connection", func() {
-		Expect(fakeVariant.ConnectCallCount()).To(Equal(1))
+		Expect(fakeVariant.ConnectCallCount()).To(BeNumerically(">=",1))
 	})
 
 	It("should ping the connection to make sure it works", func() {
@@ -58,8 +58,8 @@ var _ = Describe("SqlStore", func() {
 		})
 
 		Context("when it succeeds", func() {
-			It("", func() {
-				Expect(fakeSqlDb.QueryCallCount()).To(Equal(2))
+			It("queries the database", func() {
+				Expect(fakeSqlDb.QueryCallCount()).To(BeNumerically(">=",2))
 			})
 		})
 	})
