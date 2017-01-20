@@ -14,10 +14,7 @@ type postgresConnection struct {
 }
 
 func NewPostgres(username, password, host, port, dbName string) SqlVariant {
-	return &postgresConnection{
-		sql:                &sqlshim.SqlShim{},
-		dbConnectionString: fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", username, password, host, port, dbName),
-	}
+	return NewPostgresWithSqlObject(username, password, host, port, dbName, &sqlshim.SqlShim{})
 }
 
 func NewPostgresWithSqlObject(username, password, host, port, dbName string, sql sqlshim.Sql) SqlVariant {

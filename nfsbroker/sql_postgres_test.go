@@ -12,7 +12,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("mysqlConnection", func() {
+var _ = Describe("postgresConnection", func() {
 	var (
 		database nfsbroker.SqlVariant
 		logger   lager.Logger
@@ -21,7 +21,7 @@ var _ = Describe("mysqlConnection", func() {
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test-SqlConnection")
-		database = nfsbroker.NewMySqlWithSqlObject("username", "password", "host", "port", "dbName", fakeSql)
+		database = nfsbroker.NewPostgresWithSqlObject("username", "password", "host", "port", "dbName", fakeSql)
 	})
 
 	Describe(".Connect", func() {
@@ -38,8 +38,8 @@ var _ = Describe("mysqlConnection", func() {
 				_, err = database.Connect(logger)
 				Expect(err).NotTo(HaveOccurred())
 				dbType, connectionString := fakeSql.OpenArgsForCall(0)
-				Expect(dbType).To(Equal("mysql"))
-				Expect(connectionString).To(Equal("username:password@tcp(host:port)/dbName"))
+				Expect(dbType).To(Equal("postgres"))
+				Expect(connectionString).To(Equal("postgres://username:password@host:port/dbName?sslmode=disable"))
 			})
 		})
 
@@ -58,7 +58,7 @@ var _ = Describe("mysqlConnection", func() {
 	Describe(".Flavorify", func() {
 		It("should return unaltered query", func() {
 			query := `INSERT INTO service_instances (id, value) VALUES (?, ?)`
-			Expect(database.Flavorify(query)).To(Equal(query))
+			Expect(database.Flavorify(query)).To(Equal(`INSERT INTO service_instances (id, value) VALUES ($1, $2)`))
 		})
 	})
 })

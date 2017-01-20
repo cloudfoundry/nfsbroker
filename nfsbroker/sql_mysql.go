@@ -13,10 +13,7 @@ type mysqlConnection struct {
 }
 
 func NewMySql(username, password, host, port, dbName string) SqlVariant {
-	return &mysqlConnection{
-		sql:                &sqlshim.SqlShim{},
-		dbConnectionString: fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", username, password, host, port, dbName),
-	}
+	return NewMySqlWithSqlObject(username, password, host, port, dbName, &sqlshim.SqlShim{})
 }
 
 func NewMySqlWithSqlObject(username, password, host, port, dbName string, sql sqlshim.Sql) SqlVariant {
