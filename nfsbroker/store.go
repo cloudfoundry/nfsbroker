@@ -2,7 +2,6 @@ package nfsbroker
 
 import (
 	"code.cloudfoundry.org/goshims/ioutilshim"
-	"code.cloudfoundry.org/goshims/sqlshim"
 	"code.cloudfoundry.org/lager"
 )
 
@@ -15,7 +14,7 @@ type Store interface {
 
 func NewStore(logger lager.Logger, dbDriver, dbUsername, dbPassword, dbHostname, dbPort, dbName, fileName string) Store {
 	if dbDriver != "" {
-		store, err := NewSqlStore(logger, &sqlshim.SqlShim{}, dbDriver, dbUsername, dbPassword, dbHostname, dbPort, dbName)
+		store, err := NewSqlStore(logger, dbDriver, dbUsername, dbPassword, dbHostname, dbPort, dbName)
 		if err != nil {
 			logger.Fatal("failed-creating-sql-store", err)
 		}

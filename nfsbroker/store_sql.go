@@ -14,30 +14,34 @@ type sqlStore struct {
 	database sqlshim.SqlDB
 }
 
-func NewSqlStore(logger lager.Logger, sql sqlshim.Sql, dbDriver, username, password, host, port, dbName string) (Store, error) {
+func NewSqlStore(logger lager.Logger, dbDriver, username, password, host, port, dbName string) (Store, error) {
 
 	var err error
 	var toDatabase SqlVariant
 	switch dbDriver {
 	case "mysql":
-		toDatabase = NewMySqlWithSqlObject(username, password, host, port, dbName, sql)
+		toDatabase = NewMySql(username, password, host, port, dbName)
 	case "postgres":
-		toDatabase = NewPostgresWithSqlObject(username, password, host, port, dbName, sql)
+		toDatabase = NewPostgres(username, password, host, port, dbName)
 	default:
 		err = fmt.Errorf("Unrecognized Driver: %s", dbDriver)
 		logger.Error("db-driver-unrecognized", err)
 		return nil, err
 	}
+	return NewSqlStoreWithVariant(logger, toDatabase)
+}
 
+func NewSqlStoreWithVariant(logger lager.Logger, toDatabase SqlVariant) (Store, error) {
 	database := NewSqlConnection(toDatabase)
 
-	err = database.Connect(logger)
+	err := database.Connect(logger)
 	if err != nil {
 		logger.Error("sql-failed-to-connect", err)
 		return nil, err
 	}
 
 	initialize(logger, database)
+
 	if err != nil {
 		logger.Error("sql-failed-to-initialize-database", err)
 		return nil, err

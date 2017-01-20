@@ -7,26 +7,26 @@ import (
 	"github.com/pivotal-cf/brokerapi"
 
 	"code.cloudfoundry.org/goshims/sqlshim/sql_fake"
+	"code.cloudfoundry.org/nfsbroker/nfsbrokerfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("SqlStore", func() {
 	var (
-		store     nfsbroker.Store
-		logger    lager.Logger
-		state     nfsbroker.DynamicState
-		fakeSql   *sql_fake.FakeSql
-		fakeSqlDb *sql_fake.FakeSqlDB
-		err       error
+		store       nfsbroker.Store
+		logger      lager.Logger
+		state       nfsbroker.DynamicState
+		fakeSqlDb   = &sql_fake.FakeSqlDB{}
+		fakeVariant = &nfsbrokerfakes.FakeSqlVariant{}
+		err         error
 	)
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test-broker")
-		fakeSql = &sql_fake.FakeSql{}
-		fakeSqlDb = &sql_fake.FakeSqlDB{}
-		fakeSql.OpenReturns(fakeSqlDb, nil)
-		store, err = nfsbroker.NewSqlStore(logger, fakeSql, "postgres", "foo", "foo", "foo", "foo", "foo")
+		fakeVariant.ConnectReturns(fakeSqlDb, nil)
+		fakeVariant.FlavorifyStub = func(query string) string { return query }
+		store, err = nfsbroker.NewSqlStoreWithVariant(logger, fakeVariant)
 		Expect(err).ToNot(HaveOccurred())
 		state = nfsbroker.DynamicState{
 			InstanceMap: map[string]nfsbroker.ServiceInstance{
@@ -36,19 +36,18 @@ var _ = Describe("SqlStore", func() {
 			},
 			BindingMap: map[string]brokerapi.BindDetails{},
 		}
-
 	})
 
 	It("should open a db connection", func() {
-		Expect(fakeSql.OpenCallCount()).To(Equal(1))
+		Expect(fakeVariant.ConnectCallCount()).To(Equal(1))
 	})
 
 	It("should ping the connection to make sure it works", func() {
-		Expect(fakeSqlDb.PingCallCount()).To(Equal(1))
+		Expect(fakeSqlDb.PingCallCount()).To(BeNumerically(">=", 1))
 	})
 
 	It("should create tables if they don't exist", func() {
-		Expect(fakeSqlDb.ExecCallCount()).To(Equal(2))
+		Expect(fakeSqlDb.ExecCallCount()).To(BeNumerically(">=", 2))
 		Expect(fakeSqlDb.ExecArgsForCall(0)).To(ContainSubstring("CREATE TABLE IF NOT EXISTS service_instances"))
 		Expect(fakeSqlDb.ExecArgsForCall(1)).To(ContainSubstring("CREATE TABLE IF NOT EXISTS service_bindings"))
 	})
@@ -70,9 +69,9 @@ var _ = Describe("SqlStore", func() {
 			BeforeEach(func() {
 				store.Save(logger, &state, "service-name", "")
 			})
-			It("", func() {
-				Expect(fakeSqlDb.ExecCallCount()).To(Equal(3))
-				query, _ := fakeSqlDb.ExecArgsForCall(2)
+			It("is inserted", func() {
+				Expect(fakeSqlDb.ExecCallCount()).To(BeNumerically(">=", 3))
+				query, _ := fakeSqlDb.ExecArgsForCall(fakeSqlDb.ExecCallCount()-1)
 				Expect(query).To(ContainSubstring("INSERT INTO service_instances (id, value) VALUES"))
 			})
 		})
@@ -80,9 +79,9 @@ var _ = Describe("SqlStore", func() {
 			BeforeEach(func() {
 				store.Save(logger, &state, "non-existent-service-name", "")
 			})
-			It("", func() {
-				Expect(fakeSqlDb.ExecCallCount()).To(Equal(3))
-				query, _ := fakeSqlDb.ExecArgsForCall(2)
+			It("is deleted", func() {
+				Expect(fakeSqlDb.ExecCallCount()).To(BeNumerically(">=", 3))
+				query, _ := fakeSqlDb.ExecArgsForCall(fakeSqlDb.ExecCallCount()-1)
 				Expect(query).To(ContainSubstring("DELETE FROM service_instances WHERE id="))
 			})
 		})
@@ -102,7 +101,7 @@ var _ = Describe("SqlStore", func() {
 				Expect(err).ToNot(HaveOccurred())
 			})
 			It("closes the db connection", func() {
-				Expect(fakeSqlDb.CloseCallCount()).To(Equal(1))
+				Expect(fakeSqlDb.CloseCallCount()).To(BeNumerically(">=", 1))
 			})
 		})
 	})
