@@ -111,46 +111,34 @@ var _ = Describe("SqlConnection", func() {
 		})
 		Describe(".Prepare", func() {
 			It("should call through", func() {
-				database.Prepare("")
-				Expect(fakeSqlDb.PrepareCallCount()).To(Equal(1))
-			})
-			It("should flavorify a query", func() {
 				toDatabase.FlavorifyReturns(query)
 				database.Prepare(`something`)
 				Expect(fakeSqlDb.PrepareArgsForCall(fakeSqlDb.PrepareCallCount()-1)).To(Equal(query))
+				Expect(fakeSqlDb.PrepareCallCount()).To(Equal(1))
 			})
 		})
 		Describe(".Exec", func() {
 			It("should call through", func() {
-				database.Exec("")
-				Expect(fakeSqlDb.ExecCallCount()).To(Equal(1))
-			})
-			It("should flavorify a query", func() {
 				toDatabase.FlavorifyReturns(query)
 				database.Exec(`something`)
 				Expect(fakeSqlDb.ExecArgsForCall(fakeSqlDb.ExecCallCount()-1)).To(Equal(query))
+				Expect(fakeSqlDb.ExecCallCount()).To(Equal(1))
 			})
 		})
 		Describe(".Query", func() {
 			It("should call through", func() {
-				database.Query("")
-				Expect(fakeSqlDb.QueryCallCount()).To(Equal(1))
-			})
-			It("should flavorify a query", func() {
 				toDatabase.FlavorifyReturns(query)
 				database.Query(`something`)
 				Expect(fakeSqlDb.QueryArgsForCall(fakeSqlDb.QueryCallCount()-1)).To(Equal(query))
+				Expect(fakeSqlDb.QueryCallCount()).To(Equal(1))
 			})
 		})
 		Describe(".QueryRow", func() {
 			It("should call through", func() {
-				database.QueryRow("")
-				Expect(fakeSqlDb.QueryRowCallCount()).To(Equal(1))
-			})
-			It("should flavorify a query", func() {
 				toDatabase.FlavorifyReturns(query)
 				database.QueryRow(`something`)
 				Expect(fakeSqlDb.QueryRowArgsForCall(fakeSqlDb.QueryRowCallCount()-1)).To(Equal(query))
+				Expect(fakeSqlDb.QueryRowCallCount()).To(Equal(1))
 			})
 		})
 		Describe(".Begin", func() {
