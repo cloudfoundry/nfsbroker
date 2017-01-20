@@ -10,8 +10,6 @@ import (
 	"github.com/pivotal-cf/brokerapi"
 )
 
-
-
 type sqlStore struct {
 	database sqlshim.SqlDB
 }
@@ -19,19 +17,19 @@ type sqlStore struct {
 func NewSqlStore(logger lager.Logger, sql sqlshim.Sql, dbDriver, username, password, host, port, dbName string) (Store, error) {
 
 	var err error
-	var databaseVariant SqlVariant
+	var toDatabase SqlVariant
 	switch dbDriver {
 	case "mysql":
-		databaseVariant = NewMySqlWithSqlObject(username, password, host, port, dbName, sql)
+		toDatabase = NewMySqlWithSqlObject(username, password, host, port, dbName, sql)
 	case "postgres":
-		databaseVariant = NewPostgresWithSqlObject(username, password, host, port, dbName, sql)
+		toDatabase = NewPostgresWithSqlObject(username, password, host, port, dbName, sql)
 	default:
 		err = fmt.Errorf("Unrecognized Driver: %s", dbDriver)
 		logger.Error("db-driver-unrecognized", err)
 		return nil, err
 	}
 
-	database := NewSqlConnection(databaseVariant)
+	database := NewSqlConnection(toDatabase)
 
 	err = database.Connect(logger)
 	if err != nil {

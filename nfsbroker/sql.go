@@ -9,20 +9,21 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
+//go:generate counterfeiter -o ../nfsbrokerfakes/fake_sql_variant.go . SqlVariant
 type SqlVariant interface {
-	Connect(logger lager.Logger) (sqlshim.SqlDB,error)
+	Connect(logger lager.Logger) (sqlshim.SqlDB, error)
 	Flavorify(query string) string
 }
 
+//go:generate counterfeiter -o ../nfsbrokerfakes/fake_sql_connection.go . SqlConnection
 type SqlConnection interface {
 	Connect(logger lager.Logger) error
 	sqlshim.SqlDB
 }
 
-
 type sqlConnection struct {
 	sqlDB sqlshim.SqlDB
-	leaf SqlVariant
+	leaf  SqlVariant
 }
 
 func NewSqlConnection(variant SqlVariant) SqlConnection {
@@ -30,7 +31,6 @@ func NewSqlConnection(variant SqlVariant) SqlConnection {
 		leaf: variant,
 	}
 }
-
 
 func (c *sqlConnection) flavorify(query string) string {
 	if c.leaf == nil {

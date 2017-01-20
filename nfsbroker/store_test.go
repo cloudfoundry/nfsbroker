@@ -227,7 +227,7 @@ var _ = Describe("SqlStore", func() {
 		Context("when using mysql", func() {
 			It("uses a mysql-flavored query", func() {
 				expectedQuery := `INSERT INTO service_instances (id, value) VALUES (?, ?)`
-				sqlVariant := nfsbroker.NewMySql("","","","","")
+				sqlVariant := nfsbroker.NewMySql("", "", "", "", "")
 				Expect(sqlVariant.Flavorify(query)).To(Equal(expectedQuery))
 			})
 		})
@@ -235,7 +235,7 @@ var _ = Describe("SqlStore", func() {
 		Context("when using postgres", func() {
 			It("uses a postgres-flavored query", func() {
 				expectedQuery := `INSERT INTO service_instances (id, value) VALUES ($1, $2)`
-				sqlVariant := nfsbroker.NewPostgres("","","","","")
+				sqlVariant := nfsbroker.NewPostgres("", "", "", "", "")
 				Expect(sqlVariant.Flavorify(query)).To(Equal(expectedQuery))
 			})
 		})

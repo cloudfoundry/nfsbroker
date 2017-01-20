@@ -27,18 +27,12 @@ func NewPostgresWithSqlObject(username, password, host, port, dbName string, sql
 	}
 }
 
-func (c *postgresConnection) Connect(logger lager.Logger) (sqlshim.SqlDB, error)  {
+func (c *postgresConnection) Connect(logger lager.Logger) (sqlshim.SqlDB, error) {
 	logger = logger.Session("postgres-connection-connect")
 	logger.Info("start")
 	defer logger.Info("end")
-
 	sqlDB, err := c.sql.Open("postgres", c.dbConnectionString)
-	if err != nil {
-		logger.Error("failed-to-open", err)
-		return nil, err
-	}
-
-	return sqlDB, nil
+	return sqlDB, err
 }
 
 func (c *postgresConnection) Flavorify(query string) string {

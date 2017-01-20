@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-type FileStore struct {
+type fileStore struct {
 	fileName string
 	ioutil   ioutilshim.Ioutil
 }
@@ -17,13 +17,13 @@ func NewFileStore(
 	fileName string,
 	ioutil ioutilshim.Ioutil,
 ) Store {
-	return &FileStore{
+	return &fileStore{
 		fileName: fileName,
 		ioutil:   ioutil,
 	}
 }
 
-func (s *FileStore) Restore(logger lager.Logger, state *DynamicState) error {
+func (s *fileStore) Restore(logger lager.Logger, state *DynamicState) error {
 	logger = logger.Session("restore-state")
 	logger.Info("start")
 	defer logger.Info("end")
@@ -44,7 +44,7 @@ func (s *FileStore) Restore(logger lager.Logger, state *DynamicState) error {
 	return err
 }
 
-func (s *FileStore) Save(logger lager.Logger, state *DynamicState, _, _ string) error {
+func (s *fileStore) Save(logger lager.Logger, state *DynamicState, _, _ string) error {
 	logger = logger.Session("serialize-state")
 	logger.Info("start")
 	defer logger.Info("end")
@@ -66,6 +66,6 @@ func (s *FileStore) Save(logger lager.Logger, state *DynamicState, _, _ string) 
 	return nil
 }
 
-func (s *FileStore) Cleanup() error {
+func (s *fileStore) Cleanup() error {
 	return nil
 }
