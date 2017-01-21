@@ -21,7 +21,7 @@ var _ = Describe("postgresConnection", func() {
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test-SqlConnection")
-		database = nfsbroker.NewPostgresWithSqlObject("username", "password", "host", "port", "dbName", fakeSql)
+		database = nfsbroker.NewPostgresWithSqlObject("username", "password", "host", "port", "dbName", "", fakeSql)
 	})
 
 	Describe(".Connect", func() {

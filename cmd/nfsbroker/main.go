@@ -88,6 +88,12 @@ var dbName = flag.String(
 	"(optional) database name when using SQL to store broker state",
 )
 
+var dbCACert = flag.String(
+	"dbCACert",
+	"",
+	"(optional) CA Cert to verify SSL connection",
+)
+
 func main() {
 	parseCommandLine()
 
@@ -129,7 +135,7 @@ func checkParams() {
 func createServer(logger lager.Logger) ifrit.Runner {
 	fileName := filepath.Join(*dataDir, fmt.Sprintf("%s-services.json", *serviceName))
 
-	store := nfsbroker.NewStore(logger, *dbDriver, *dbUsername, *dbPassword, *dbHostname, *dbPort, *dbName, fileName)
+	store := nfsbroker.NewStore(logger, *dbDriver, *dbUsername, *dbPassword, *dbHostname, *dbPort, *dbName, *dbCACert, fileName)
 
 	serviceBroker := nfsbroker.New(logger,
 		*serviceName, *serviceId,

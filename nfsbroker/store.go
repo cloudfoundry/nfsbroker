@@ -12,9 +12,9 @@ type Store interface {
 	Cleanup() error
 }
 
-func NewStore(logger lager.Logger, dbDriver, dbUsername, dbPassword, dbHostname, dbPort, dbName, fileName string) Store {
+func NewStore(logger lager.Logger, dbDriver, dbUsername, dbPassword, dbHostname, dbPort, dbName, dbCACert, fileName string) Store {
 	if dbDriver != "" {
-		store, err := NewSqlStore(logger, dbDriver, dbUsername, dbPassword, dbHostname, dbPort, dbName)
+		store, err := NewSqlStore(logger, dbDriver, dbUsername, dbPassword, dbHostname, dbPort, dbName, dbCACert)
 		if err != nil {
 			logger.Fatal("failed-creating-sql-store", err)
 		}

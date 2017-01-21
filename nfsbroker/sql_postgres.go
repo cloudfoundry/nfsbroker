@@ -13,11 +13,11 @@ type postgresConnection struct {
 	dbConnectionString string
 }
 
-func NewPostgres(username, password, host, port, dbName string) SqlVariant {
-	return NewPostgresWithSqlObject(username, password, host, port, dbName, &sqlshim.SqlShim{})
+func NewPostgres(username, password, host, port, dbName, caCert string) SqlVariant {
+	return NewPostgresWithSqlObject(username, password, host, port, dbName, caCert, &sqlshim.SqlShim{})
 }
 
-func NewPostgresWithSqlObject(username, password, host, port, dbName string, sql sqlshim.Sql) SqlVariant {
+func NewPostgresWithSqlObject(username, password, host, port, dbName, caCert string, sql sqlshim.Sql) SqlVariant {
 	return &postgresConnection{
 		sql:                sql,
 		dbConnectionString: fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", username, password, host, port, dbName),

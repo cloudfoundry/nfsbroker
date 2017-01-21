@@ -12,11 +12,11 @@ type mysqlConnection struct {
 	dbConnectionString string
 }
 
-func NewMySql(username, password, host, port, dbName string) SqlVariant {
-	return NewMySqlWithSqlObject(username, password, host, port, dbName, &sqlshim.SqlShim{})
+func NewMySql(username, password, host, port, dbName, caCert string) SqlVariant {
+	return NewMySqlWithSqlObject(username, password, host, port, dbName, caCert, &sqlshim.SqlShim{})
 }
 
-func NewMySqlWithSqlObject(username, password, host, port, dbName string, sql sqlshim.Sql) SqlVariant {
+func NewMySqlWithSqlObject(username, password, host, port, dbName, caCert string, sql sqlshim.Sql) SqlVariant {
 	return &mysqlConnection{
 		sql:                sql,
 		dbConnectionString: fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", username, password, host, port, dbName),
