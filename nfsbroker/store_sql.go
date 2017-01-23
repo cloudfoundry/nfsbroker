@@ -20,9 +20,9 @@ func NewSqlStore(logger lager.Logger, dbDriver, username, password, host, port, 
 	var toDatabase SqlVariant
 	switch dbDriver {
 	case "mysql":
-		toDatabase = NewMySql(username, password, host, port, dbName, caCert)
+		toDatabase = NewMySql(logger, username, password, host, port, dbName, caCert)
 	case "postgres":
-		toDatabase = NewPostgres(username, password, host, port, dbName, caCert)
+		toDatabase = NewPostgres(logger, username, password, host, port, dbName, caCert)
 	default:
 		err = fmt.Errorf("Unrecognized Driver: %s", dbDriver)
 		logger.Error("db-driver-unrecognized", err)

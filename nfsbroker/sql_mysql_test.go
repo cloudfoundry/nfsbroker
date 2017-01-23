@@ -21,7 +21,7 @@ var _ = Describe("mysqlConnection", func() {
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test-SqlConnection")
-		database = nfsbroker.NewMySqlWithSqlObject("username", "password", "host", "port", "dbName", "",  fakeSql)
+		database = nfsbroker.NewMySqlWithSqlObject(logger, "username", "password", "host", "port", "dbName", "",  fakeSql)
 	})
 
 	Describe(".Connect", func() {
