@@ -3,66 +3,68 @@ package nfsbroker
 import (
 	"fmt"
 
-	"crypto/tls"
-	"crypto/x509"
-
 	"code.cloudfoundry.org/goshims/sqlshim"
 	"code.cloudfoundry.org/lager"
+	"crypto/tls"
+	"crypto/x509"
 	"github.com/go-sql-driver/mysql"
-	"errors"
 )
 
-type mysqlConnection struct {
+type mysqlVariant struct {
 	sql                sqlshim.Sql
 	dbConnectionString string
+	caCert             string
+	dbName             string
 }
 
-func NewMySql(logger lager.Logger, username, password, host, port, dbName, caCert string) SqlVariant {
-	return NewMySqlWithSqlObject(logger, username, password, host, port, dbName, caCert, &sqlshim.SqlShim{})
+func NewMySqlVariant(username, password, host, port, dbName, caCert string) SqlVariant {
+	return NewMySqlVariantWithSqlObject(username, password, host, port, dbName, caCert, &sqlshim.SqlShim{})
 }
 
-func NewMySqlWithSqlObject(logger lager.Logger, username, password, host, port, dbName, caCert string, sql sqlshim.Sql) SqlVariant {
-	logger = logger.Session("new-mysql-connection")
+func NewMySqlVariantWithSqlObject(username, password, host, port, dbName, caCert string, sql sqlshim.Sql) SqlVariant {
+	return &mysqlVariant{
+		sql:                sql,
+		dbConnectionString: fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", username, password, host, port, dbName),
+		caCert:             caCert,
+		dbName:             dbName,
+	}
+}
+
+func (c *mysqlVariant) Connect(logger lager.Logger) (sqlshim.SqlDB, error) {
+	logger = logger.Session("mysql-connection-connect")
 	logger.Info("start")
 	defer logger.Info("end")
 
-	var databaseConnectionString string
-	switch caCert {
-	case "":
-		logger.Debug("insecure-mysql")
-		databaseConnectionString = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", username, password, host, port, dbName)
-	default:
+	if c.caCert != "" {
 		logger.Debug("secure-mysql")
-		certBytes := []byte(caCert)
+		certBytes := []byte(c.caCert)
 
 		caCertPool := x509.NewCertPool()
 		if ok := caCertPool.AppendCertsFromPEM(certBytes); !ok {
-			logger.Fatal("failed-to-parse-sql-ca", fmt.Errorf("Invalid CA Cert for %s", dbName))
+			err := fmt.Errorf("Invalid CA Cert for %s", c.dbName)
+			logger.Error("failed-to-parse-sql-ca", err)
+			return nil, err
+
 		}
 
 		tlsConfig := &tls.Config{
 			InsecureSkipVerify: false,
 			RootCAs:            caCertPool,
 		}
-
-		mysql.RegisterTLSConfig("bbs-tls", tlsConfig)
-		databaseConnectionString = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?tls=bbs-tls", username, password, host, port, dbName)
+		ourKey := "nfs-tls"
+		mysql.RegisterTLSConfig(ourKey, tlsConfig)
+		c.dbConnectionString = fmt.Sprintf("%s?tls=%s", c.dbConnectionString, ourKey)
 	}
 
-	return &mysqlConnection{
-		sql:                sql,
-		dbConnectionString: databaseConnectionString,
-	}
-}
-
-func (c *mysqlConnection) Connect(logger lager.Logger) (sqlshim.SqlDB, error) {
-	logger = logger.Session("mysql-connection-connect")
-	logger.Info("start")
-	defer logger.Info("end")
+	logger.Info("db-string", lager.Data{"value": c.dbConnectionString})
 	sqlDB, err := c.sql.Open("mysql", c.dbConnectionString)
 	return sqlDB, err
 }
 
-func (c *mysqlConnection) Flavorify(query string) string {
+func (c *mysqlVariant) Flavorify(query string) string {
 	return query
+}
+
+func (c *mysqlVariant) Close() error {
+	return nil
 }

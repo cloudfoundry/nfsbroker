@@ -13,6 +13,7 @@ import (
 type SqlVariant interface {
 	Connect(logger lager.Logger) (sqlshim.SqlDB, error)
 	Flavorify(query string) string
+	Close() error
 }
 
 //go:generate counterfeiter -o ../nfsbrokerfakes/fake_sql_connection.go . SqlConnection
@@ -27,24 +28,27 @@ type sqlConnection struct {
 }
 
 func NewSqlConnection(variant SqlVariant) SqlConnection {
+	if variant == nil {
+		panic("variant cannot be nil")
+	}
 	return &sqlConnection{
 		leaf: variant,
 	}
 }
 
 func (c *sqlConnection) flavorify(query string) string {
-	if c.leaf == nil {
-		panic("sqlConnection is an abstract class")
-	}
 	return c.leaf.Flavorify(query)
 }
 
 func (c *sqlConnection) Connect(logger lager.Logger) error {
-	if c.leaf == nil {
-		panic("sqlConnection is an abstract class")
-	}
 	sqlDB, err := c.leaf.Connect(logger)
+	if err != nil {
+		return err
+	}
+
 	c.sqlDB = sqlDB
+
+	err = c.Ping()
 	return err
 }
 
@@ -52,6 +56,7 @@ func (c *sqlConnection) Ping() error {
 	return c.sqlDB.Ping()
 }
 func (c *sqlConnection) Close() error {
+	defer c.leaf.Close()
 	return c.sqlDB.Close()
 }
 func (c *sqlConnection) SetMaxIdleConns(n int) {

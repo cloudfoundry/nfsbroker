@@ -39,11 +39,7 @@ var _ = Describe("SqlStore", func() {
 	})
 
 	It("should open a db connection", func() {
-		Expect(fakeVariant.ConnectCallCount()).To(BeNumerically(">=",1))
-	})
-
-	It("should ping the connection to make sure it works", func() {
-		Expect(fakeSqlDb.PingCallCount()).To(BeNumerically(">=", 1))
+		Expect(fakeVariant.ConnectCallCount()).To(BeNumerically(">=", 1))
 	})
 
 	It("should create tables if they don't exist", func() {
@@ -59,7 +55,7 @@ var _ = Describe("SqlStore", func() {
 
 		Context("when it succeeds", func() {
 			It("queries the database", func() {
-				Expect(fakeSqlDb.QueryCallCount()).To(BeNumerically(">=",2))
+				Expect(fakeSqlDb.QueryCallCount()).To(BeNumerically(">=", 2))
 			})
 		})
 	})
@@ -71,7 +67,7 @@ var _ = Describe("SqlStore", func() {
 			})
 			It("is inserted", func() {
 				Expect(fakeSqlDb.ExecCallCount()).To(BeNumerically(">=", 3))
-				query, _ := fakeSqlDb.ExecArgsForCall(fakeSqlDb.ExecCallCount()-1)
+				query, _ := fakeSqlDb.ExecArgsForCall(fakeSqlDb.ExecCallCount() - 1)
 				Expect(query).To(ContainSubstring("INSERT INTO service_instances (id, value) VALUES"))
 			})
 		})
@@ -81,7 +77,7 @@ var _ = Describe("SqlStore", func() {
 			})
 			It("is deleted", func() {
 				Expect(fakeSqlDb.ExecCallCount()).To(BeNumerically(">=", 3))
-				query, _ := fakeSqlDb.ExecArgsForCall(fakeSqlDb.ExecCallCount()-1)
+				query, _ := fakeSqlDb.ExecArgsForCall(fakeSqlDb.ExecCallCount() - 1)
 				Expect(query).To(ContainSubstring("DELETE FROM service_instances WHERE id="))
 			})
 		})

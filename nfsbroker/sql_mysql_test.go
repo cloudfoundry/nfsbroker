@@ -12,45 +12,86 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("mysqlConnection", func() {
+var _ = Describe("MysqlVariant", func() {
+
 	var (
-		database nfsbroker.SqlVariant
 		logger   lager.Logger
-		fakeSql  = &sql_fake.FakeSql{}
+		fakeSql  *sql_fake.FakeSql
+		err      error
+		database nfsbroker.SqlVariant
+
+		cert string
 	)
 
 	BeforeEach(func() {
-		logger = lagertest.NewTestLogger("test-SqlConnection")
-		database = nfsbroker.NewMySqlWithSqlObject(logger, "username", "password", "host", "port", "dbName", "",  fakeSql)
+		logger = lagertest.NewTestLogger("mysql-variant-test")
+
+		fakeSql = &sql_fake.FakeSql{}
+	})
+
+	JustBeforeEach(func() {
+		database = nfsbroker.NewMySqlVariantWithSqlObject("username", "password", "host", "port", "dbName", cert, fakeSql)
 	})
 
 	Describe(".Connect", func() {
-		var (
-			err error
-		)
 
-		Context("when it can connect to a valid database", func() {
+		JustBeforeEach(func() {
+			_, err = database.Connect(logger)
+		})
+
+		Context("when ca cert specified", func() {
 			BeforeEach(func() {
-				fakeSql.OpenReturns(nil, nil)
+				cert = exampleCaCert
 			})
 
-			It("reports no error", func() {
-				_, err = database.Connect(logger)
+			It("open call has correctly formed connection string", func() {
 				Expect(err).NotTo(HaveOccurred())
+
+				Expect(fakeSql.OpenCallCount()).To(Equal(1))
 				dbType, connectionString := fakeSql.OpenArgsForCall(0)
 				Expect(dbType).To(Equal("mysql"))
-				Expect(connectionString).To(Equal("username:password@tcp(host:port)/dbName"))
+				Expect(connectionString).To(Equal("username:password@tcp(host:port)/dbName?tls=nfs-tls"))
 			})
 		})
 
-		Context("when it cannot connect to a valid database", func() {
+		Context("when ca cert specified is invalid", func() {
 			BeforeEach(func() {
-				fakeSql.OpenReturns(nil, errors.New("something wrong"))
+				cert = "invalid"
+			})
+			It("should return an error", func() {
+				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Context("when no ca cert specified", func() {
+			BeforeEach(func() {
+				cert = ""
 			})
 
-			It("reports error", func() {
-				_, err = database.Connect(logger)
-				Expect(err).To(HaveOccurred())
+			Context("when it can connect to a valid database", func() {
+				BeforeEach(func() {
+					fakeSql.OpenReturns(nil, nil)
+				})
+
+				It("reports no error", func() {
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(fakeSql.OpenCallCount()).To(Equal(1))
+					dbType, connectionString := fakeSql.OpenArgsForCall(fakeSql.OpenCallCount() - 1)
+					Expect(dbType).To(Equal("mysql"))
+					Expect(connectionString).To(Equal("username:password@tcp(host:port)/dbName"))
+				})
+			})
+
+			Context("when it cannot connect to a valid database", func() {
+				BeforeEach(func() {
+					fakeSql = &sql_fake.FakeSql{}
+					fakeSql.OpenReturns(nil, errors.New("something wrong"))
+				})
+
+				It("reports error", func() {
+					Expect(err).To(HaveOccurred())
+				})
 			})
 		})
 	})
@@ -61,4 +102,12 @@ var _ = Describe("mysqlConnection", func() {
 			Expect(database.Flavorify(query)).To(Equal(query))
 		})
 	})
+
+	Describe(".Close", func() {
+		It("doesn't fail", func() {
+			err := database.Close()
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
 })
+

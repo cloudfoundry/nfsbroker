@@ -27,6 +27,12 @@ type FakeSqlVariant struct {
 	flavorifyReturns struct {
 		result1 string
 	}
+	CloseStub        func() error
+	closeMutex       sync.RWMutex
+	closeArgsForCall []struct{}
+	closeReturns     struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -96,6 +102,30 @@ func (fake *FakeSqlVariant) FlavorifyReturns(result1 string) {
 	}{result1}
 }
 
+func (fake *FakeSqlVariant) Close() error {
+	fake.closeMutex.Lock()
+	fake.closeArgsForCall = append(fake.closeArgsForCall, struct{}{})
+	fake.recordInvocation("Close", []interface{}{})
+	fake.closeMutex.Unlock()
+	if fake.CloseStub != nil {
+		return fake.CloseStub()
+	}
+	return fake.closeReturns.result1
+}
+
+func (fake *FakeSqlVariant) CloseCallCount() int {
+	fake.closeMutex.RLock()
+	defer fake.closeMutex.RUnlock()
+	return len(fake.closeArgsForCall)
+}
+
+func (fake *FakeSqlVariant) CloseReturns(result1 error) {
+	fake.CloseStub = nil
+	fake.closeReturns = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeSqlVariant) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -103,6 +133,8 @@ func (fake *FakeSqlVariant) Invocations() map[string][][]interface{} {
 	defer fake.connectMutex.RUnlock()
 	fake.flavorifyMutex.RLock()
 	defer fake.flavorifyMutex.RUnlock()
+	fake.closeMutex.RLock()
+	defer fake.closeMutex.RUnlock()
 	return fake.invocations
 }
 

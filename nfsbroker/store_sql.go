@@ -5,13 +5,12 @@ import (
 
 	"encoding/json"
 
-	"code.cloudfoundry.org/goshims/sqlshim"
 	"code.cloudfoundry.org/lager"
 	"github.com/pivotal-cf/brokerapi"
 )
 
 type sqlStore struct {
-	database sqlshim.SqlDB
+	database SqlConnection
 }
 
 func NewSqlStore(logger lager.Logger, dbDriver, username, password, host, port, dbName, caCert string) (Store, error) {
@@ -20,9 +19,9 @@ func NewSqlStore(logger lager.Logger, dbDriver, username, password, host, port, 
 	var toDatabase SqlVariant
 	switch dbDriver {
 	case "mysql":
-		toDatabase = NewMySql(logger, username, password, host, port, dbName, caCert)
+		toDatabase = NewMySqlVariant(username, password, host, port, dbName, caCert)
 	case "postgres":
-		toDatabase = NewPostgres(logger, username, password, host, port, dbName, caCert)
+		toDatabase = NewPostgresVariant(username, password, host, port, dbName, caCert)
 	default:
 		err = fmt.Errorf("Unrecognized Driver: %s", dbDriver)
 		logger.Error("db-driver-unrecognized", err)
@@ -34,14 +33,7 @@ func NewSqlStore(logger lager.Logger, dbDriver, username, password, host, port, 
 func NewSqlStoreWithVariant(logger lager.Logger, toDatabase SqlVariant) (Store, error) {
 	database := NewSqlConnection(toDatabase)
 
-	err := database.Connect(logger)
-	if err != nil {
-		logger.Error("sql-failed-to-connect", err)
-		return nil, err
-	}
-
-	initialize(logger, database)
-
+	err := initialize(logger, database)
 	if err != nil {
 		logger.Error("sql-failed-to-initialize-database", err)
 		return nil, err
@@ -52,18 +44,19 @@ func NewSqlStoreWithVariant(logger lager.Logger, toDatabase SqlVariant) (Store, 
 	}, nil
 }
 
-func initialize(logger lager.Logger, db sqlshim.SqlDB) error {
+func initialize(logger lager.Logger, db SqlConnection) error {
 	logger = logger.Session("initialize-database")
 	logger.Info("start")
 	defer logger.Info("end")
 
 	var err error
-	err = db.Ping()
+	err = db.Connect(logger)
 	if err != nil {
+		logger.Error("sql-failed-to-connect", err)
 		return err
 	}
 
-	// TODO: uniqueify table names?
+	// TODO: uniquify table names?
 	_, err = db.Exec(`
 			CREATE TABLE IF NOT EXISTS service_instances(
 				id VARCHAR(255) PRIMARY KEY,
