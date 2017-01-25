@@ -8,6 +8,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"github.com/go-sql-driver/mysql"
+	"time"
 )
 
 type mysqlVariant struct {
@@ -36,6 +37,11 @@ func (c *mysqlVariant) Connect(logger lager.Logger) (sqlshim.SqlDB, error) {
 	defer logger.Info("end")
 
 	if c.caCert != "" {
+		cfg, err := mysql.ParseDSN(c.dbConnectionString)
+		if err != nil {
+			logger.Fatal("invalid-db-connection-string", err, lager.Data{"connection-string": c.dbConnectionString})
+		}
+
 		logger.Debug("secure-mysql")
 		certBytes := []byte(c.caCert)
 
@@ -53,7 +59,11 @@ func (c *mysqlVariant) Connect(logger lager.Logger) (sqlshim.SqlDB, error) {
 		}
 		ourKey := "nfs-tls"
 		mysql.RegisterTLSConfig(ourKey, tlsConfig)
-		c.dbConnectionString = fmt.Sprintf("%s?tls=%s", c.dbConnectionString, ourKey)
+		cfg.TLSConfig = ourKey
+		cfg.Timeout = 10 * time.Minute
+		cfg.ReadTimeout = 10 * time.Minute
+		cfg.WriteTimeout = 10 * time.Minute
+		c.dbConnectionString = cfg.FormatDSN()
 	}
 
 	logger.Info("db-string", lager.Data{"value": c.dbConnectionString})

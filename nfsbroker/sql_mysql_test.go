@@ -50,7 +50,7 @@ var _ = Describe("MysqlVariant", func() {
 				Expect(fakeSql.OpenCallCount()).To(Equal(1))
 				dbType, connectionString := fakeSql.OpenArgsForCall(0)
 				Expect(dbType).To(Equal("mysql"))
-				Expect(connectionString).To(Equal("username:password@tcp(host:port)/dbName?tls=nfs-tls"))
+				Expect(connectionString).To(Equal("username:password@tcp(host:port)/dbName?readTimeout=10m0s\u0026timeout=10m0s\u0026tls=nfs-tls\u0026writeTimeout=10m0s"))
 			})
 		})
 
