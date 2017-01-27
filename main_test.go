@@ -120,7 +120,7 @@ var _ = Describe("nfsbroker Main", func() {
 			volmanRunner := failRunner{
 				Name:       "nfsbroker",
 				Command:    exec.Command(binaryPath, args...),
-				StartCheck: "ERROR: Required parameter dataDir not defined.",
+				StartCheck: "Either dataDir or db parameters must be provided.",
 			}
 			process := ifrit.Invoke(volmanRunner)
 			ginkgomon.Kill(process) // this is only if incorrect implementation leaves process running
