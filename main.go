@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -21,6 +22,7 @@ import (
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/http_server"
+	"encoding/json"
 )
 
 var dataDir = flag.String(
@@ -94,6 +96,12 @@ var dbCACert = flag.String(
 	"(optional) CA Cert to verify SSL connection",
 )
 
+var cfServiceName = flag.String(
+	"cfServiceName",
+	"",
+	"(optional) For CF pushed apps, the service name in VCAP_SERVICES where we should find database credentials.  dbDriver must be defined if this option is set, but all other db parameters will be extracted from the service binding.",
+)
+
 func main() {
 	parseCommandLine()
 
@@ -124,16 +132,55 @@ func parseCommandLine() {
 }
 
 func checkParams() {
-	if *dataDir == "" {
-		fmt.Fprint(os.Stderr, "\nERROR: Required parameter dataDir not defined.\n\n")
+	if *dataDir == "" && *dbDriver == "" {
+		fmt.Fprint(os.Stderr, "\nERROR: Either dataDir or db parameters must be provided.\n\n")
 		flag.Usage()
 		os.Exit(1)
 	}
 
 }
 
+func parseVcapServices(logger lager.Logger) {
+	if *dbDriver == "" {
+		logger.Fatal("missing-db-driver-parameter", errors.New("dbDriver parameter is required for cf deployed broker"))
+	}
+
+	// populate db parameters from VCAP_SERVICES and pitch a fit if there isn't one.
+	services, hasValue := os.LookupEnv("VCAP_SERVICES")
+	if !hasValue {
+		logger.Fatal("missing-vcap-services-environment", errors.New("missing VCAP_SERVICES environment"))
+	}
+
+	stuff := map[string][]interface{}{}
+	err := json.Unmarshal([]byte(services), &stuff)
+	if err != nil {
+		logger.Fatal("json-unmarshal-error", err)
+	}
+
+	stuff2, ok := stuff[*cfServiceName]
+	if !ok {
+		logger.Fatal("missing-service-binding", errors.New("VCAP_SERVICES missing specified db service"), lager.Data{"stuff": stuff})
+	}
+
+	stuff3 := stuff2[0].(map[string]interface{})
+
+	credentials := stuff3["credentials"].(map[string]interface{})
+	logger.Debug("credentials-parsed", lager.Data{"credentials": credentials})
+
+	*dbUsername = credentials["username"].(string)
+	*dbPassword = credentials["password"].(string)
+	*dbHostname = credentials["hostname"].(string)
+	*dbPort = fmt.Sprintf("%.0f", credentials["port"].(float64))
+	*dbName = credentials["name"].(string)
+}
+
 func createServer(logger lager.Logger) ifrit.Runner {
 	fileName := filepath.Join(*dataDir, fmt.Sprintf("%s-services.json", *serviceName))
+
+	// if we are CF pushed
+	if *cfServiceName != "" {
+		parseVcapServices(logger)
+	}
 
 	store := nfsbroker.NewStore(logger, *dbDriver, *dbUsername, *dbPassword, *dbHostname, *dbPort, *dbName, *dbCACert, fileName)
 

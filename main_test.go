@@ -113,7 +113,7 @@ func (r failRunner) Run(sigChan <-chan os.Signal, ready chan<- struct{}) error {
 	}
 }
 
-var _ = Describe("Knfsbroker Main", func() {
+var _ = Describe("nfsbroker Main", func() {
 	Context("Missing required args", func() {
 		It("shows usage", func() {
 			var args []string

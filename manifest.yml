@@ -1,0 +1,8 @@
+---
+  buildpack: go_buildpack
+  env:
+    GOPACKAGENAME: nfsbroker
+    GOVERSION: go1.7
+    BROKERNAME: nfs
+    DBSERVICENAME: p-mysql
+    DBDRIVERNAME: mysql
