@@ -6,3 +6,6 @@
     BROKERNAME: nfs
     DBSERVICENAME: p-mysql
     DBDRIVERNAME: mysql
+    BROKERUSER: admin
+    BROKERPASS: admin
+    LOGLEVEL: debug
