@@ -3,9 +3,9 @@
   env:
     GOPACKAGENAME: nfsbroker
     GOVERSION: go1.7
-    BROKERNAME: nfs
-    DBSERVICENAME: p-mysql
-    DBDRIVERNAME: mysql
-    BROKERUSER: admin
-    BROKERPASS: admin
-    LOGLEVEL: debug
+    DBSERVICENAME: p-mysql #service name for db service as seen in `cf marketplace`
+    DBDRIVERNAME: mysql #mysql or postgres
+    SERVICENAME: nfs #service name to publish in the marketplace
+    BROKERUSER: <replace me>
+    BROKERPASS: <replace me>
+    LOGLEVEL: info #error, warn, info, debug
