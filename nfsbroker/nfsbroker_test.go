@@ -337,11 +337,11 @@ var _ = Describe("Broker", func() {
 				Expect(binding.VolumeMounts[0].Driver).To(Equal("nfsv3driver"))
 			})
 
-			It("fills in the group id", func() {
+			It("fills in the volume id", func() {
 				binding, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(binding.VolumeMounts[0].Device.VolumeId).To(Equal("some-instance-id"))
+				Expect(binding.VolumeMounts[0].Device.VolumeId).To(ContainSubstring("some-instance-id"))
 			})
 
 			Context("when the binding already exists", func() {
@@ -359,6 +359,34 @@ var _ = Describe("Broker", func() {
 					bindDetails.AppGUID = "different"
 					_, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
 					Expect(err).To(Equal(brokerapi.ErrBindingAlreadyExists))
+				})
+			})
+
+			Context("given another binding with the same share", func() {
+				var (
+					err error
+					bindSpec1 brokerapi.Binding
+				)
+
+				BeforeEach(func() {
+					bindSpec1, err = broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				Context("given different options", func() {
+					var (
+						bindSpec2 brokerapi.Binding
+					)
+					BeforeEach(func() {
+						bindDetails.Parameters["uid"] = "3000"
+						bindDetails.Parameters["gid"] = "3000"
+						bindSpec2, err = broker.Bind(ctx, "some-instance-id", "binding-id-2", bindDetails)
+						Expect(err).NotTo(HaveOccurred())
+					})
+
+					It("should issue a volume mount with a different volume ID", func() {
+						Expect(bindSpec1.VolumeMounts[0].Device.VolumeId).NotTo(Equal(bindSpec2.VolumeMounts[0].Device.VolumeId))
+					})
 				})
 			})
 

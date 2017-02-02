@@ -15,6 +15,7 @@ import (
 	"code.cloudfoundry.org/goshims/osshim"
 	"code.cloudfoundry.org/lager"
 	"github.com/pivotal-cf/brokerapi"
+	"crypto/md5"
 )
 
 const (
@@ -217,6 +218,13 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 
 	mountConfig := map[string]interface{}{"source": fmt.Sprintf("nfs://%s?uid=%s&gid=%s", instanceDetails.Share, uid.(string), gid.(string))}
 
+	s, err := b.hash(mountConfig)
+	if (err != nil) {
+		logger.Error("error-calculating-volume-id", err, lager.Data{"config": mountConfig, "bindingID": bindingID, "instanceID": instanceID})
+		return brokerapi.Binding{}, err
+	}
+	volumeId := fmt.Sprintf("%s-%s", instanceID, s)
+
 	return brokerapi.Binding{
 		Credentials: struct{}{}, // if nil, cloud controller chokes on response
 		VolumeMounts: []brokerapi.VolumeMount{{
@@ -225,11 +233,22 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 			Driver:       "nfsv3driver",
 			DeviceType:   "shared",
 			Device: brokerapi.SharedDevice{
-				VolumeId:    instanceID,
+				VolumeId:    volumeId,
 				MountConfig: mountConfig,
 			},
 		}},
 	}, nil
+}
+
+func (b *Broker) hash(mountConfig map[string]interface{}) (string, error) {
+	var (
+		bytes []byte
+	  err error
+	)
+	if bytes, err = json.Marshal(mountConfig); err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", md5.Sum(bytes)), nil
 }
 
 func (b *Broker) Unbind(context context.Context, instanceID string, bindingID string, details brokerapi.UnbindDetails) error {
