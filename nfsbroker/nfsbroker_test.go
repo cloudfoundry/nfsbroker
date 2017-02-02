@@ -53,15 +53,15 @@ var _ = Describe("Broker", func() {
 				result := broker.Services(ctx)[0]
 				Expect(result.ID).To(Equal("service-id"))
 				Expect(result.Name).To(Equal("service-name"))
-				Expect(result.Description).To(Equal("NFS volumes secured with Kerberos (see: https://example.com/knfs-volume-release/)"))
+				Expect(result.Description).To(Equal("Existing NFSv3 volumes (see: https://code.cloudfoundry.org/nfs-volume-release/)"))
 				Expect(result.Bindable).To(Equal(true))
 				Expect(result.PlanUpdatable).To(Equal(false))
-				Expect(result.Tags).To(ContainElement("knfs"))
+				Expect(result.Tags).To(ContainElement("nfs"))
 				Expect(result.Requires).To(ContainElement(brokerapi.RequiredPermission("volume_mount")))
 
 				Expect(result.Plans[0].Name).To(Equal("Existing"))
 				Expect(result.Plans[0].ID).To(Equal("Existing"))
-				Expect(result.Plans[0].Description).To(Equal("a filesystem you have already provisioned by contacting <URL>"))
+				Expect(result.Plans[0].Description).To(Equal("A preexisting filesystem"))
 			})
 		})
 

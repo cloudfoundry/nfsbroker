@@ -99,17 +99,17 @@ func (b *Broker) Services(_ context.Context) []brokerapi.Service {
 	return []brokerapi.Service{{
 		ID:            b.static.ServiceId,
 		Name:          b.static.ServiceName,
-		Description:   "NFS volumes secured with Kerberos (see: https://example.com/knfs-volume-release/)",
+		Description:   "Existing NFSv3 volumes (see: https://code.cloudfoundry.org/nfs-volume-release/)",
 		Bindable:      true,
 		PlanUpdatable: false,
-		Tags:          []string{"knfs"},
+		Tags:          []string{"nfs"},
 		Requires:      []brokerapi.RequiredPermission{PermissionVolumeMount},
 
 		Plans: []brokerapi.ServicePlan{
 			{
 				Name:        "Existing",
 				ID:          "Existing",
-				Description: "a filesystem you have already provisioned by contacting <URL>",
+				Description: "A preexisting filesystem",
 			},
 		},
 	}}

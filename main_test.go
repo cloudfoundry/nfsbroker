@@ -200,7 +200,7 @@ var _ = Describe("nfsbroker Main", func() {
 				Expect(catalog.Services[0].ID).To(Equal("someguid"))
 				Expect(catalog.Services[0].Plans[0].ID).To(Equal("Existing"))
 				Expect(catalog.Services[0].Plans[0].Name).To(Equal("Existing"))
-				Expect(catalog.Services[0].Plans[0].Description).To(Equal("a filesystem you have already provisioned by contacting <URL>"))
+				Expect(catalog.Services[0].Plans[0].Description).To(Equal("A preexisting filesystem"))
 			})
 		})
 	})
