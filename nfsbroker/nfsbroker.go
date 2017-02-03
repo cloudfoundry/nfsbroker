@@ -336,15 +336,3 @@ func readOnlyToMode(ro bool) string {
 	}
 	return "rw"
 }
-
-func EscapedToString(source string) string {
-	if strings.Contains(source, `\\u0026`) {
-		return "Double Escaped"
-	} else if strings.Contains(source, `\u0026`) {
-		return "Single Escaped"
-	} else if strings.Contains(source, `&`) {
-		return "UnEscaped"
-	} else {
-		return "Not Found"
-	}
-}
