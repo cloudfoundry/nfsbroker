@@ -8,14 +8,14 @@ import (
 	"fmt"
 	"path"
 	"reflect"
-	"strings"
 	"sync"
+
+	"crypto/md5"
 
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/goshims/osshim"
 	"code.cloudfoundry.org/lager"
 	"github.com/pivotal-cf/brokerapi"
-	"crypto/md5"
 )
 
 const (
@@ -219,7 +219,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 	mountConfig := map[string]interface{}{"source": fmt.Sprintf("nfs://%s?uid=%s&gid=%s", instanceDetails.Share, uid.(string), gid.(string))}
 
 	s, err := b.hash(mountConfig)
-	if (err != nil) {
+	if err != nil {
 		logger.Error("error-calculating-volume-id", err, lager.Data{"config": mountConfig, "bindingID": bindingID, "instanceID": instanceID})
 		return brokerapi.Binding{}, err
 	}
@@ -243,7 +243,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 func (b *Broker) hash(mountConfig map[string]interface{}) (string, error) {
 	var (
 		bytes []byte
-	  err error
+		err   error
 	)
 	if bytes, err = json.Marshal(mountConfig); err != nil {
 		return "", err
