@@ -6,6 +6,6 @@
     DBSERVICENAME: p-mysql #service name for db service as seen in `cf marketplace`
     DBDRIVERNAME: mysql #mysql or postgres
     SERVICENAME: nfs #service name to publish in the marketplace
-    BROKERUSER: <replace me>
-    BROKERPASS: <replace me>
+    USERNAME: <replace me>
+    PASSWORD: <replace me>
     LOGLEVEL: info #error, warn, info, debug

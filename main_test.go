@@ -143,9 +143,10 @@ var _ = Describe("nfsbroker Main", func() {
 			password = "password"
 			tempDir = os.TempDir()
 
+			os.Setenv("USERNAME", username)
+			os.Setenv("PASSWORD", password)
+
 			args = append(args, "-listenAddr", listenAddr)
-			args = append(args, "-username", username)
-			args = append(args, "-password", password)
 			args = append(args, "-dataDir", tempDir)
 
 		})

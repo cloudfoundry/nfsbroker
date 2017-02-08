@@ -16,13 +16,13 @@ import (
 
 	"path/filepath"
 
+	"encoding/json"
 	"github.com/go-sql-driver/mysql"
 	"github.com/lib/pq"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/http_server"
-	"encoding/json"
 )
 
 var dataDir = flag.String(
@@ -47,32 +47,12 @@ var serviceId = flag.String(
 	"service-guid",
 	"ID of the service to register with cloud controller",
 )
-var username = flag.String(
-	"username",
-	"admin",
-	"basic auth username to verify on incoming requests",
-)
-var password = flag.String(
-	"password",
-	"admin",
-	"basic auth password to verify on incoming requests",
-)
 var dbDriver = flag.String(
 	"dbDriver",
 	"",
 	"(optional) database driver name when using SQL to store broker state",
 )
 
-var dbUsername = flag.String(
-	"dbUsername",
-	"",
-	"(optional) database username when using SQL to store broker state",
-)
-var dbPassword = flag.String(
-	"dbPassword",
-	"",
-	"(optional) database password when using SQL to store broker state",
-)
 var dbHostname = flag.String(
 	"dbHostname",
 	"",
@@ -102,8 +82,16 @@ var cfServiceName = flag.String(
 	"(optional) For CF pushed apps, the service name in VCAP_SERVICES where we should find database credentials.  dbDriver must be defined if this option is set, but all other db parameters will be extracted from the service binding.",
 )
 
+var (
+	username   string
+	password   string
+	dbUsername string
+	dbPassword string
+)
+
 func main() {
 	parseCommandLine()
+	parseEnvironment()
 
 	checkParams()
 
@@ -131,13 +119,19 @@ func parseCommandLine() {
 	flag.Parse()
 }
 
+func parseEnvironment() {
+	username, _ = os.LookupEnv("USERNAME")
+	password, _ = os.LookupEnv("PASSWORD")
+	dbUsername, _ = os.LookupEnv("DB_USERNAME")
+	dbPassword, _ = os.LookupEnv("DB_PASSWORD")
+}
+
 func checkParams() {
 	if *dataDir == "" && *dbDriver == "" {
 		fmt.Fprint(os.Stderr, "\nERROR: Either dataDir or db parameters must be provided.\n\n")
 		flag.Usage()
 		os.Exit(1)
 	}
-
 }
 
 func parseVcapServices(logger lager.Logger) {
@@ -167,8 +161,8 @@ func parseVcapServices(logger lager.Logger) {
 	credentials := stuff3["credentials"].(map[string]interface{})
 	logger.Debug("credentials-parsed", lager.Data{"credentials": credentials})
 
-	*dbUsername = credentials["username"].(string)
-	*dbPassword = credentials["password"].(string)
+	dbUsername = credentials["username"].(string)
+	dbPassword = credentials["password"].(string)
 	*dbHostname = credentials["hostname"].(string)
 	*dbPort = fmt.Sprintf("%.0f", credentials["port"].(float64))
 	*dbName = credentials["name"].(string)
@@ -182,13 +176,13 @@ func createServer(logger lager.Logger) ifrit.Runner {
 		parseVcapServices(logger)
 	}
 
-	store := nfsbroker.NewStore(logger, *dbDriver, *dbUsername, *dbPassword, *dbHostname, *dbPort, *dbName, *dbCACert, fileName)
+	store := nfsbroker.NewStore(logger, *dbDriver, dbUsername, dbPassword, *dbHostname, *dbPort, *dbName, *dbCACert, fileName)
 
 	serviceBroker := nfsbroker.New(logger,
 		*serviceName, *serviceId,
 		*dataDir, &osshim.OsShim{}, clock.NewClock(), store)
 
-	credentials := brokerapi.BrokerCredentials{Username: *username, Password: *password}
+	credentials := brokerapi.BrokerCredentials{Username: username, Password: password}
 	handler := brokerapi.New(serviceBroker, logger.Session("broker-api"), credentials)
 
 	return http_server.New(*atAddress, handler)
