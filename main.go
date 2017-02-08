@@ -39,7 +39,7 @@ var atAddress = flag.String(
 
 var serviceName = flag.String(
 	"serviceName",
-	"knfsvolume",
+	"nfsvolume",
 	"name of the service to register with cloud controller",
 )
 var serviceId = flag.String(
