@@ -11,6 +11,7 @@ import (
 type fileStore struct {
 	fileName string
 	ioutil   ioutilshim.Ioutil
+	storeType string
 }
 
 func NewFileStore(
@@ -19,6 +20,7 @@ func NewFileStore(
 ) Store {
 	return &fileStore{
 		fileName: fileName,
+		storeType: FILESTORE,
 		ioutil:   ioutil,
 	}
 }
@@ -68,4 +70,8 @@ func (s *fileStore) Save(logger lager.Logger, state *DynamicState, _, _ string) 
 
 func (s *fileStore) Cleanup() error {
 	return nil
+}
+
+func (s *fileStore) GetType() string {
+	return s.storeType
 }

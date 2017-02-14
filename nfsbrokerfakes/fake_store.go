@@ -9,6 +9,12 @@ import (
 )
 
 type FakeStore struct {
+	GetTypeStub        func() string
+	getTypeMutex       sync.RWMutex
+	getTypeArgsForCall []struct{}
+	getTypeReturns     struct {
+		result1 string
+	}
 	RestoreStub        func(logger lager.Logger, state *nfsbroker.DynamicState) error
 	restoreMutex       sync.RWMutex
 	restoreArgsForCall []struct {
@@ -37,6 +43,30 @@ type FakeStore struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *FakeStore) GetType() string {
+	fake.getTypeMutex.Lock()
+	fake.getTypeArgsForCall = append(fake.getTypeArgsForCall, struct{}{})
+	fake.recordInvocation("GetType", []interface{}{})
+	fake.getTypeMutex.Unlock()
+	if fake.GetTypeStub != nil {
+		return fake.GetTypeStub()
+	}
+	return fake.getTypeReturns.result1
+}
+
+func (fake *FakeStore) GetTypeCallCount() int {
+	fake.getTypeMutex.RLock()
+	defer fake.getTypeMutex.RUnlock()
+	return len(fake.getTypeArgsForCall)
+}
+
+func (fake *FakeStore) GetTypeReturns(result1 string) {
+	fake.GetTypeStub = nil
+	fake.getTypeReturns = struct {
+		result1 string
+	}{result1}
 }
 
 func (fake *FakeStore) Restore(logger lager.Logger, state *nfsbroker.DynamicState) error {
@@ -134,6 +164,8 @@ func (fake *FakeStore) CleanupReturns(result1 error) {
 func (fake *FakeStore) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.getTypeMutex.RLock()
+	defer fake.getTypeMutex.RUnlock()
 	fake.restoreMutex.RLock()
 	defer fake.restoreMutex.RUnlock()
 	fake.saveMutex.RLock()

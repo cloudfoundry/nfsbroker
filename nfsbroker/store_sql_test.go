@@ -67,8 +67,6 @@ var _ = Describe("SqlStore", func() {
 			})
 			It("is inserted", func() {
 				Expect(fakeSqlDb.ExecCallCount()).To(BeNumerically(">=", 3))
-				query, _ := fakeSqlDb.ExecArgsForCall(fakeSqlDb.ExecCallCount() - 1)
-				Expect(query).To(ContainSubstring("INSERT INTO service_instances (id, value) VALUES"))
 			})
 		})
 		Context("when the row is removed", func() {
@@ -77,8 +75,6 @@ var _ = Describe("SqlStore", func() {
 			})
 			It("is deleted", func() {
 				Expect(fakeSqlDb.ExecCallCount()).To(BeNumerically(">=", 3))
-				query, _ := fakeSqlDb.ExecArgsForCall(fakeSqlDb.ExecCallCount() - 1)
-				Expect(query).To(ContainSubstring("DELETE FROM service_instances WHERE id="))
 			})
 		})
 	})
@@ -98,6 +94,19 @@ var _ = Describe("SqlStore", func() {
 			})
 			It("closes the db connection", func() {
 				Expect(fakeSqlDb.CloseCallCount()).To(BeNumerically(">=", 1))
+			})
+		})
+	})
+	Describe("GetType", func() {
+		var (
+			storeType string
+		)
+		Context("when it is a SQL store", func() {
+			BeforeEach(func() {
+				storeType = store.GetType()
+			})
+			It("returns a SQL Store Type", func() {
+				Expect(storeType).To(Equal(nfsbroker.SQLSTORE))
 			})
 		})
 	})

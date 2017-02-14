@@ -118,5 +118,17 @@ var _ = Describe("FileStore", func() {
 			})
 		})
 	})
-
+	Describe("GetType", func() {
+		var (
+			storeType string
+		)
+		Context("when it is a File store", func() {
+			BeforeEach(func() {
+				storeType = store.GetType()
+			})
+			It("returns a File Store Type", func() {
+				Expect(storeType).To(Equal(nfsbroker.FILESTORE))
+			})
+		})
+	})
 })

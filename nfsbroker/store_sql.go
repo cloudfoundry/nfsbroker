@@ -7,9 +7,11 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"github.com/pivotal-cf/brokerapi"
+	"database/sql"
 )
 
 type sqlStore struct {
+  storeType string
 	database SqlConnection
 }
 
@@ -34,12 +36,14 @@ func NewSqlStoreWithVariant(logger lager.Logger, toDatabase SqlVariant) (Store, 
 	database := NewSqlConnection(toDatabase)
 
 	err := initialize(logger, database)
+
 	if err != nil {
 		logger.Error("sql-failed-to-initialize-database", err)
 		return nil, err
 	}
 
 	return &sqlStore{
+		storeType: SQLSTORE,
 		database: database,
 	}, nil
 }
@@ -159,17 +163,29 @@ func (s *sqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bi
 	defer logger.Info("end")
 
 	if instanceId != "" {
-		instance, ok := state.InstanceMap[instanceId]
-		if ok {
+		var queriedServiceID sql.NullString
+		query := `SELECT TOP 1 service_instances.id FROM service_instances WHERE service_instance.id = ?`
+		returnedRows, err := s.database.Query(query, instanceId)
+		if err != nil {
+			logger.Error("failed-query", err)
+			return err
+		}
+		if returnedRows != nil {
+			returnedRows.Next()
+			err := returnedRows.Scan(&queriedServiceID)
+			if err != nil {
+				logger.Error("failed-scanning", err)
+				return err
+			}
+		}
+		instance, _ := state.InstanceMap[instanceId]
+		if !queriedServiceID.Valid {
 			logger.Info("instance-found", lager.Data{"instance": instance})
 			jsonValue, err := json.Marshal(&instance)
 			if err != nil {
 				logger.Error("failed-marshaling", err)
 				return err
 			}
-
-			// todo--what if the row already exists?
-
 			query := `INSERT INTO service_instances (id, value) VALUES (?, ?)`
 
 			_, err = s.database.Exec(query, instanceId, jsonValue)
@@ -177,6 +193,7 @@ func (s *sqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bi
 				logger.Error("failed-exec", err)
 				return err
 			}
+			state.InstanceMap = make(map[string]ServiceInstance)
 		} else {
 			query := `DELETE FROM service_instances WHERE id=?`
 			_, err := s.database.Exec(query, instanceId)
@@ -188,15 +205,21 @@ func (s *sqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bi
 	}
 
 	if bindingId != "" {
-		binding, ok := state.BindingMap[bindingId]
-		if ok {
+
+		var queriedBindingID sql.NullString
+		query := `SELECT TOP 1 service_bindings.id FROM service_bindings WHERE service_bindings.id = ?`
+		err := s.database.QueryRow(query, bindingId).Scan(&queriedBindingID)
+		if err != nil {
+			logger.Error("failed-exec", err)
+			return err
+		}
+		binding, _ := state.BindingMap[bindingId]
+		if !queriedBindingID.Valid {
 			jsonValue, err := json.Marshal(&binding)
 			if err != nil {
 				logger.Error("failed-marshaling", err)
 				return err
 			}
-
-			// todo--what if the row already exists?
 			query := `INSERT INTO service_bindings (id, value) VALUES (?, ?)`
 			_, err = s.database.Exec(query, bindingId, jsonValue)
 			if err != nil {
@@ -218,4 +241,8 @@ func (s *sqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bi
 
 func (s *sqlStore) Cleanup() error {
 	return s.database.Close()
+}
+
+func (s *sqlStore) GetType() string {
+  return s.storeType
 }
