@@ -60,6 +60,7 @@ type Broker struct {
 	static  staticState
 	dynamic DynamicState
 	store   Store
+	config  Config
 }
 
 func New(
@@ -68,6 +69,7 @@ func New(
 	os osshim.Os,
 	clock clock.Clock,
 	store Store,
+	config *Config,
 ) *Broker {
 
 	theBroker := Broker{
@@ -85,6 +87,7 @@ func New(
 			InstanceMap: map[string]ServiceInstance{},
 			BindingMap:  map[string]brokerapi.BindDetails{},
 		},
+		config: *config,
 	}
 
 	theBroker.store.Restore(logger, &theBroker.dynamic)
@@ -205,18 +208,25 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 
 	b.dynamic.BindingMap[bindingID] = details
 
-	var uid interface{}
-	var exist bool
-	if uid, exist = details.Parameters["uid"]; !exist {
-		return brokerapi.Binding{}, errors.New("config requires a \"uid\"")
+	source := fmt.Sprintf("nfs://%s", instanceDetails.Share)
+
+	if err := b.config.SetEntries(source, details.Parameters, []string{
+		"share", "mount", "kerberosPrincipal", "kerberosKeytab", "readonly",
+	}); err != nil {
+		logger.Debug("Parameters-Error-Assign-Entries", lager.Data{
+			"given_source":  source,
+			"given_options": details.Parameters,
+			"source":        b.config.source,
+			"mount":         b.config.mount,
+			"sloppy_mount":  b.config.sloppyMount,
+		})
+		return brokerapi.Binding{}, err
 	}
 
-	var gid interface{}
-	if gid, exist = details.Parameters["gid"]; !exist {
-		return brokerapi.Binding{}, errors.New("config requires a \"gid\"")
-	}
+	mountConfig := b.config.MountConfig()
+	mountConfig["source"] = b.config.Share(source)
 
-	mountConfig := map[string]interface{}{"source": fmt.Sprintf("nfs://%s?uid=%s&gid=%s", instanceDetails.Share, uid.(string), gid.(string))}
+	logger.Info("Volume Service Binding", lager.Data{"Driver": "nfsv3driver", "MountConfig": mountConfig})
 
 	s, err := b.hash(mountConfig)
 	if err != nil {
