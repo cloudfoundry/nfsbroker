@@ -39,12 +39,17 @@ var _ = Describe("Broker", func() {
 
 	Context("when creating first time", func() {
 		BeforeEach(func() {
+			source := nfsbroker.NewNfsBrokerConfigDetails()
+			source.ReadConf("uid,gid", "", []string{"uid", "gid"})
+			mounts := nfsbroker.NewNfsBrokerConfigDetails()
+			mounts.ReadConf("sloppy_mount,allow_other,allow_root,multithread,default_permissions,fusenfs_uid,fusenfs_gid", "sloppy_mount:true", []string{})
 			broker = nfsbroker.New(
 				logger,
 				"service-name", "service-id", "/fake-dir",
 				fakeOs,
 				nil,
 				fakeStore,
+				nfsbroker.NewNfsBrokerConfig(source, mounts),
 			)
 		})
 
@@ -244,10 +249,14 @@ var _ = Describe("Broker", func() {
 			It("passes `share` from create-service into `mountConfig.ip` on the bind response", func() {
 				binding, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
 				Expect(err).NotTo(HaveOccurred())
+
 				mc := binding.VolumeMounts[0].Device.MountConfig
 				share, ok := mc["source"].(string)
+
 				Expect(ok).To(BeTrue())
-				Expect(share).To(Equal(fmt.Sprintf("nfs://server:/some-share?uid=%s&gid=%s", uid, gid)))
+				Expect(share).To(ContainSubstring("nfs://server:/some-share?"))
+				Expect(share).To(ContainSubstring(fmt.Sprintf("uid=%s", uid)))
+				Expect(share).To(ContainSubstring(fmt.Sprintf("gid=%s", gid)))
 			})
 
 			Context("given the uid is not supplied", func() {
@@ -364,7 +373,7 @@ var _ = Describe("Broker", func() {
 
 			Context("given another binding with the same share", func() {
 				var (
-					err error
+					err       error
 					bindSpec1 brokerapi.Binding
 				)
 
@@ -398,6 +407,143 @@ var _ = Describe("Broker", func() {
 			It("errors when the app guid is not provided", func() {
 				_, err := broker.Bind(ctx, "some-instance-id", "binding-id", brokerapi.BindDetails{})
 				Expect(err).To(Equal(brokerapi.ErrAppGuidNotProvided))
+			})
+
+			Context("given allowed, default and mandatory parameters are empty", func() {
+				BeforeEach(func() {
+					source := nfsbroker.NewNfsBrokerConfigDetails()
+					source.ReadConf("", "", []string{})
+					mounts := nfsbroker.NewNfsBrokerConfigDetails()
+					mounts.ReadConf("", "", []string{})
+					broker = nfsbroker.New(
+						logger,
+						"service-name", "service-id", "/fake-dir",
+						fakeOs,
+						nil,
+						fakeStore,
+						nfsbroker.NewNfsBrokerConfig(source, mounts),
+					)
+
+					configuration := map[string]interface{}{"share": "server:/some-share"}
+
+					buf := &bytes.Buffer{}
+					_ = json.NewEncoder(buf).Encode(configuration)
+					provisionDetails := brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
+
+					_, err := broker.Provision(ctx, instanceID, provisionDetails, false)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				Context("given allow_root=true is supplied", func() {
+					BeforeEach(func() {
+						bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{
+							nfsbroker.Username: "principal name",
+							nfsbroker.Secret:   "some keytab data",
+							"allow_root":       true,
+						},
+						}
+					})
+
+					It("should return with an error", func() {
+						_, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
+						Expect(err).To(HaveOccurred())
+					})
+				})
+			})
+
+			Context("given allowed, default and mandatory parameters are empty, excepted for mount default with sloppy_mount=true is supplied ", func() {
+				BeforeEach(func() {
+					source := nfsbroker.NewNfsBrokerConfigDetails()
+					source.ReadConf("", "", []string{})
+					mounts := nfsbroker.NewNfsBrokerConfigDetails()
+					mounts.ReadConf("", "sloppy_mount:true", []string{})
+					broker = nfsbroker.New(
+						logger,
+						"service-name", "service-id", "/fake-dir",
+						fakeOs,
+						nil,
+						fakeStore,
+						nfsbroker.NewNfsBrokerConfig(source, mounts),
+					)
+
+					configuration := map[string]interface{}{"share": "server:/some-share"}
+
+					buf := &bytes.Buffer{}
+					_ = json.NewEncoder(buf).Encode(configuration)
+					provisionDetails := brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
+
+					_, err := broker.Provision(ctx, instanceID, provisionDetails, false)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				Context("given allow_root=true is supplied", func() {
+					BeforeEach(func() {
+						bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{
+							nfsbroker.Username: "principal name",
+							nfsbroker.Secret:   "some keytab data",
+							"allow_root":       true,
+						},
+						}
+					})
+
+					It("do not flows allow_root option through", func() {
+						binding, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
+						Expect(err).NotTo(HaveOccurred())
+
+						mc := binding.VolumeMounts[0].Device.MountConfig
+						_, ok := mc["allow_root"]
+
+						Expect(ok).To(BeFalse())
+					})
+				})
+			})
+
+			Context("given default and mandatory parameters are empty, allowed parameters contain allow_root", func() {
+				BeforeEach(func() {
+					source := nfsbroker.NewNfsBrokerConfigDetails()
+					source.ReadConf("", "", []string{})
+					mounts := nfsbroker.NewNfsBrokerConfigDetails()
+					mounts.ReadConf("allow_root", "", []string{})
+					broker = nfsbroker.New(
+						logger,
+						"service-name", "service-id", "/fake-dir",
+						fakeOs,
+						nil,
+						fakeStore,
+						nfsbroker.NewNfsBrokerConfig(source, mounts),
+					)
+
+					configuration := map[string]interface{}{"share": "server:/some-share"}
+
+					buf := &bytes.Buffer{}
+					_ = json.NewEncoder(buf).Encode(configuration)
+					provisionDetails := brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
+
+					_, err := broker.Provision(ctx, instanceID, provisionDetails, false)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				Context("given allow_root=true is supplied", func() {
+					BeforeEach(func() {
+						bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{
+							nfsbroker.Username: "principal name",
+							nfsbroker.Secret:   "some keytab data",
+							"allow_root":       true,
+						},
+						}
+					})
+
+					It("flows allow_root=true option through", func() {
+						binding, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
+						Expect(err).NotTo(HaveOccurred())
+
+						mc := binding.VolumeMounts[0].Device.MountConfig
+						ar, ok := mc["allow_root"].(string)
+
+						Expect(ok).To(BeTrue())
+						Expect(ar).To(Equal("true"))
+					})
+				})
 			})
 		})
 
@@ -472,12 +618,18 @@ var _ = Describe("Broker", func() {
 				return nil
 			}
 
+			source := nfsbroker.NewNfsBrokerConfigDetails()
+			source.ReadConf("uid,gid", "", []string{"uid", "gid"})
+			mounts := nfsbroker.NewNfsBrokerConfigDetails()
+			mounts.ReadConf("sloppy_mount,allow_other,allow_root,multithread,default_permissions,fusenfs_uid,fusenfs_gid", "sloppy_mount:true", []string{})
+
 			broker = nfsbroker.New(
 				logger,
 				"service-name", "service-id", "/fake-dir",
 				fakeOs,
 				nil,
 				fakeStore,
+				nfsbroker.NewNfsBrokerConfig(source, mounts),
 			)
 
 			_, err := broker.Bind(ctx, "service-name", "whatever", bindDetails)

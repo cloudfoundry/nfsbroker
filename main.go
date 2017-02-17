@@ -82,6 +82,30 @@ var cfServiceName = flag.String(
 	"(optional) For CF pushed apps, the service name in VCAP_SERVICES where we should find database credentials.  dbDriver must be defined if this option is set, but all other db parameters will be extracted from the service binding.",
 )
 
+var sourceFlagAllowed = flag.String(
+	"allowed-in-source",
+	"",
+	"This is a comma separted list of parameters allowed to be send in share url. Each of this parameters can be specify by brokers",
+)
+
+var sourceFlagDefault = flag.String(
+	"default-in-source",
+	"",
+	"This is a comma separted list of like params:value. This list specify default value of parameters. If parameters has default value and is not in allowed list, this default value become a forced value who's cannot be override",
+)
+
+var mountFlagAllowed = flag.String(
+	"allowed-in-mount",
+	"",
+	"This is a comma separted list of parameters allowed to be send in extra config. Each of this parameters can be specify by brokers",
+)
+
+var mountFlagDefault = flag.String(
+	"default-in-mount",
+	"",
+	"This is a comma separted list of like params:value. This list specify default value of parameters. If parameters has default value and is not in allowed list, this default value become a forced value who's cannot be override",
+)
+
 var (
 	username   string
 	password   string
@@ -178,9 +202,17 @@ func createServer(logger lager.Logger) ifrit.Runner {
 
 	store := nfsbroker.NewStore(logger, *dbDriver, dbUsername, dbPassword, *dbHostname, *dbPort, *dbName, *dbCACert, fileName)
 
+	source := nfsbroker.NewNfsBrokerConfigDetails()
+	source.ReadConf(*sourceFlagAllowed, *sourceFlagDefault, []string{"uid", "gid"})
+
+	mounts := nfsbroker.NewNfsBrokerConfigDetails()
+	mounts.ReadConf(*mountFlagAllowed, *mountFlagDefault, []string{})
+
+	config := nfsbroker.NewNfsBrokerConfig(source, mounts)
+
 	serviceBroker := nfsbroker.New(logger,
 		*serviceName, *serviceId,
-		*dataDir, &osshim.OsShim{}, clock.NewClock(), store)
+		*dataDir, &osshim.OsShim{}, clock.NewClock(), store, config)
 
 	credentials := brokerapi.BrokerCredentials{Username: username, Password: password}
 	handler := brokerapi.New(serviceBroker, logger.Session("broker-api"), credentials)
