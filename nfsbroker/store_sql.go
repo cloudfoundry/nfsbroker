@@ -164,24 +164,25 @@ func (s *sqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bi
 	defer logger.Info("end")
 
 	if instanceId != "" {
-		var queriedServiceID sql.NullString
-		query := `SELECT service_instances.id FROM service_instances WHERE service_instance.id = ? LIMIT 1`
-		returnedRows, err := s.database.Query(query, instanceId)
-		if err != nil {
-			logger.Debug("failed-query", lager.Data{"Query": query})
+		var queriedServiceID string
+		query := `SELECT service_instances.id FROM service_instances WHERE service_instance.id = ?`
+		row := s.database.QueryRow(query, instanceId)
+		if row == nil {
+			err := fmt.Errorf("Row error!")
 			logger.Error("failed-query", err)
 			return err
 		}
-		if returnedRows != nil {
-			returnedRows.Next()
-			err := returnedRows.Scan(&queriedServiceID)
+		err := row.Scan(&queriedServiceID)
+		if err == nil {
+			query := `DELETE FROM service_instances WHERE id=?`
+			_, err := s.database.Exec(query, instanceId)
 			if err != nil {
-				logger.Error("failed-scanning", err)
+				logger.Error("failed-exec", err)
 				return err
 			}
-		}
-		instance, _ := state.InstanceMap[instanceId]
-		if !queriedServiceID.Valid {
+			return nil
+		} else if err == sql.ErrNoRows {
+			instance, _ := state.InstanceMap[instanceId]
 			logger.Info("instance-found", lager.Data{"instance": instance})
 			jsonValue, err := json.Marshal(&instance)
 			if err != nil {
@@ -196,57 +197,57 @@ func (s *sqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bi
 				return err
 			}
 			state.InstanceMap = make(map[string]ServiceInstance)
+			return nil
 		} else {
-			query := `DELETE FROM service_instances WHERE id=?`
-			_, err := s.database.Exec(query, instanceId)
-			if err != nil {
-				logger.Error("failed-exec", err)
-				return err
-			}
-		}
-	}
-
-	if bindingId != "" {
-		var queriedBindingID sql.NullString
-		query := `SELECT service_bindings.id FROM service_bindings WHERE service_bindings.id = ? LIMIT 1`
-		returnedRows, err := s.database.Query(query, bindingId)
-		if err != nil {
 			logger.Debug("failed-query", lager.Data{"Query": query})
 			logger.Error("failed-query", err)
 			return err
 		}
-		if returnedRows != nil {
-			returnedRows.Next()
-			err := returnedRows.Scan(&queriedBindingID)
-			if err != nil {
-				logger.Error("failed-scanning", err)
-				return err
-			}
+	} else if bindingId != "" {
+		var queriedBindingID string
+		query := `SELECT service_bindings.id FROM service_bindings WHERE service_bindings.id = ?`
+		row := s.database.QueryRow(query, bindingId)
+		if row == nil {
+			err := fmt.Errorf("Row error!")
+			logger.Error("failed-query", err)
+			return err
 		}
-		binding, _ := state.BindingMap[bindingId]
-		if !queriedBindingID.Valid {
-			jsonValue, err := json.Marshal(&binding)
-			if err != nil {
-				logger.Error("failed-marshaling", err)
-				return err
-			}
-			query := `INSERT INTO service_bindings (id, value) VALUES (?, ?)`
-			_, err = s.database.Exec(query, bindingId, jsonValue)
-			if err != nil {
-				logger.Error("failed-exec", err)
-				return err
-			}
-		} else {
+		err := row.Scan(&queriedBindingID)
+		if err == nil {
 			query := `DELETE FROM service_bindings WHERE id=?`
 			_, err := s.database.Exec(query, bindingId)
 			if err != nil {
 				logger.Error("failed-exec", err)
 				return err
 			}
-		}
-	}
+			return nil
 
-	return nil
+		} else if err == sql.ErrNoRows {
+
+			binding, _ := state.BindingMap[bindingId]
+			jsonValue, err := json.Marshal(&binding)
+			if err != nil {
+				logger.Error("failed-marshaling", err)
+				return err
+			}
+
+			query := `INSERT INTO service_bindings (id, value) VALUES (?, ?)`
+			_, err = s.database.Exec(query, bindingId, jsonValue)
+			if err != nil {
+				logger.Error("failed-exec", err)
+				return err
+			}
+			return nil
+		} else {
+			logger.Debug("failed-query", lager.Data{"Query": query})
+			logger.Error("failed-query", err)
+			return err
+		}
+	} else {
+		err := fmt.Errorf("Both BindingID and InstanceID's were nil!")
+		logger.Error("failed-exec", err)
+		return err
+	}
 }
 
 func (s *sqlStore) Cleanup() error {
