@@ -5,14 +5,15 @@ import (
 
 	"encoding/json"
 
+	"database/sql"
+
 	"code.cloudfoundry.org/lager"
 	"github.com/pivotal-cf/brokerapi"
-	"database/sql"
 )
 
 type sqlStore struct {
-  storeType string
-	database SqlConnection
+	storeType string
+	database  SqlConnection
 }
 
 func NewSqlStore(logger lager.Logger, dbDriver, username, password, host, port, dbName, caCert string) (Store, error) {
@@ -44,7 +45,7 @@ func NewSqlStoreWithVariant(logger lager.Logger, toDatabase SqlVariant) (Store, 
 
 	return &sqlStore{
 		storeType: SQLSTORE,
-		database: database,
+		database:  database,
 	}, nil
 }
 
@@ -167,6 +168,7 @@ func (s *sqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bi
 		query := `SELECT TOP 1 service_instances.id FROM service_instances WHERE service_instance.id = ?`
 		returnedRows, err := s.database.Query(query, instanceId)
 		if err != nil {
+			logger.Debug("failed-query", lager.Data{"Query": query})
 			logger.Error("failed-query", err)
 			return err
 		}
@@ -205,13 +207,21 @@ func (s *sqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bi
 	}
 
 	if bindingId != "" {
-
 		var queriedBindingID sql.NullString
 		query := `SELECT TOP 1 service_bindings.id FROM service_bindings WHERE service_bindings.id = ?`
-		err := s.database.QueryRow(query, bindingId).Scan(&queriedBindingID)
+		returnedRows, err := s.database.Query(query, bindingId)
 		if err != nil {
-			logger.Error("failed-exec", err)
+			logger.Debug("failed-query", lager.Data{"Query": query})
+			logger.Error("failed-query", err)
 			return err
+		}
+		if returnedRows != nil {
+			returnedRows.Next()
+			err := returnedRows.Scan(&queriedBindingID)
+			if err != nil {
+				logger.Error("failed-scanning", err)
+				return err
+			}
 		}
 		binding, _ := state.BindingMap[bindingId]
 		if !queriedBindingID.Valid {
@@ -244,5 +254,5 @@ func (s *sqlStore) Cleanup() error {
 }
 
 func (s *sqlStore) GetType() string {
-  return s.storeType
+	return s.storeType
 }
