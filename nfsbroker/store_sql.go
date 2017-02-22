@@ -164,16 +164,11 @@ func (s *sqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bi
 	defer logger.Info("end")
 
 	if instanceId != "" {
-		var queriedServiceID string
-		query := `SELECT service_instances.id FROM service_instances WHERE service_instance.id = ?`
-		row := s.database.QueryRow(query, instanceId)
-		if row == nil {
-			err := fmt.Errorf("Row error!")
-			logger.Error("failed-query", err)
+		err, keyValueInTable := s.keyValueInTable(logger, "id", instanceId, "service_instances")
+		if err != nil {
 			return err
 		}
-		err := row.Scan(&queriedServiceID)
-		if err == nil {
+		if keyValueInTable {
 			query := `DELETE FROM service_instances WHERE id=?`
 			_, err := s.database.Exec(query, instanceId)
 			if err != nil {
@@ -181,39 +176,31 @@ func (s *sqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bi
 				return err
 			}
 			return nil
-		} else if err == sql.ErrNoRows {
-			instance, _ := state.InstanceMap[instanceId]
-			logger.Info("instance-found", lager.Data{"instance": instance})
-			jsonValue, err := json.Marshal(&instance)
-			if err != nil {
-				logger.Error("failed-marshaling", err)
-				return err
-			}
-			query := `INSERT INTO service_instances (id, value) VALUES (?, ?)`
+		}
+		instance, _ := state.InstanceMap[instanceId]
+		logger.Info("instance-found", lager.Data{"instance": instance})
+		jsonValue, err := json.Marshal(&instance)
+		if err != nil {
+			logger.Error("failed-marshaling", err)
+			return err
+		}
+		query := `INSERT INTO service_instances (id, value) VALUES (?, ?)`
 
-			_, err = s.database.Exec(query, instanceId, jsonValue)
-			if err != nil {
-				logger.Error("failed-exec", err)
-				return err
-			}
-			state.InstanceMap = make(map[string]ServiceInstance)
-			return nil
-		} else {
-			logger.Debug("failed-query", lager.Data{"Query": query})
-			logger.Error("failed-query", err)
+		_, err = s.database.Exec(query, instanceId, jsonValue)
+		if err != nil {
+			logger.Error("failed-exec", err)
 			return err
 		}
+		state.InstanceMap = make(map[string]ServiceInstance)
+		return nil
+
 	} else if bindingId != "" {
-		var queriedBindingID string
-		query := `SELECT service_bindings.id FROM service_bindings WHERE service_bindings.id = ?`
-		row := s.database.QueryRow(query, bindingId)
-		if row == nil {
-			err := fmt.Errorf("Row error!")
-			logger.Error("failed-query", err)
+		err, keyValueInTable := s.keyValueInTable(logger, "id", bindingId, "service_bindings")
+		if err != nil {
 			return err
 		}
-		err := row.Scan(&queriedBindingID)
-		if err == nil {
+
+		if keyValueInTable {
 			query := `DELETE FROM service_bindings WHERE id=?`
 			_, err := s.database.Exec(query, bindingId)
 			if err != nil {
@@ -222,32 +209,26 @@ func (s *sqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bi
 			}
 			return nil
 
-		} else if err == sql.ErrNoRows {
-
-			binding, _ := state.BindingMap[bindingId]
-			jsonValue, err := json.Marshal(&binding)
-			if err != nil {
-				logger.Error("failed-marshaling", err)
-				return err
-			}
-
-			query := `INSERT INTO service_bindings (id, value) VALUES (?, ?)`
-			_, err = s.database.Exec(query, bindingId, jsonValue)
-			if err != nil {
-				logger.Error("failed-exec", err)
-				return err
-			}
-			return nil
-		} else {
-			logger.Debug("failed-query", lager.Data{"Query": query})
-			logger.Error("failed-query", err)
+		}
+		binding, _ := state.BindingMap[bindingId]
+		jsonValue, err := json.Marshal(&binding)
+		if err != nil {
+			logger.Error("failed-marshaling", err)
 			return err
 		}
-	} else {
-		err := fmt.Errorf("Both BindingID and InstanceID's were nil!")
-		logger.Error("failed-exec", err)
-		return err
+
+		query := `INSERT INTO service_bindings (id, value) VALUES (?, ?)`
+		_, err = s.database.Exec(query, bindingId, jsonValue)
+		if err != nil {
+			logger.Error("failed-exec", err)
+			return err
+		}
+		return nil
+
 	}
+	err := fmt.Errorf("Both BindingID and InstanceID's were nil!")
+	logger.Error("failed-exec", err)
+	return err
 }
 
 func (s *sqlStore) Cleanup() error {
@@ -256,4 +237,25 @@ func (s *sqlStore) Cleanup() error {
 
 func (s *sqlStore) GetType() string {
 	return s.storeType
+}
+
+func (s *sqlStore) keyValueInTable(logger lager.Logger, key, value, table string) (error, bool) {
+	var queriedServiceID string
+	query := fmt.Sprintf(`SELECT %s.%s FROM %s WHERE %s.%s = ?`, table, key, table, table, key)
+	row := s.database.QueryRow(query, value)
+	if row == nil {
+		err := fmt.Errorf("Row error!")
+		logger.Error("failed-query", err)
+		return err, true
+	}
+	err := row.Scan(&queriedServiceID)
+	if err == nil {
+		return nil, true
+	} else if err == sql.ErrNoRows {
+		return nil, false
+	}
+
+	logger.Debug("failed-query", lager.Data{"Query": query})
+	logger.Error("failed-query", err)
+	return err, true
 }
