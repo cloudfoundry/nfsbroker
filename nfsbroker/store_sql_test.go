@@ -66,7 +66,7 @@ var _ = Describe("SqlStore", func() {
 				store.Save(logger, &state, "service-name", "")
 			})
 			It("is inserted", func() {
-				Expect(fakeSqlDb.ExecCallCount()).To(BeNumerically(">=", 3))
+				Expect(fakeSqlDb.ExecCallCount()).To(BeNumerically(">=", 2))
 			})
 		})
 		Context("when the row is removed", func() {
@@ -74,7 +74,7 @@ var _ = Describe("SqlStore", func() {
 				store.Save(logger, &state, "non-existent-service-name", "")
 			})
 			It("is deleted", func() {
-				Expect(fakeSqlDb.ExecCallCount()).To(BeNumerically(">=", 3))
+				Expect(fakeSqlDb.ExecCallCount()).To(BeNumerically(">=", 2))
 			})
 		})
 	})
