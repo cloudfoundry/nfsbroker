@@ -165,7 +165,7 @@ func (s *sqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bi
 
 	if instanceId != "" {
 		var queriedServiceID sql.NullString
-		query := `SELECT TOP 1 service_instances.id FROM service_instances WHERE service_instance.id = ?`
+		query := `SELECT service_instances.id FROM service_instances WHERE service_instance.id = ? LIMIT 1`
 		returnedRows, err := s.database.Query(query, instanceId)
 		if err != nil {
 			logger.Debug("failed-query", lager.Data{"Query": query})
@@ -208,7 +208,7 @@ func (s *sqlStore) Save(logger lager.Logger, state *DynamicState, instanceId, bi
 
 	if bindingId != "" {
 		var queriedBindingID sql.NullString
-		query := `SELECT TOP 1 service_bindings.id FROM service_bindings WHERE service_bindings.id = ?`
+		query := `SELECT service_bindings.id FROM service_bindings WHERE service_bindings.id = ? LIMIT 1`
 		returnedRows, err := s.database.Query(query, bindingId)
 		if err != nil {
 			logger.Debug("failed-query", lager.Data{"Query": query})
