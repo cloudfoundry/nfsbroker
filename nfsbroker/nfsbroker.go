@@ -187,7 +187,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 
 	defer b.store.Save(logger, &b.dynamic, "", bindingID)
 
-	logger.Info("Starting nfsbroker bind")
+	logger.Info("starting-nfsbroker-bind")
 	instanceDetails, ok := b.dynamic.InstanceMap[instanceID]
 	if !ok {
 		return brokerapi.Binding{}, brokerapi.ErrInstanceDoesNotExist
@@ -213,7 +213,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 	if err := b.config.SetEntries(source, details.Parameters, []string{
 		"share", "mount", "kerberosPrincipal", "kerberosKeytab", "readonly",
 	}); err != nil {
-		logger.Debug("Parameters-Error-Assign-Entries", lager.Data{
+		logger.Debug("parameters-error-assign-entries", lager.Data{
 			"given_source":  source,
 			"given_options": details.Parameters,
 			"source":        b.config.source,
@@ -226,7 +226,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 	mountConfig := b.config.MountConfig()
 	mountConfig["source"] = b.config.Share(source)
 
-	logger.Info("Volume Service Binding", lager.Data{"Driver": "nfsv3driver", "MountConfig": mountConfig})
+	logger.Info("volume-service-binding", lager.Data{"Driver": "nfsv3driver", "MountConfig": mountConfig})
 
 	s, err := b.hash(mountConfig)
 	if err != nil {

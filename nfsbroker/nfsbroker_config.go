@@ -69,12 +69,12 @@ func (m *Config) SetEntries(share string, opts map[string]interface{}, ignoreLis
 	}
 
 	if len(errorList) > 0 && m.sloppyMount != true {
-		err := errors.New("Not allowed options : " + strings.Join(errorList, ", "))
+		err := errors.New("Not allowed options: " + strings.Join(errorList, ", "))
 		return err
 	}
 
 	if mdtErr := append(m.source.CheckMandatory(), m.mount.CheckMandatory()...); len(mdtErr) > 0 {
-		err := errors.New("Missing mandatory options : " + strings.Join(mdtErr, ", "))
+		err := errors.New("Missing mandatory options: " + strings.Join(mdtErr, ", "))
 		return err
 	}
 
