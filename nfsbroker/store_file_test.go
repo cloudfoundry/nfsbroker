@@ -15,10 +15,10 @@ import (
 
 var _ = Describe("FileStore", func() {
 	var (
-		store      nfsbroker.Store
+		store nfsbroker.Store
 		fakeIoutil *ioutil_fake.FakeIoutil
-		logger     lager.Logger
-		state      nfsbroker.DynamicState
+		logger lager.Logger
+		state nfsbroker.DynamicState
 	)
 
 	BeforeEach(func() {
@@ -43,7 +43,7 @@ var _ = Describe("FileStore", func() {
 		Context("when it succeeds", func() {
 			BeforeEach(func() {
 				fakeIoutil.ReadFileReturns([]byte(`{"InstanceMap":{},"BindingMap":{}}`), nil)
-				err = store.Restore(logger, &state)
+				err = store.Restore(logger)
 			})
 
 			It("reads the file", func() {
@@ -55,18 +55,19 @@ var _ = Describe("FileStore", func() {
 		Context("when the file system is failing", func() {
 			BeforeEach(func() {
 				fakeIoutil.ReadFileReturns(nil, errors.New("badness"))
-				err = store.Restore(logger, &state)
+				err = store.Restore(logger)
 			})
 
 			It("returns an error", func() {
 				Expect(err).To(MatchError("badness"))
 			})
 		})
+
 		Context("when there is junk in the file", func() {
 			BeforeEach(func() {
 				filecontents := "{serviceName: [some invalid state]}"
 				fakeIoutil.ReadFileReturns([]byte(filecontents), nil)
-				err = store.Restore(logger, &state)
+				err = store.Restore(logger)
 			})
 			It("returns an error", func() {
 				Expect(err).To(HaveOccurred())
@@ -82,7 +83,7 @@ var _ = Describe("FileStore", func() {
 		Context("when it succeeds", func() {
 			BeforeEach(func() {
 				fakeIoutil.WriteFileReturns(nil)
-				err = store.Save(logger, &state, "", "")
+				err = store.Save(logger)
 			})
 
 			It("writes the file", func() {
@@ -94,7 +95,7 @@ var _ = Describe("FileStore", func() {
 		Context("when the file system is failing", func() {
 			BeforeEach(func() {
 				fakeIoutil.WriteFileReturns(errors.New("badness"))
-				err = store.Save(logger, &state, "", "")
+				err = store.Save(logger)
 			})
 
 			It("returns an error", func() {
@@ -118,16 +119,94 @@ var _ = Describe("FileStore", func() {
 			})
 		})
 	})
-	Describe("GetType", func() {
+
+	Describe("Create, Retrieve and Delete InstanceDetails", func() {
 		var (
-			storeType string
+			instanceID string
+			err error
+			outInstanceDetails nfsbroker.ServiceInstance
+			inInstanceDetails nfsbroker.ServiceInstance
 		)
-		Context("when it is a File store", func() {
+		JustBeforeEach(func() {
+			outInstanceDetails, err = store.RetrieveInstanceDetails(instanceID)
+		})
+
+		Context("when details not found", func() {
 			BeforeEach(func() {
-				storeType = store.GetType()
+				instanceID = "garbage"
 			})
-			It("returns a File Store Type", func() {
-				Expect(storeType).To(Equal(nfsbroker.FILESTORE))
+
+			It("then will error", func() {
+				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Context("when details found", func() {
+			BeforeEach(func() {
+				instanceID = "somethingGood"
+				inInstanceDetails = nfsbroker.ServiceInstance{ServiceID: "sample-service"}
+				store.CreateInstanceDetails(instanceID, inInstanceDetails)
+			})
+			It("then will find instance details", func() {
+				Expect(outInstanceDetails).To(Equal(inInstanceDetails))
+			})
+			Context("when deleting", func() {
+				JustBeforeEach(func() {
+					err = store.DeleteInstanceDetails(instanceID)
+				})
+				It("then should not error", func() {
+					Expect(err).ToNot(HaveOccurred())
+				})
+				It("then should not be able to delete again", func() {
+					err = store.DeleteInstanceDetails(instanceID)
+					Expect(err).To(HaveOccurred())
+				})
+			})
+
+		})
+		Describe("Create, Retrieve and Delete BindingDetails", func() {
+			var (
+				bindingID string
+				err error
+				outBindingDetails brokerapi.BindDetails
+				inBindingDetails brokerapi.BindDetails
+			)
+			JustBeforeEach(func() {
+				outBindingDetails, err = store.RetrieveBindingDetails(bindingID)
+			})
+
+			Context("when details not found", func() {
+				BeforeEach(func() {
+					bindingID = "garbage"
+				})
+
+				It("then will error", func() {
+					Expect(err).To(HaveOccurred())
+				})
+			})
+
+			Context("when details found", func() {
+				BeforeEach(func() {
+					bindingID = "somethingGood"
+					inBindingDetails = brokerapi.BindDetails{ServiceID:"sample-service"}
+					store.CreateBindingDetails(bindingID, inBindingDetails)
+				})
+				It("then will find binding details", func() {
+					Expect(outBindingDetails).To(Equal(inBindingDetails))
+				})
+				Context("when deleting", func() {
+					JustBeforeEach(func() {
+						err = store.DeleteBindingDetails(bindingID)
+					})
+					It("then should not error", func() {
+						Expect(err).ToNot(HaveOccurred())
+					})
+					It("then should not be able to delete again", func() {
+						err = store.DeleteBindingDetails(bindingID)
+						Expect(err).To(HaveOccurred())
+					})
+				})
+
 			})
 		})
 	})

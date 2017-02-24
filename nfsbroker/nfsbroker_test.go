@@ -88,6 +88,7 @@ var _ = Describe("Broker", func() {
 				_ = json.NewEncoder(buf).Encode(configuration)
 				provisionDetails = brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
 				asyncAllowed = false
+				fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{}, errors.New("not found"))
 			})
 
 			JustBeforeEach(func() {
@@ -103,9 +104,7 @@ var _ = Describe("Broker", func() {
 			})
 
 			It("should write state", func() {
-				_, data, id, _ := fakeStore.SaveArgsForCall(fakeStore.SaveCallCount() - 1)
-				Expect(id).To(Equal(instanceID))
-				Expect(data.InstanceMap[instanceID].PlanID).To(Equal("Existing"))
+				Expect(fakeStore.SaveCallCount()).Should(BeNumerically(">", 0))
 			})
 
 			Context("create-service was given invalid JSON", func() {
@@ -133,10 +132,8 @@ var _ = Describe("Broker", func() {
 			})
 
 			Context("when the service instance already exists with different details", func() {
-				// enclosing context creates initial instance
-				JustBeforeEach(func() {
-					provisionDetails.ServiceID = "different-service-id"
-					_, err = broker.Provision(ctx, "some-instance-id", provisionDetails, true)
+				BeforeEach(func() {
+					fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{ServiceID:"different-service-id"},nil)
 				})
 
 				It("should error", func() {
@@ -168,6 +165,7 @@ var _ = Describe("Broker", func() {
 			Context("when the instance does not exist", func() {
 				BeforeEach(func() {
 					instanceID = "does-not-exist"
+					fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{}, brokerapi.ErrInstanceDoesNotExist)
 				})
 
 				It("should fail", func() {
@@ -177,7 +175,7 @@ var _ = Describe("Broker", func() {
 
 			Context("given an existing instance", func() {
 				var (
-					spec brokerapi.ProvisionedServiceSpec
+					previousSaveCallCount int
 				)
 
 				BeforeEach(func() {
@@ -188,9 +186,8 @@ var _ = Describe("Broker", func() {
 					_ = json.NewEncoder(buf).Encode(configuration)
 					provisionDetails = brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
 					asyncAllowed = false
-
-					spec, err = broker.Provision(ctx, instanceID, provisionDetails, asyncAllowed)
-					Expect(err).NotTo(HaveOccurred())
+					fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{ServiceID:instanceID},nil)
+					previousSaveCallCount = fakeStore.SaveCallCount()
 				})
 
 				It("should succeed", func() {
@@ -198,11 +195,7 @@ var _ = Describe("Broker", func() {
 				})
 
 				It("save state", func() {
-					Expect(fakeStore.SaveCallCount()).To(Equal(2))
-					_, data, id, _ := fakeStore.SaveArgsForCall(fakeStore.SaveCallCount() - 1)
-					Expect(id).To(Equal(instanceID))
-					_, exists := data.InstanceMap[instanceID]
-					Expect(exists).To(BeFalse())
+					Expect(fakeStore.SaveCallCount()).To(Equal(previousSaveCallCount+1))
 				})
 			})
 
@@ -228,14 +221,8 @@ var _ = Describe("Broker", func() {
 				uid = "1234"
 				gid = "5678"
 
-				configuration := map[string]interface{}{"share": "server:/some-share"}
-
-				buf := &bytes.Buffer{}
-				_ = json.NewEncoder(buf).Encode(configuration)
-				provisionDetails := brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
-
-				_, err := broker.Provision(ctx, instanceID, provisionDetails, false)
-				Expect(err).NotTo(HaveOccurred())
+				fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{ServiceID:instanceID,Share:"server:/some-share"}, nil)
+				fakeStore.RetrieveBindingDetailsReturns(brokerapi.BindDetails{},errors.New("yar"))
 
 				bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{
 					nfsbroker.Username: "principal name",
@@ -326,11 +313,10 @@ var _ = Describe("Broker", func() {
 			})
 
 			It("should write state", func() {
+				previousSaveCallCount := fakeStore.SaveCallCount()
 				_, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
 				Expect(err).NotTo(HaveOccurred())
-
-				_, data, _, _ := fakeStore.SaveArgsForCall(fakeStore.SaveCallCount() - 1)
-				Expect(data.InstanceMap[instanceID].PlanID).To(Equal("Existing"))
+				Expect(fakeStore.SaveCallCount()).To(Equal(previousSaveCallCount + 1))
 			})
 
 			It("errors if mode is not a boolean", func() {
@@ -354,17 +340,15 @@ var _ = Describe("Broker", func() {
 			})
 
 			Context("when the binding already exists", func() {
-				BeforeEach(func() {
-					_, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
-					Expect(err).NotTo(HaveOccurred())
-				})
 
 				It("doesn't error when binding the same details", func() {
+					fakeStore.RetrieveBindingDetailsReturns(bindDetails, nil)
 					_, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
 				It("errors when binding different details", func() {
+					fakeStore.RetrieveBindingDetailsReturns(brokerapi.BindDetails{}, nil)
 					bindDetails.AppGUID = "different"
 					_, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
 					Expect(err).To(Equal(brokerapi.ErrBindingAlreadyExists))
@@ -400,6 +384,7 @@ var _ = Describe("Broker", func() {
 			})
 
 			It("errors when the service instance does not exist", func() {
+				fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{}, errors.New("Awesome!"))
 				_, err := broker.Bind(ctx, "nonexistent-instance-id", "binding-id", brokerapi.BindDetails{AppGUID: "guid"})
 				Expect(err).To(Equal(brokerapi.ErrInstanceDoesNotExist))
 			})
@@ -423,15 +408,6 @@ var _ = Describe("Broker", func() {
 						fakeStore,
 						nfsbroker.NewNfsBrokerConfig(source, mounts),
 					)
-
-					configuration := map[string]interface{}{"share": "server:/some-share"}
-
-					buf := &bytes.Buffer{}
-					_ = json.NewEncoder(buf).Encode(configuration)
-					provisionDetails := brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
-
-					_, err := broker.Provision(ctx, instanceID, provisionDetails, false)
-					Expect(err).NotTo(HaveOccurred())
 				})
 
 				Context("given allow_root=true is supplied", func() {
@@ -465,15 +441,6 @@ var _ = Describe("Broker", func() {
 						fakeStore,
 						nfsbroker.NewNfsBrokerConfig(source, mounts),
 					)
-
-					configuration := map[string]interface{}{"share": "server:/some-share"}
-
-					buf := &bytes.Buffer{}
-					_ = json.NewEncoder(buf).Encode(configuration)
-					provisionDetails := brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
-
-					_, err := broker.Provision(ctx, instanceID, provisionDetails, false)
-					Expect(err).NotTo(HaveOccurred())
 				})
 
 				Context("given allow_root=true is supplied", func() {
@@ -512,15 +479,6 @@ var _ = Describe("Broker", func() {
 						fakeStore,
 						nfsbroker.NewNfsBrokerConfig(source, mounts),
 					)
-
-					configuration := map[string]interface{}{"share": "server:/some-share"}
-
-					buf := &bytes.Buffer{}
-					_ = json.NewEncoder(buf).Encode(configuration)
-					provisionDetails := brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
-
-					_, err := broker.Provision(ctx, instanceID, provisionDetails, false)
-					Expect(err).NotTo(HaveOccurred())
 				})
 
 				Context("given allow_root=true is supplied", func() {
@@ -557,19 +515,9 @@ var _ = Describe("Broker", func() {
 			BeforeEach(func() {
 				instanceID = "some-instance-id"
 
-				configuration := map[string]interface{}{"share": "server:/some-share"}
-
-				buf := &bytes.Buffer{}
-				_ = json.NewEncoder(buf).Encode(configuration)
-				provisionDetails := brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
-
-				_, err = broker.Provision(ctx, instanceID, provisionDetails, false)
-				Expect(err).NotTo(HaveOccurred())
-
 				bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{nfsbroker.Username: "principal name", nfsbroker.Secret: "some keytab data", "uid": "1000", "gid": "1000"}}
 
-				_, err = broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
-				Expect(err).NotTo(HaveOccurred())
+				fakeStore.RetrieveBindingDetailsReturns(bindDetails, nil)
 			})
 
 			It("unbinds a bound service instance from an app", func() {
@@ -578,63 +526,22 @@ var _ = Describe("Broker", func() {
 			})
 
 			It("fails when trying to unbind a instance that has not been provisioned", func() {
+				fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{},errors.New("Shazaam!"))
 				err = broker.Unbind(ctx, "some-other-instance-id", "binding-id", brokerapi.UnbindDetails{})
 				Expect(err).To(Equal(brokerapi.ErrInstanceDoesNotExist))
 			})
 
 			It("fails when trying to unbind a binding that has not been bound", func() {
+				fakeStore.RetrieveBindingDetailsReturns(brokerapi.BindDetails{}, errors.New("Hooray!"))
 				err := broker.Unbind(ctx, "some-instance-id", "some-other-binding-id", brokerapi.UnbindDetails{})
 				Expect(err).To(Equal(brokerapi.ErrBindingDoesNotExist))
 			})
 			It("should write state", func() {
+				previousCallCount := fakeStore.SaveCallCount()
 				err := broker.Unbind(ctx, "some-instance-id", "binding-id", brokerapi.UnbindDetails{})
 				Expect(err).NotTo(HaveOccurred())
-
-				_, data, _, _ := fakeStore.SaveArgsForCall(fakeStore.SaveCallCount() - 1)
-				Expect(data.InstanceMap[instanceID].PlanID).To(Equal("Existing"))
+				Expect(fakeStore.SaveCallCount()).To(Equal(previousCallCount + 1))
 			})
 		})
-
 	})
-
-	Context("when recreating", func() {
-		var bindDetails brokerapi.BindDetails
-
-		BeforeEach(func() {
-			bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{nfsbroker.Username: "principal name", nfsbroker.Secret: "some keytab data", "uid": "1000", "gid": "1000"}}
-		})
-		It("should be able to bind to previously created service", func() {
-			fileContents := nfsbroker.DynamicState{
-				InstanceMap: map[string]nfsbroker.ServiceInstance{
-					"service-name": {
-						Share: "server:/some-share",
-					},
-				},
-				BindingMap: map[string]brokerapi.BindDetails{},
-			}
-
-			fakeStore.RestoreStub = func(logger lager.Logger, state *nfsbroker.DynamicState) error {
-				*state = fileContents
-				return nil
-			}
-
-			source := nfsbroker.NewNfsBrokerConfigDetails()
-			source.ReadConf("uid,gid", "", []string{"uid", "gid"})
-			mounts := nfsbroker.NewNfsBrokerConfigDetails()
-			mounts.ReadConf("sloppy_mount,allow_other,allow_root,multithread,default_permissions,fusenfs_uid,fusenfs_gid", "sloppy_mount:true", []string{})
-
-			broker = nfsbroker.New(
-				logger,
-				"service-name", "service-id", "/fake-dir",
-				fakeOs,
-				nil,
-				fakeStore,
-				nfsbroker.NewNfsBrokerConfig(source, mounts),
-			)
-
-			_, err := broker.Bind(ctx, "service-name", "whatever", bindDetails)
-			Expect(err).NotTo(HaveOccurred())
-		})
-	})
-
 })

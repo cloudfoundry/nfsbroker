@@ -1,17 +1,25 @@
 package nfsbroker
 
 import (
-	"code.cloudfoundry.org/goshims/ioutilshim"
-	"code.cloudfoundry.org/lager"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
+
+	"code.cloudfoundry.org/goshims/ioutilshim"
+	"code.cloudfoundry.org/lager"
+	"github.com/pivotal-cf/brokerapi"
 )
 
 type fileStore struct {
-	fileName string
-	ioutil   ioutilshim.Ioutil
-	storeType string
+	fileName     string
+	ioutil       ioutilshim.Ioutil
+	dynamicState *DynamicState
+}
+
+type DynamicState struct {
+	InstanceMap map[string]ServiceInstance
+	BindingMap  map[string]brokerapi.BindDetails
 }
 
 func NewFileStore(
@@ -20,12 +28,15 @@ func NewFileStore(
 ) Store {
 	return &fileStore{
 		fileName: fileName,
-		storeType: FILESTORE,
 		ioutil:   ioutil,
+		dynamicState: &DynamicState{
+			InstanceMap: make(map[string]ServiceInstance),
+			BindingMap:  make(map[string]brokerapi.BindDetails),
+		},
 	}
 }
 
-func (s *fileStore) Restore(logger lager.Logger, state *DynamicState) error {
+func (s *fileStore) Restore(logger lager.Logger) error {
 	logger = logger.Session("restore-state")
 	logger.Info("start")
 	defer logger.Info("end")
@@ -36,7 +47,7 @@ func (s *fileStore) Restore(logger lager.Logger, state *DynamicState) error {
 		return err
 	}
 
-	err = json.Unmarshal(serviceData, state)
+	err = json.Unmarshal(serviceData, s.dynamicState)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed-to-unmarshall-state from state-file: %s", s.fileName), err)
 		return err
@@ -46,12 +57,12 @@ func (s *fileStore) Restore(logger lager.Logger, state *DynamicState) error {
 	return err
 }
 
-func (s *fileStore) Save(logger lager.Logger, state *DynamicState, _, _ string) error {
+func (s *fileStore) Save(logger lager.Logger) error {
 	logger = logger.Session("serialize-state")
 	logger.Info("start")
 	defer logger.Info("end")
 
-	stateData, err := json.Marshal(state)
+	stateData, err := json.Marshal(s.dynamicState)
 	if err != nil {
 		logger.Error("failed-to-marshall-state", err)
 		return err
@@ -64,7 +75,6 @@ func (s *fileStore) Save(logger lager.Logger, state *DynamicState, _, _ string) 
 	}
 
 	logger.Info("state-saved", lager.Data{"state-file": s.fileName})
-
 	return nil
 }
 
@@ -72,6 +82,44 @@ func (s *fileStore) Cleanup() error {
 	return nil
 }
 
-func (s *fileStore) GetType() string {
-	return s.storeType
+func (s *fileStore) RetrieveInstanceDetails(id string) (ServiceInstance, error) {
+	requestedServiceInstance, found := s.dynamicState.InstanceMap[id]
+	if !found {
+		return ServiceInstance{}, errors.New(id + " Not Found.")
+	}
+	return requestedServiceInstance, nil
+}
+
+func (s *fileStore) RetrieveBindingDetails(id string) (brokerapi.BindDetails, error) {
+	requestedBindingInstance, found := s.dynamicState.BindingMap[id]
+	if !found {
+		return brokerapi.BindDetails{}, errors.New(id + " Not Found.")
+	}
+	return requestedBindingInstance, nil
+}
+func (s *fileStore) CreateInstanceDetails(id string, details ServiceInstance) error {
+	s.dynamicState.InstanceMap[id] = details
+	return nil
+}
+func (s *fileStore) CreateBindingDetails(id string, details brokerapi.BindDetails) error {
+	s.dynamicState.BindingMap[id] = details
+	return nil
+}
+func (s *fileStore) DeleteInstanceDetails(id string) error {
+	_, found := s.dynamicState.InstanceMap[id]
+	if !found {
+		return errors.New(id + " Not Found.")
+	}
+
+	delete(s.dynamicState.InstanceMap,id)
+	return nil
+}
+func (s *fileStore) DeleteBindingDetails(id string) error {
+	_, found := s.dynamicState.BindingMap[id]
+	if !found {
+		return errors.New(id + " Not Found.")
+	}
+
+	delete(s.dynamicState.BindingMap,id)
+	return nil
 }

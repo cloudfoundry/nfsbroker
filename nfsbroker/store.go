@@ -3,18 +3,24 @@ package nfsbroker
 import (
 	"code.cloudfoundry.org/goshims/ioutilshim"
 	"code.cloudfoundry.org/lager"
+	"github.com/pivotal-cf/brokerapi"
 )
-
-const SQLSTORE = "SQL_Store"
-const FILESTORE = "File_Store"
 
 //go:generate counterfeiter -o ../nfsbrokerfakes/fake_store.go . Store
 type Store interface {
-	GetType() string
-	Restore(logger lager.Logger, state *DynamicState) error
-	Save(logger lager.Logger, state *DynamicState, instanceId, bindingId string) error
-	Cleanup() error
+	RetrieveInstanceDetails(id string) (ServiceInstance, error)
+	RetrieveBindingDetails(id string) (brokerapi.BindDetails, error)
 
+	CreateInstanceDetails(id string, details ServiceInstance) error
+	CreateBindingDetails(id string, details brokerapi.BindDetails) error
+
+	DeleteInstanceDetails(id string) error
+	DeleteBindingDetails(id string) error
+
+
+	Restore(logger lager.Logger) error
+	Save(logger lager.Logger) error
+	Cleanup() error
 }
 
 func NewStore(logger lager.Logger, dbDriver, dbUsername, dbPassword, dbHostname, dbPort, dbName, dbCACert, fileName string) Store {

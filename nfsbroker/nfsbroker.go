@@ -41,11 +41,6 @@ type ServiceInstance struct {
 	Share            string
 }
 
-type DynamicState struct {
-	InstanceMap map[string]ServiceInstance
-	BindingMap  map[string]brokerapi.BindDetails
-}
-
 type lock interface {
 	Lock()
 	Unlock()
@@ -58,7 +53,6 @@ type Broker struct {
 	mutex   lock
 	clock   clock.Clock
 	static  staticState
-	dynamic DynamicState
 	store   Store
 	config  Config
 }
@@ -83,14 +77,10 @@ func New(
 			ServiceName: serviceName,
 			ServiceId:   serviceId,
 		},
-		dynamic: DynamicState{
-			InstanceMap: map[string]ServiceInstance{},
-			BindingMap:  map[string]brokerapi.BindDetails{},
-		},
 		config: *config,
 	}
 
-	theBroker.store.Restore(logger, &theBroker.dynamic)
+	theBroker.store.Restore(logger)
 
 	return &theBroker
 }
@@ -143,17 +133,18 @@ func (b *Broker) Provision(context context.Context, instanceID string, details b
 		return brokerapi.ProvisionedServiceSpec{}, errors.New("config requires a \"share\" key")
 	}
 
-	b.dynamic.InstanceMap[instanceID] = ServiceInstance{
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+	defer b.store.Save(logger)
+
+	instanceDetails := ServiceInstance{
 		details.ServiceID,
 		details.PlanID,
 		details.OrganizationGUID,
 		details.SpaceGUID,
 		configuration.Share}
 
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-
-	defer b.store.Save(logger, &b.dynamic, instanceID, "")
+	b.store.CreateInstanceDetails(instanceID, instanceDetails)
 
 	return brokerapi.ProvisionedServiceSpec{IsAsync: false}, nil
 }
@@ -165,57 +156,55 @@ func (b *Broker) Deprovision(context context.Context, instanceID string, details
 
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
+	defer b.store.Save(logger)
 
-	_, instanceExists := b.dynamic.InstanceMap[instanceID]
-	if !instanceExists {
+	_, err := b.store.RetrieveInstanceDetails(instanceID)
+	if err != nil {
 		return brokerapi.DeprovisionServiceSpec{}, brokerapi.ErrInstanceDoesNotExist
 	} else {
-		delete(b.dynamic.InstanceMap, instanceID)
-		b.store.Save(logger, &b.dynamic, instanceID, "")
+		b.store.DeleteInstanceDetails(instanceID)
 	}
-
 	return brokerapi.DeprovisionServiceSpec{IsAsync: false, OperationData: "deprovision"}, nil
 }
 
-func (b *Broker) Bind(context context.Context, instanceID string, bindingID string, details brokerapi.BindDetails) (brokerapi.Binding, error) {
+func (b *Broker) Bind(context context.Context, instanceID string, bindingID string, bindDetails brokerapi.BindDetails) (brokerapi.Binding, error) {
 	logger := b.logger.Session("bind")
-	logger.Info("start", lager.Data{"bindingID": bindingID, "details": details})
+	logger.Info("start", lager.Data{"bindingID": bindingID, "details": bindDetails})
 	defer logger.Info("end")
 
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
-
-	defer b.store.Save(logger, &b.dynamic, "", bindingID)
+	defer b.store.Save(logger)
 
 	logger.Info("starting-nfsbroker-bind")
-	instanceDetails, ok := b.dynamic.InstanceMap[instanceID]
-	if !ok {
+	instanceDetails, err  := b.store.RetrieveInstanceDetails(instanceID)
+	if err != nil {
 		return brokerapi.Binding{}, brokerapi.ErrInstanceDoesNotExist
 	}
 
-	if details.AppGUID == "" {
+	if bindDetails.AppGUID == "" {
 		return brokerapi.Binding{}, brokerapi.ErrAppGuidNotProvided
 	}
 
-	mode, err := evaluateMode(details.Parameters)
+	mode, err := evaluateMode(bindDetails.Parameters)
 	if err != nil {
 		return brokerapi.Binding{}, err
 	}
 
-	if b.bindingConflicts(bindingID, details) {
+	if b.bindingConflicts(bindingID, bindDetails) {
 		return brokerapi.Binding{}, brokerapi.ErrBindingAlreadyExists
 	}
 
-	b.dynamic.BindingMap[bindingID] = details
+	b.store.CreateBindingDetails(bindingID, bindDetails)
 
 	source := fmt.Sprintf("nfs://%s", instanceDetails.Share)
 
-	if err := b.config.SetEntries(source, details.Parameters, []string{
+	if err := b.config.SetEntries(source, bindDetails.Parameters, []string{
 		"share", "mount", "kerberosPrincipal", "kerberosKeytab", "readonly",
 	}); err != nil {
 		logger.Debug("parameters-error-assign-entries", lager.Data{
 			"given_source":  source,
-			"given_options": details.Parameters,
+			"given_options": bindDetails.Parameters,
 			"source":        b.config.source,
 			"mount":         b.config.mount,
 			"sloppy_mount":  b.config.sloppyMount,
@@ -238,7 +227,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 	return brokerapi.Binding{
 		Credentials: struct{}{}, // if nil, cloud controller chokes on response
 		VolumeMounts: []brokerapi.VolumeMount{{
-			ContainerDir: evaluateContainerPath(details.Parameters, instanceID),
+			ContainerDir: evaluateContainerPath(bindDetails.Parameters, instanceID),
 			Mode:         mode,
 			Driver:       "nfsv3driver",
 			DeviceType:   "shared",
@@ -268,19 +257,17 @@ func (b *Broker) Unbind(context context.Context, instanceID string, bindingID st
 
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
+	defer b.store.Save(logger)
 
-	defer b.store.Save(logger, &b.dynamic, "", bindingID)
-
-	if _, ok := b.dynamic.InstanceMap[instanceID]; !ok {
+	if _, err := b.store.RetrieveInstanceDetails(instanceID); err != nil {
 		return brokerapi.ErrInstanceDoesNotExist
 	}
 
-	if _, ok := b.dynamic.BindingMap[bindingID]; !ok {
+	if _, err := b.store.RetrieveBindingDetails(bindingID); err != nil {
 		return brokerapi.ErrBindingDoesNotExist
 	}
 
-	delete(b.dynamic.BindingMap, bindingID)
-
+	b.store.DeleteBindingDetails(bindingID)
 	return nil
 }
 
@@ -303,7 +290,8 @@ func (b *Broker) LastOperation(_ context.Context, instanceID string, operationDa
 }
 
 func (b *Broker) instanceConflicts(details brokerapi.ProvisionDetails, instanceID string) bool {
-	if existing, ok := b.dynamic.InstanceMap[instanceID]; ok {
+
+	if existing, err := b.store.RetrieveInstanceDetails(instanceID);  err == nil {
 		if !reflect.DeepEqual(details, existing) {
 			return true
 		}
@@ -312,7 +300,7 @@ func (b *Broker) instanceConflicts(details brokerapi.ProvisionDetails, instanceI
 }
 
 func (b *Broker) bindingConflicts(bindingID string, details brokerapi.BindDetails) bool {
-	if existing, ok := b.dynamic.BindingMap[bindingID]; ok {
+	if existing, err := b.store.RetrieveBindingDetails(bindingID); err == nil {
 		if !reflect.DeepEqual(details, existing) {
 			return true
 		}
