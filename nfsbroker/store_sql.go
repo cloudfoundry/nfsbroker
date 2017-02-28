@@ -102,6 +102,7 @@ func (s *SqlStore) RetrieveInstanceDetails(id string) (ServiceInstance, error) {
 	  return ServiceInstance{}, err
   }
 }
+
 func (s *SqlStore) RetrieveBindingDetails(id string) (brokerapi.BindDetails, error) {
 	var bindingID string
 	var value []byte
@@ -118,16 +119,44 @@ func (s *SqlStore) RetrieveBindingDetails(id string) (brokerapi.BindDetails, err
 		return brokerapi.BindDetails{}, err
 	}
 }
+
 func (s *SqlStore) CreateInstanceDetails(id string, details ServiceInstance) error {
+	jsonData, err := json.Marshal(details)
+	if err != nil {
+		return err
+	}
+	_, err = s.Database.Exec("INSERT INTO service_instances (id, value) VALUES (?, ?)", id, jsonData)
+	if err != nil {
+		return err
+	}
 	return nil
 }
+
 func (s *SqlStore) CreateBindingDetails(id string, details brokerapi.BindDetails) error {
+	jsonData, err := json.Marshal(details)
+	if err != nil {
+		return err
+	}
+	_, err = s.Database.Exec("INSERT INTO service_bindings (id, value) VALUES (?, ?)", id, jsonData)
+	if err != nil {
+		return err
+	}
 	return nil
 }
+
 func (s *SqlStore) DeleteInstanceDetails(id string) error {
+	_, err := s.Database.Exec("DELETE FROM service_instances WHERE service_instances.id = ?", id)
+	if err != nil {
+		return err
+	}
 	return nil
 }
+
 func (s *SqlStore) DeleteBindingDetails(id string) error {
+	_, err := s.Database.Exec("DELETE FROM service_bindings WHERE service_bindings.id = ?", id)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

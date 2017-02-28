@@ -13,6 +13,7 @@ import (
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 	"reflect"
 	"encoding/json"
+	"database/sql"
 )
 
 var _ = Describe("SqlStore", func() {
@@ -23,6 +24,14 @@ var _ = Describe("SqlStore", func() {
 		fakeSqlDb = &sql_fake.FakeSqlDB{}
 		fakeVariant = &nfsbrokerfakes.FakeSqlVariant{}
 		err error
+		bindingID, serviceID, planID, orgGUID, spaceGUID, appGUID, share string
+		serviceInstance nfsbroker.ServiceInstance
+		sqlStore nfsbroker.SqlStore
+		db *sql.DB
+		mock sqlmock.Sqlmock
+		bindResource brokerapi.BindResource
+	  parameters map[string]interface{}
+	  bindDetails brokerapi.BindDetails
 	)
 
 	BeforeEach(func() {
@@ -41,6 +50,9 @@ var _ = Describe("SqlStore", func() {
 			},
 			BindingMap: map[string]brokerapi.BindDetails{},
 		}
+		db, mock, err = sqlmock.New()
+		sqlStore = nfsbroker.SqlStore{Database:nfsbrokerfakes.FakeSQLMockConnection{db},
+			StoreType:"mysql"}
 	})
 
 	It("should open a db connection", func() {
@@ -84,14 +96,6 @@ var _ = Describe("SqlStore", func() {
 	})
 
 	Describe("RetrieveInstanceDetails", func() {
-		var serviceID, planID, orgGUID, spaceGUID, share string
-		var err error
-		var serviceInstance nfsbroker.ServiceInstance
-
-		db, mock, err := sqlmock.New()
-		sqlStore := nfsbroker.SqlStore{Database:nfsbrokerfakes.FakeSQLMockConnection{db},
-			StoreType:"mysql"}
-
 		Context("When the instance exists", func() {
 			BeforeEach(func() {
 				Expect(err).NotTo(HaveOccurred())
@@ -137,22 +141,13 @@ var _ = Describe("SqlStore", func() {
 	})
 
 	Describe("RetrieveBindingDetails", func() {
-		var appGUID, planID, serviceID, bindingID string
-		var bindResource brokerapi.BindResource
-		var parameters map[string]interface{}
-		var err error
-		var bindDetails brokerapi.BindDetails
-
-		db, mock, err := sqlmock.New()
-		sqlStore := nfsbroker.SqlStore{Database:nfsbrokerfakes.FakeSQLMockConnection{db},
-			StoreType:"mysql"}
-
 		Context("When the instance exists", func() {
 			BeforeEach(func() {
 				Expect(err).NotTo(HaveOccurred())
 				appGUID = "instance_123"
 				planID = "plan_123"
 				serviceID = "service_123"
+				bindingID = "binding_123"
 				bindResource = brokerapi.BindResource{AppGuid: appGUID, Route: "binding-route"}
 
 				columns := []string{"id", "value"}
@@ -161,11 +156,11 @@ var _ = Describe("SqlStore", func() {
 				Expect(err).NotTo(HaveOccurred())
 				rows.AddRow(bindingID, jsonvalue)
 
-				mock.ExpectQuery("SELECT service_bindings.id FROM service_bindings WHERE service_bindings.id = ?").WithArgs(serviceID).WillReturnRows(rows)
+				mock.ExpectQuery("SELECT service_bindings.id FROM service_bindings WHERE service_bindings.id = ?").WithArgs(bindingID).WillReturnRows(rows)
 			})
 			JustBeforeEach(func() {
 
-				bindDetails, err = sqlStore.RetrieveBindingDetails(serviceID)
+				bindDetails, err = sqlStore.RetrieveBindingDetails(bindingID)
 			})
 			It("should return the binding details", func() {
 				Expect(err).To(BeNil())
@@ -180,15 +175,97 @@ var _ = Describe("SqlStore", func() {
 		})
 		Context("When the binding does not exist", func() {
 			BeforeEach(func() {
-				mock.ExpectQuery("SELECT service_bindings.id FROM service_bindings WHERE service_bindings.id = ?").WithArgs(serviceID)
+				mock.ExpectQuery("SELECT service_bindings.id FROM service_bindings WHERE service_bindings.id = ?").WithArgs(bindingID)
 			})
 			JustBeforeEach(func() {
-				bindDetails, err = sqlStore.RetrieveBindingDetails(serviceID)
+				bindDetails, err = sqlStore.RetrieveBindingDetails(bindingID)
 			})
 			It("should return an error", func() {
 				Expect(err).To(HaveOccurred())
 				Expect(reflect.DeepEqual(bindDetails, brokerapi.BindDetails{})).To(BeTrue())
 			})
+		})
+	})
+
+	Describe("CreateInstanceDetails", func() {
+		BeforeEach(func() {
+			Expect(err).NotTo(HaveOccurred())
+			orgGUID = "org_123"
+			planID = "plan_123"
+			serviceID = "service_123"
+			spaceGUID = "space_123"
+			share = "share_123"
+			serviceInstance = nfsbroker.ServiceInstance{ServiceID:serviceID,PlanID:planID,OrganizationGUID:orgGUID,SpaceGUID:spaceGUID,Share:share}
+			jsonValue, err := json.Marshal(serviceInstance)
+			Expect(err).NotTo(HaveOccurred())
+
+			result := sqlmock.NewResult(1,1)
+			mock.ExpectExec("INSERT INTO service_instances").WithArgs(serviceID,jsonValue).WillReturnResult(result)
+		})
+		JustBeforeEach(func() {
+			err = sqlStore.CreateInstanceDetails(serviceID,serviceInstance)
+		})
+		It("should not error and call INSERT INTO on the db", func() {
+			Expect(err).To(BeNil())
+			Expect(mock.ExpectationsWereMet()).Should(Succeed())
+		})
+	})
+
+	Describe("CreateBindingDetails", func() {
+		BeforeEach(func() {
+			Expect(err).NotTo(HaveOccurred())
+			appGUID = "instance_123"
+			planID = "plan_123"
+			serviceID = "service_123"
+			bindingID = "binding_123"
+			bindResource = brokerapi.BindResource{AppGuid: appGUID, Route: "binding-route"}
+			bindDetails = brokerapi.BindDetails{AppGUID: appGUID, PlanID: planID, ServiceID: serviceID, BindResource: &bindResource, Parameters: parameters}
+
+			jsonValue, err := json.Marshal(bindDetails)
+			Expect(err).NotTo(HaveOccurred())
+
+			result := sqlmock.NewResult(1,1)
+			mock.ExpectExec("INSERT INTO service_bindings").WithArgs(bindingID,jsonValue).WillReturnResult(result)
+		})
+		JustBeforeEach(func() {
+			err = sqlStore.CreateBindingDetails(bindingID,bindDetails)
+		})
+		It("should not error and call INSERT INTO on the db", func() {
+			Expect(err).To(BeNil())
+			Expect(mock.ExpectationsWereMet()).Should(Succeed())
+		})
+	})
+
+	Describe("DeleteInstanceDetails", func() {
+		BeforeEach(func() {
+			Expect(err).NotTo(HaveOccurred())
+			serviceID = "my_service"
+			result := sqlmock.NewResult(1,1)
+			mock.ExpectExec("DELETE FROM service_instances WHERE service_instances.id = ?").WithArgs(serviceID).WillReturnResult(result)
+		})
+		JustBeforeEach(func() {
+			err = sqlStore.DeleteInstanceDetails(serviceID)
+		})
+		It("should not error and call DELETE FROM on the db", func() {
+			Expect(err).To(BeNil())
+			Expect(mock.ExpectationsWereMet()).Should(Succeed())
+		})
+	})
+	Describe("DeleteBindingDetails", func() {
+
+
+		BeforeEach(func() {
+			Expect(err).NotTo(HaveOccurred())
+			bindingID = "my_binding"
+			result := sqlmock.NewResult(1,1)
+			mock.ExpectExec("DELETE FROM service_bindings WHERE service_bindings.id = ?").WithArgs(bindingID).WillReturnResult(result)
+		})
+		JustBeforeEach(func() {
+			err = sqlStore.DeleteBindingDetails(bindingID)
+		})
+		It("should not error and call DELETE FROM on the db", func() {
+			Expect(err).To(BeNil())
+			Expect(mock.ExpectationsWereMet()).Should(Succeed())
 		})
 	})
 })
