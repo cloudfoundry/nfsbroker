@@ -93,9 +93,15 @@ func (s *SqlStore) Cleanup() error {
 }
 
 func (s *SqlStore) RetrieveInstanceDetails(id string) (ServiceInstance, error) {
-	var serviceID, planID, orgGUID, spaceGUID, share string
-	if err := s.Database.QueryRow("SELECT service_instances.id FROM service_instances WHERE service_instance.id = ?", id).Scan(&serviceID, &planID, &orgGUID, &spaceGUID, &share); err == nil {
-		return ServiceInstance{ServiceID: serviceID, PlanID: planID, OrganizationGUID: orgGUID, SpaceGUID: spaceGUID, Share: share}, nil
+	var serviceID string
+	var value []byte
+	var serviceInstance ServiceInstance
+	if err := s.Database.QueryRow("SELECT service_instances.id FROM service_instances WHERE service_instance.id = ?", id).Scan(&serviceID, &value); err == nil {
+		err = json.Unmarshal(value, &serviceInstance)
+		if err != nil {
+			return ServiceInstance{}, err
+		}
+		return serviceInstance, nil
 	} else if err == sql.ErrNoRows {
 	  return ServiceInstance{}, brokerapi.ErrInstanceDoesNotExist
 	}	else {

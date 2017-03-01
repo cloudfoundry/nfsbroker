@@ -105,9 +105,12 @@ var _ = Describe("SqlStore", func() {
 				spaceGUID = "space_123"
 				share = "share_123"
 
-				columns := []string{"ServiceID", "PlanID", "OrgGUID", "SpaceGUID", "Share"}
+				columns := []string{"id", "value"}
+
 				rows := sqlmock.NewRows(columns)
-				rows.AddRow(serviceID,planID,orgGUID,spaceGUID,share)
+				jsonvalue, err := json.Marshal(nfsbroker.ServiceInstance{Share:share, PlanID: planID, ServiceID: serviceID, OrganizationGUID: orgGUID, SpaceGUID: spaceGUID})
+				Expect(err).NotTo(HaveOccurred())
+				rows.AddRow(serviceID,jsonvalue)
 
 				mock.ExpectQuery("SELECT service_instances.id FROM service_instances WHERE service_instance.id = ?").WithArgs(serviceID).WillReturnRows(rows)
 			})
