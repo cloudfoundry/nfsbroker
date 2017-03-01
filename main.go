@@ -84,26 +84,26 @@ var cfServiceName = flag.String(
 
 var sourceFlagAllowed = flag.String(
 	"allowed-in-source",
-	"",
-	"A comma separted list of parameters allowed to be set in share url.",
+	"uid,gid",
+	"A comma separated list of parameters allowed to be set in share url.",
 )
 
 var sourceFlagDefault = flag.String(
 	"default-in-source",
 	"",
-	"A comma separted list of defauts specified as param:value. If a parameter has a default value and is not in the allowed list, this default value becomes a fixed value that cannot be overridden",
+	"A comma separated list of defaults specified as param:value. If a parameter has a default value and is not in the allowed list, this default value becomes a fixed value that cannot be overridden",
 )
 
 var mountFlagAllowed = flag.String(
 	"allowed-in-mount",
-	"",
-	"A comma separted list of parameters allowed to be set in extra config.",
+	"auto_cache",
+	"A comma separated list of parameters allowed to be set in extra config.",
 )
 
 var mountFlagDefault = flag.String(
 	"default-in-mount",
-	"",
-	"A comma separted list of defauts specified as param:value. If a parameter has a default value and is not in the allowed list, this default value becomes a fixed value that cannot be overridden",
+	"auto_cache:true",
+	"A comma separated list of defaults specified as param:value. If a parameter has a default value and is not in the allowed list, this default value becomes a fixed value that cannot be overridden",
 )
 
 var (
