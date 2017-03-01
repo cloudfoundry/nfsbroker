@@ -107,7 +107,7 @@ func (r failRunner) Run(sigChan <-chan os.Signal, ready chan<- struct{}) error {
 			}
 
 			Expect(string(allOutput.Contents())).To(ContainSubstring(r.StartCheck))
-			Expect(session.ExitCode()).To(Equal(1), fmt.Sprintf("Expected process to exit with 1, got: %d", session.ExitCode()))
+			Expect(session.ExitCode()).To(Not(Equal(0)), fmt.Sprintf("Expected process to exit with non-zero, got: 0"))
 			return nil
 		}
 	}
@@ -115,6 +115,7 @@ func (r failRunner) Run(sigChan <-chan os.Signal, ready chan<- struct{}) error {
 
 var _ = Describe("nfsbroker Main", func() {
 	Context("Missing required args", func() {
+		var process ifrit.Process
 		It("shows usage", func() {
 			var args []string
 			volmanRunner := failRunner{
@@ -122,7 +123,11 @@ var _ = Describe("nfsbroker Main", func() {
 				Command:    exec.Command(binaryPath, args...),
 				StartCheck: "Either dataDir or db parameters must be provided.",
 			}
-			process := ifrit.Invoke(volmanRunner)
+			process = ifrit.Invoke(volmanRunner)
+
+		})
+
+		AfterEach(func() {
 			ginkgomon.Kill(process) // this is only if incorrect implementation leaves process running
 		})
 	})
