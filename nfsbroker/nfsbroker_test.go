@@ -140,6 +140,16 @@ var _ = Describe("Broker", func() {
 					Expect(err).To(Equal(brokerapi.ErrInstanceAlreadyExists))
 				})
 			})
+
+			Context("when the service instance creation fails", func() {
+				BeforeEach(func() {
+					fakeStore.CreateInstanceDetailsReturns(errors.New("badness"))
+				})
+
+				It("should error", func() {
+					Expect(err).To(HaveOccurred())
+				})
+			})
 		})
 
 		Context(".Deprovision", func() {
@@ -380,6 +390,22 @@ var _ = Describe("Broker", func() {
 					It("should issue a volume mount with a different volume ID", func() {
 						Expect(bindSpec1.VolumeMounts[0].Device.VolumeId).NotTo(Equal(bindSpec2.VolumeMounts[0].Device.VolumeId))
 					})
+				})
+			})
+
+			Context("when the binding cannot be stored", func() {
+				var (
+					err       error
+				)
+
+				BeforeEach(func() {
+					fakeStore.CreateBindingDetailsReturns(errors.New("badness"))
+					_, err = broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
+
+				})
+
+				It("should error", func() {
+					Expect(err).To(HaveOccurred())
 				})
 			})
 

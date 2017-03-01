@@ -92,11 +92,23 @@ func (s *SqlStore) Cleanup() error {
 	return nil
 }
 
+func (s *SqlStore) CreateInstanceDetails(id string, details ServiceInstance) error {
+	jsonData, err := json.Marshal(details)
+	if err != nil {
+		return err
+	}
+	_, err = s.Database.Exec("INSERT INTO service_instances (id, value) VALUES (?, ?)", id, jsonData)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *SqlStore) RetrieveInstanceDetails(id string) (ServiceInstance, error) {
 	var serviceID string
 	var value []byte
 	var serviceInstance ServiceInstance
-	if err := s.Database.QueryRow("SELECT service_instances.id FROM service_instances WHERE service_instance.id = ?", id).Scan(&serviceID, &value); err == nil {
+	if err := s.Database.QueryRow("SELECT id, value FROM service_instances WHERE id = ?", id).Scan(&serviceID, &value); err == nil {
 		err = json.Unmarshal(value, &serviceInstance)
 		if err != nil {
 			return ServiceInstance{}, err
@@ -113,7 +125,7 @@ func (s *SqlStore) RetrieveBindingDetails(id string) (brokerapi.BindDetails, err
 	var bindingID string
 	var value []byte
 	bindDetails := brokerapi.BindDetails{}
-	if err := s.Database.QueryRow("SELECT service_bindings.id FROM service_bindings WHERE service_bindings.id = ?", id).Scan(&bindingID, &value); err == nil {
+	if err := s.Database.QueryRow("SELECT id, value FROM service_bindings WHERE id = ?", id).Scan(&bindingID, &value); err == nil {
 		err = json.Unmarshal(value, &bindDetails)
 		if err != nil {
 			return brokerapi.BindDetails{}, err
@@ -124,18 +136,6 @@ func (s *SqlStore) RetrieveBindingDetails(id string) (brokerapi.BindDetails, err
 	}	else {
 		return brokerapi.BindDetails{}, err
 	}
-}
-
-func (s *SqlStore) CreateInstanceDetails(id string, details ServiceInstance) error {
-	jsonData, err := json.Marshal(details)
-	if err != nil {
-		return err
-	}
-	_, err = s.Database.Exec("INSERT INTO service_instances (id, value) VALUES (?, ?)", id, jsonData)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (s *SqlStore) CreateBindingDetails(id string, details brokerapi.BindDetails) error {
@@ -151,7 +151,7 @@ func (s *SqlStore) CreateBindingDetails(id string, details brokerapi.BindDetails
 }
 
 func (s *SqlStore) DeleteInstanceDetails(id string) error {
-	_, err := s.Database.Exec("DELETE FROM service_instances WHERE service_instances.id = ?", id)
+	_, err := s.Database.Exec("DELETE FROM service_instances WHERE id = ?", id)
 	if err != nil {
 		return err
 	}
@@ -159,7 +159,7 @@ func (s *SqlStore) DeleteInstanceDetails(id string) error {
 }
 
 func (s *SqlStore) DeleteBindingDetails(id string) error {
-	_, err := s.Database.Exec("DELETE FROM service_bindings WHERE service_bindings.id = ?", id)
+	_, err := s.Database.Exec("DELETE FROM service_bindings WHERE id = ?", id)
 	if err != nil {
 		return err
 	}

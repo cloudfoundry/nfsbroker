@@ -112,7 +112,7 @@ var _ = Describe("SqlStore", func() {
 				Expect(err).NotTo(HaveOccurred())
 				rows.AddRow(serviceID,jsonvalue)
 
-				mock.ExpectQuery("SELECT service_instances.id FROM service_instances WHERE service_instance.id = ?").WithArgs(serviceID).WillReturnRows(rows)
+				mock.ExpectQuery("SELECT id, value FROM service_instances WHERE id = ?").WithArgs(serviceID).WillReturnRows(rows)
 			})
 			JustBeforeEach(func() {
 
@@ -130,7 +130,7 @@ var _ = Describe("SqlStore", func() {
 		})
 		Context("When the instance does not exist", func() {
 			BeforeEach(func() {
-				mock.ExpectQuery("SELECT service_instances.id FROM service_instances WHERE service_instance.id = ?").WithArgs(serviceID)
+				mock.ExpectQuery("SELECT id, value FROM service_instances WHERE id = ?").WithArgs(serviceID)
 			})
 			JustBeforeEach(func() {
 				serviceInstance, err = sqlStore.RetrieveInstanceDetails(serviceID)
@@ -159,7 +159,7 @@ var _ = Describe("SqlStore", func() {
 				Expect(err).NotTo(HaveOccurred())
 				rows.AddRow(bindingID, jsonvalue)
 
-				mock.ExpectQuery("SELECT service_bindings.id FROM service_bindings WHERE service_bindings.id = ?").WithArgs(bindingID).WillReturnRows(rows)
+				mock.ExpectQuery("SELECT id, value FROM service_bindings WHERE id = ?").WithArgs(bindingID).WillReturnRows(rows)
 			})
 			JustBeforeEach(func() {
 
@@ -178,7 +178,7 @@ var _ = Describe("SqlStore", func() {
 		})
 		Context("When the binding does not exist", func() {
 			BeforeEach(func() {
-				mock.ExpectQuery("SELECT service_bindings.id FROM service_bindings WHERE service_bindings.id = ?").WithArgs(bindingID)
+				mock.ExpectQuery("SELECT id, value FROM service_bindings WHERE id = ?").WithArgs(bindingID)
 			})
 			JustBeforeEach(func() {
 				bindDetails, err = sqlStore.RetrieveBindingDetails(bindingID)
@@ -244,7 +244,7 @@ var _ = Describe("SqlStore", func() {
 			Expect(err).NotTo(HaveOccurred())
 			serviceID = "my_service"
 			result := sqlmock.NewResult(1,1)
-			mock.ExpectExec("DELETE FROM service_instances WHERE service_instances.id = ?").WithArgs(serviceID).WillReturnResult(result)
+			mock.ExpectExec("DELETE FROM service_instances WHERE id = ?").WithArgs(serviceID).WillReturnResult(result)
 		})
 		JustBeforeEach(func() {
 			err = sqlStore.DeleteInstanceDetails(serviceID)
@@ -261,7 +261,7 @@ var _ = Describe("SqlStore", func() {
 			Expect(err).NotTo(HaveOccurred())
 			bindingID = "my_binding"
 			result := sqlmock.NewResult(1,1)
-			mock.ExpectExec("DELETE FROM service_bindings WHERE service_bindings.id = ?").WithArgs(bindingID).WillReturnResult(result)
+			mock.ExpectExec("DELETE FROM service_bindings WHERE id = ?").WithArgs(bindingID).WillReturnResult(result)
 		})
 		JustBeforeEach(func() {
 			err = sqlStore.DeleteBindingDetails(bindingID)

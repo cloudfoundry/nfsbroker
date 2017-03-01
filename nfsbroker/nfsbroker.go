@@ -144,7 +144,10 @@ func (b *Broker) Provision(context context.Context, instanceID string, details b
 		details.SpaceGUID,
 		configuration.Share}
 
-	b.store.CreateInstanceDetails(instanceID, instanceDetails)
+	err = b.store.CreateInstanceDetails(instanceID, instanceDetails)
+	if err != nil {
+		return brokerapi.ProvisionedServiceSpec{}, fmt.Errorf("failed to store instance details %s", instanceID)
+	}
 
 	return brokerapi.ProvisionedServiceSpec{IsAsync: false}, nil
 }
@@ -195,7 +198,10 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 		return brokerapi.Binding{}, brokerapi.ErrBindingAlreadyExists
 	}
 
-	b.store.CreateBindingDetails(bindingID, bindDetails)
+	err = b.store.CreateBindingDetails(bindingID, bindDetails)
+	if err != nil {
+		return brokerapi.Binding{}, err
+	}
 
 	source := fmt.Sprintf("nfs://%s", instanceDetails.Share)
 
