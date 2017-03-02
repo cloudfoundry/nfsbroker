@@ -109,7 +109,7 @@ func (b *Broker) Services(_ context.Context) []brokerapi.Service {
 	}}
 }
 
-func (b *Broker) Provision(context context.Context, instanceID string, details brokerapi.ProvisionDetails, asyncAllowed bool) (brokerapi.ProvisionedServiceSpec, error) {
+func (b *Broker) Provision(context context.Context, instanceID string, details brokerapi.ProvisionDetails, asyncAllowed bool) (_ brokerapi.ProvisionedServiceSpec, e error) {
 	logger := b.logger.Session("provision").WithData(lager.Data{"instanceID": instanceID})
 	logger.Info("start")
 	defer logger.Info("end")
@@ -135,7 +135,12 @@ func (b *Broker) Provision(context context.Context, instanceID string, details b
 
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
-	defer b.store.Save(logger)
+	defer func() {
+		out := b.store.Save(logger)
+		if e == nil {
+			e = out
+		}
+	}()
 
 	instanceDetails := ServiceInstance{
 		details.ServiceID,
@@ -152,35 +157,50 @@ func (b *Broker) Provision(context context.Context, instanceID string, details b
 	return brokerapi.ProvisionedServiceSpec{IsAsync: false}, nil
 }
 
-func (b *Broker) Deprovision(context context.Context, instanceID string, details brokerapi.DeprovisionDetails, asyncAllowed bool) (brokerapi.DeprovisionServiceSpec, error) {
+func (b *Broker) Deprovision(context context.Context, instanceID string, details brokerapi.DeprovisionDetails, asyncAllowed bool) (_ brokerapi.DeprovisionServiceSpec, e error) {
 	logger := b.logger.Session("deprovision")
 	logger.Info("start")
 	defer logger.Info("end")
 
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
-	defer b.store.Save(logger)
+	defer func() {
+		out := b.store.Save(logger)
+		if e == nil {
+			e = out
+		}
+	}()
 
 	_, err := b.store.RetrieveInstanceDetails(instanceID)
 	if err != nil {
 		return brokerapi.DeprovisionServiceSpec{}, brokerapi.ErrInstanceDoesNotExist
-	} else {
-		b.store.DeleteInstanceDetails(instanceID)
 	}
+
+	err = b.store.DeleteInstanceDetails(instanceID)
+	if err != nil {
+		return brokerapi.DeprovisionServiceSpec{}, err
+	}
+
 	return brokerapi.DeprovisionServiceSpec{IsAsync: false, OperationData: "deprovision"}, nil
 }
 
-func (b *Broker) Bind(context context.Context, instanceID string, bindingID string, bindDetails brokerapi.BindDetails) (brokerapi.Binding, error) {
+func (b *Broker) Bind(context context.Context, instanceID string, bindingID string, bindDetails brokerapi.BindDetails) (_ brokerapi.Binding, e error) {
 	logger := b.logger.Session("bind")
 	logger.Info("start", lager.Data{"bindingID": bindingID, "details": bindDetails})
 	defer logger.Info("end")
 
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
-	defer b.store.Save(logger)
+	defer func() {
+		out := b.store.Save(logger)
+		if e == nil {
+			e = out
+		}
+	}()
+
 
 	logger.Info("starting-nfsbroker-bind")
-	instanceDetails, err  := b.store.RetrieveInstanceDetails(instanceID)
+	instanceDetails, err := b.store.RetrieveInstanceDetails(instanceID)
 	if err != nil {
 		return brokerapi.Binding{}, brokerapi.ErrInstanceDoesNotExist
 	}
@@ -256,14 +276,20 @@ func (b *Broker) hash(mountConfig map[string]interface{}) (string, error) {
 	return fmt.Sprintf("%x", md5.Sum(bytes)), nil
 }
 
-func (b *Broker) Unbind(context context.Context, instanceID string, bindingID string, details brokerapi.UnbindDetails) error {
+func (b *Broker) Unbind(context context.Context, instanceID string, bindingID string, details brokerapi.UnbindDetails) (e error) {
 	logger := b.logger.Session("unbind")
 	logger.Info("start")
 	defer logger.Info("end")
 
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
-	defer b.store.Save(logger)
+	defer func() {
+		out := b.store.Save(logger)
+		if e == nil {
+			e = out
+		}
+	}()
+
 
 	if _, err := b.store.RetrieveInstanceDetails(instanceID); err != nil {
 		return brokerapi.ErrInstanceDoesNotExist
@@ -273,7 +299,9 @@ func (b *Broker) Unbind(context context.Context, instanceID string, bindingID st
 		return brokerapi.ErrBindingDoesNotExist
 	}
 
-	b.store.DeleteBindingDetails(bindingID)
+	if err := b.store.DeleteBindingDetails(bindingID); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -297,7 +325,7 @@ func (b *Broker) LastOperation(_ context.Context, instanceID string, operationDa
 
 func (b *Broker) instanceConflicts(details brokerapi.ProvisionDetails, instanceID string) bool {
 
-	if existing, err := b.store.RetrieveInstanceDetails(instanceID);  err == nil {
+	if existing, err := b.store.RetrieveInstanceDetails(instanceID); err == nil {
 		if !reflect.DeepEqual(details, existing) {
 			return true
 		}

@@ -150,6 +150,17 @@ var _ = Describe("Broker", func() {
 					Expect(err).To(HaveOccurred())
 				})
 			})
+
+			Context("when the save fails", func() {
+				BeforeEach(func() {
+					fakeStore.SaveReturns(errors.New("badness"))
+				})
+
+				It("should error", func() {
+					Expect(err).To(HaveOccurred())
+				})
+			})
+
 		})
 
 		Context(".Deprovision", func() {
@@ -207,8 +218,27 @@ var _ = Describe("Broker", func() {
 				It("save state", func() {
 					Expect(fakeStore.SaveCallCount()).To(Equal(previousSaveCallCount+1))
 				})
+
+				Context("when deletion of the instance fails", func() {
+					BeforeEach(func() {
+						fakeStore.DeleteInstanceDetailsReturns(errors.New("badness"))
+					})
+
+					It("should error", func() {
+						Expect(err).To(HaveOccurred())
+					})
+				})
 			})
 
+			Context("when the save fails", func() {
+				BeforeEach(func() {
+					fakeStore.SaveReturns(errors.New("badness"))
+				})
+
+				It("should error", func() {
+					Expect(err).To(HaveOccurred())
+				})
+			})
 		})
 
 		Context(".LastOperation", func() {
@@ -407,6 +437,21 @@ var _ = Describe("Broker", func() {
 				It("should error", func() {
 					Expect(err).To(HaveOccurred())
 				})
+
+			})
+
+			Context("when the save fails", func() {
+				var (
+					err       error
+				)
+				BeforeEach(func() {
+					fakeStore.SaveReturns(errors.New("badness"))
+					_, err = broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
+				})
+
+				It("should error", func() {
+					Expect(err).To(HaveOccurred())
+				})
 			})
 
 			It("errors when the service instance does not exist", func() {
@@ -534,26 +579,23 @@ var _ = Describe("Broker", func() {
 		Context(".Unbind", func() {
 			var (
 				instanceID  string
-				err         error
 				bindDetails brokerapi.BindDetails
 			)
 
 			BeforeEach(func() {
 				instanceID = "some-instance-id"
-
 				bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{nfsbroker.Username: "principal name", nfsbroker.Secret: "some keytab data", "uid": "1000", "gid": "1000"}}
 
 				fakeStore.RetrieveBindingDetailsReturns(bindDetails, nil)
 			})
-
 			It("unbinds a bound service instance from an app", func() {
-				err = broker.Unbind(ctx, "some-instance-id", "binding-id", brokerapi.UnbindDetails{})
+				err := broker.Unbind(ctx, "some-instance-id", "binding-id", brokerapi.UnbindDetails{})
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("fails when trying to unbind a instance that has not been provisioned", func() {
 				fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{},errors.New("Shazaam!"))
-				err = broker.Unbind(ctx, "some-other-instance-id", "binding-id", brokerapi.UnbindDetails{})
+				err := broker.Unbind(ctx, "some-other-instance-id", "binding-id", brokerapi.UnbindDetails{})
 				Expect(err).To(Equal(brokerapi.ErrInstanceDoesNotExist))
 			})
 
@@ -567,6 +609,28 @@ var _ = Describe("Broker", func() {
 				err := broker.Unbind(ctx, "some-instance-id", "binding-id", brokerapi.UnbindDetails{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(fakeStore.SaveCallCount()).To(Equal(previousCallCount + 1))
+			})
+
+			Context("when the save fails", func() {
+				BeforeEach(func() {
+					fakeStore.SaveReturns(errors.New("badness"))
+				})
+
+				It("should error", func() {
+					err := broker.Unbind(ctx, "some-instance-id", "binding-id", brokerapi.UnbindDetails{})
+					Expect(err).To(HaveOccurred())
+				})
+			})
+
+			Context("when deletion of the binding details fails", func() {
+				BeforeEach(func() {
+					fakeStore.DeleteBindingDetailsReturns(errors.New("badness"))
+				})
+
+				It("should error", func() {
+					err := broker.Unbind(ctx, "some-instance-id", "binding-id", brokerapi.UnbindDetails{})
+					Expect(err).To(HaveOccurred())
+				})
 			})
 		})
 	})
