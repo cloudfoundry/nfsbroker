@@ -350,6 +350,7 @@ var _ = Describe("Broker", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(binding.VolumeMounts[0].Mode).To(Equal("r"))
+				Expect(binding.VolumeMounts[0].Device.MountConfig["readonly"]).To(Equal(true))
 			})
 
 			It("should write state", func() {

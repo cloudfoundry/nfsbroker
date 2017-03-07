@@ -240,7 +240,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 
 	mountConfig := b.config.MountConfig()
 	mountConfig["source"] = b.config.Share(source)
-	if mode == "ro" {
+	if mode == "r" {
 		mountConfig["readonly"] = true
 	}
 
