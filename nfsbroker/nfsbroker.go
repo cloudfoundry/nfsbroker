@@ -242,6 +242,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 	mountConfig["source"] = b.config.Share(source)
 	if mode == "r" {
 		mountConfig["readonly"] = true
+		mode = "rw"
 	}
 
 	logger.Info("volume-service-binding", lager.Data{"Driver": "nfsv3driver", "MountConfig": mountConfig})
