@@ -84,7 +84,7 @@ var cfServiceName = flag.String(
 
 var sourceFlagAllowed = flag.String(
 	"allowed-in-source",
-	"",
+	"uid,gid",
 	"A comma separated list of parameters allowed to be set in share url.",
 )
 
