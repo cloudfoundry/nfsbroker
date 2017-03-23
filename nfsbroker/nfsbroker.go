@@ -254,7 +254,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 	}
 	volumeId := fmt.Sprintf("%s-%s", instanceID, s)
 
-	return brokerapi.Binding{
+	ret := brokerapi.Binding{
 		Credentials: struct{}{}, // if nil, cloud controller chokes on response
 		VolumeMounts: []brokerapi.VolumeMount{{
 			ContainerDir: evaluateContainerPath(bindDetails.Parameters, instanceID),
@@ -266,7 +266,8 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 				MountConfig: mountConfig,
 			},
 		}},
-	}, nil
+	}
+	return ret, nil
 }
 
 func (b *Broker) hash(mountConfig map[string]interface{}) (string, error) {

@@ -84,7 +84,7 @@ var cfServiceName = flag.String(
 
 var sourceFlagAllowed = flag.String(
 	"allowed-in-source",
-	"uid,gid",
+	"",
 	"A comma separated list of parameters allowed to be set in share url.",
 )
 
@@ -203,7 +203,7 @@ func createServer(logger lager.Logger) ifrit.Runner {
 	store := nfsbroker.NewStore(logger, *dbDriver, dbUsername, dbPassword, *dbHostname, *dbPort, *dbName, *dbCACert, fileName)
 
 	source := nfsbroker.NewNfsBrokerConfigDetails()
-	source.ReadConf(*sourceFlagAllowed, *sourceFlagDefault, []string{"uid", "gid"})
+	source.ReadConf(*sourceFlagAllowed, *sourceFlagDefault, []string{})
 
 	mounts := nfsbroker.NewNfsBrokerConfigDetails()
 	mounts.ReadConf(*mountFlagAllowed, *mountFlagDefault, []string{})
