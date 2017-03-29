@@ -154,6 +154,8 @@ func (b *Broker) Provision(context context.Context, instanceID string, details b
 		return brokerapi.ProvisionedServiceSpec{}, fmt.Errorf("failed to store instance details %s", instanceID)
 	}
 
+	logger.Info("service-instance-created", lager.Data{"instanceDetails": instanceDetails})
+
 	return brokerapi.ProvisionedServiceSpec{IsAsync: false}, nil
 }
 
@@ -218,6 +220,8 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 		return brokerapi.Binding{}, brokerapi.ErrBindingAlreadyExists
 	}
 
+	logger.Info("retrieved-instance-details", lager.Data{"instanceDetails": instanceDetails})
+
 	err = b.store.CreateBindingDetails(bindingID, bindDetails)
 	if err != nil {
 		return brokerapi.Binding{}, err
@@ -245,7 +249,8 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 		mode = "rw"
 	}
 
-	logger.Info("volume-service-binding", lager.Data{"Driver": "nfsv3driver", "MountConfig": mountConfig})
+
+	logger.Info("volume-service-binding", lager.Data{"Driver": "nfsv3driver", "MountConfig": mountConfig, "source": source})
 
 	s, err := b.hash(mountConfig)
 	if err != nil {
