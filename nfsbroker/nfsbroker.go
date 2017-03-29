@@ -110,7 +110,7 @@ func (b *Broker) Services(_ context.Context) []brokerapi.Service {
 }
 
 func (b *Broker) Provision(context context.Context, instanceID string, details brokerapi.ProvisionDetails, asyncAllowed bool) (_ brokerapi.ProvisionedServiceSpec, e error) {
-	logger := b.logger.Session("provision").WithData(lager.Data{"instanceID": instanceID})
+	logger := b.logger.Session("provision").WithData(lager.Data{"instanceID": instanceID, "details": details})
 	logger.Info("start")
 	defer logger.Info("end")
 
