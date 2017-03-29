@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"code.cloudfoundry.org/cflager"
+	"code.cloudfoundry.org/lager/lagerflags"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/debugserver"
 	"code.cloudfoundry.org/goshims/osshim"
@@ -119,7 +119,11 @@ func main() {
 
 	checkParams()
 
-	logger, logSink := cflager.New("nfsbroker")
+	sink, err := lager.NewRedactingWriterSink(os.Stdout, lager.DEBUG, nil, nil)
+	if err != nil {
+		panic(err)
+	}
+	logger, logSink := lagerflags.NewFromSink("nfsbroker", sink)
 	logger.Info("starting")
 	defer logger.Info("ends")
 
@@ -138,7 +142,7 @@ func main() {
 }
 
 func parseCommandLine() {
-	cflager.AddFlags(flag.CommandLine)
+	lagerflags.AddFlags(flag.CommandLine)
 	debugserver.AddFlags(flag.CommandLine)
 	flag.Parse()
 }
