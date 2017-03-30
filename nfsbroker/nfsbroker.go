@@ -232,7 +232,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 	// TODO--brokerConfig is not re-entrant because it stores state in SetEntries--we should modify it to
 	// TODO--be stateless.  Until we do that, we will just make a local copy, but we should really
 	// TODO--refactor this to something more efficient.
-	tempConfig := b.config
+	tempConfig := b.config.Copy()
 	if err := tempConfig.SetEntries(source, bindDetails.Parameters, []string{
 		"share", "mount", "kerberosPrincipal", "kerberosKeytab", "readonly",
 	}); err != nil {

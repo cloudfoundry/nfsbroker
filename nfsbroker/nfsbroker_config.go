@@ -41,6 +41,15 @@ func NewNfsBrokerConfig(sourceDetails *ConfigDetails, mountDetails *ConfigDetail
 	return myConf
 }
 
+func (rhs *Config) Copy() *Config {
+	myConf := new(Config)
+
+	myConf.source = rhs.source.Copy()
+	myConf.mount = rhs.mount.Copy()
+	myConf.sloppyMount = rhs.sloppyMount
+	return myConf
+}
+
 func NewNfsBrokerConfigDetails() *ConfigDetails {
 	myConf := new(ConfigDetails)
 
@@ -49,6 +58,23 @@ func NewNfsBrokerConfigDetails() *ConfigDetails {
 	myConf.Forced = make(map[string]string, 0)
 	myConf.Mandatory = make([]string, 0)
 
+	return myConf
+}
+
+func (rhs *ConfigDetails) Copy() *ConfigDetails {
+	myConf := new(ConfigDetails)
+
+	copy(myConf.Allowed, rhs.Allowed)
+	copy(myConf.Options, rhs.Options)
+
+	myConf.Forced = make(map[string]string, 0)
+	myConf.Mandatory = make([]string, 0)
+	for k, v := range rhs.Forced {
+		myConf.Forced[k] = v
+	}
+	for k, v := range rhs.Mandatory {
+		myConf.Mandatory[k] = v
+	}
 	return myConf
 }
 
