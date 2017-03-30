@@ -97,8 +97,8 @@ var _ = Describe("BrokerConfigDetails", func() {
 		MountsOptions   map[string]string
 		MountsMandatory []string
 
-		source *ConfigDetails
-		mounts *ConfigDetails
+		source, source2 *ConfigDetails
+		mounts, mounts2 *ConfigDetails
 		config *Config
 
 		errorEntries error
@@ -542,6 +542,51 @@ var _ = Describe("BrokerConfigDetails", func() {
 				Expect(share).To(ContainSubstring("uid=2999"))
 				Expect(share).To(ContainSubstring("gid=1999"))
 			})
+
+			Context("when the whole config is copied", func() {
+				var config2 *Config
+				BeforeEach(func(){
+					config2 = config.Copy()
+				})
+				It("should flow the arbitrary config into the mount command parameters ", func() {
+					actualRes := config2.Mount()
+					expectRes := mapint2slice(AbitraryConfig, "=", "--")
+
+					for _, exp := range expectRes {
+						logger.Debug("checking-actual-res-contains-part", lager.Data{"actualRes": actualRes, "part": exp})
+						Expect(inSliceString(actualRes, exp)).To(BeTrue())
+					}
+
+					for _, exp := range actualRes {
+						logger.Debug("checking-expect-res-contains-part", lager.Data{"expectRes": expectRes, "part": exp})
+						Expect(inSliceString(expectRes, exp)).To(BeTrue())
+					}
+				})
+
+				It("should flow the arbitrary config into the MountOptions struct", func() {
+					actualRes := config2.MountConfig()
+					expectRes := AbitraryConfig
+
+					for k, exp := range expectRes {
+						logger.Debug("checking-expect-res-contains-part", lager.Data{"expectRes": expectRes, "key": k, "val": exp})
+						Expect(inMapInt(actualRes, k, exp)).To(BeTrue())
+					}
+
+					for k, exp := range actualRes {
+						logger.Debug("checking-expect-res-contains-part", lager.Data{"expectRes": expectRes, "key": k, "val": exp})
+						Expect(inMapInt(expectRes, k, exp)).To(BeTrue())
+					}
+				})
+
+				It("should flow the source default options overrided by the share good params into the mount share url", func() {
+					share := config2.Share(ClientShare)
+
+					Expect(share).To(ContainSubstring("nfs://1.2.3.4?"))
+					Expect(share).To(ContainSubstring("uid=2999"))
+					Expect(share).To(ContainSubstring("gid=1999"))
+				})
+
+			})
 		})
 	})
 
@@ -569,10 +614,6 @@ var _ = Describe("BrokerConfigDetails", func() {
 
 			mounts = NewNfsBrokerConfigDetails()
 			mounts.ReadConf(strings.Join(MountsAllowed, ","), map2string(MountsOptions, ":", "", ","), MountsMandatory)
-
-			config = NewNfsBrokerConfig(source, mounts)
-			logger.Debug("debug-config-initiated", lager.Data{"config": config, "source": source, "mount": mounts})
-			logger.Debug("debug-config-updated", lager.Data{"config": config, "source": source, "mount": mounts})
 		})
 
 		It("should return empty allowed list", func() {
@@ -598,6 +639,32 @@ var _ = Describe("BrokerConfigDetails", func() {
 		It("should return empty missing mandatory field", func() {
 			Expect(len(source.CheckMandatory())).To(Equal(0))
 			Expect(len(mounts.CheckMandatory())).To(Equal(0))
+		})
+		Context("When the config is copied", func() {
+			BeforeEach(func() {
+				source2 = source.Copy()
+				mounts2 = mounts.Copy()
+			})
+			It("should return empty allowed list", func() {
+				Expect(len(source2.Allowed)).To(Equal(0))
+				Expect(len(mounts2.Allowed)).To(Equal(0))
+			})
+
+			It("should flow the default list as forced", func() {
+				Expect(source2.Forced).To(Equal(SourceOptions))
+				Expect(mounts2.Forced).To(Equal(MountsOptions))
+			})
+
+			It("should return empty options list", func() {
+				Expect(len(source2.Options)).To(Equal(0))
+				Expect(len(mounts2.Options)).To(Equal(0))
+			})
+
+			It("should flow sloppy_mount as disabled", func() {
+				Expect(source2.IsSloppyMount()).To(BeFalse())
+				Expect(mounts2.IsSloppyMount()).To(BeFalse())
+			})
+			
 		})
 	})
 })

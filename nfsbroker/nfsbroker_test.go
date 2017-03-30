@@ -286,38 +286,6 @@ var _ = Describe("Broker", func() {
 				Expect(share).To(ContainSubstring(fmt.Sprintf("gid=%s", gid)))
 			})
 
-			Context("given the uid is not supplied", func() {
-				BeforeEach(func() {
-					bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{
-						nfsbroker.Username: "principal name",
-						nfsbroker.Secret:   "some keytab data",
-						"gid":              gid,
-					},
-					}
-				})
-
-				It("should return with an error", func() {
-					_, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
-					Expect(err).To(HaveOccurred())
-				})
-			})
-
-			Context("given the gid is not supplied", func() {
-				BeforeEach(func() {
-					bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{
-						nfsbroker.Username: "principal name",
-						nfsbroker.Secret:   "some keytab data",
-						"uid":              uid,
-					},
-					}
-				})
-
-				It("should return with an error", func() {
-					_, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
-					Expect(err).To(HaveOccurred())
-				})
-			})
-
 			It("includes empty credentials to prevent CAPI crash", func() {
 				binding, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
 				Expect(err).NotTo(HaveOccurred())
