@@ -250,7 +250,8 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 	}
 
 
-	logger.Info("volume-service-binding", lager.Data{"Driver": "nfsv3driver", "MountConfig": mountConfig, "source": source})
+	// TODO -- less logging!
+	logger.Info("volume-service-binding", lager.Data{"Driver": "nfsv3driver", "mountConfig": mountConfig, "source": source, "brokerConfig":b.config})
 
 	s, err := b.hash(mountConfig)
 	if err != nil {
