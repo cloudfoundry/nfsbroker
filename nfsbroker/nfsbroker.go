@@ -229,29 +229,31 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 
 	source := fmt.Sprintf("nfs://%s", instanceDetails.Share)
 
-	if err := b.config.SetEntries(source, bindDetails.Parameters, []string{
+	// TODO--brokerConfig is not re-entrant because it stores state in SetEntries--we should modify it to
+	// TODO--be stateless.  Until we do that, we will just make a local copy, but we should really
+	// TODO--refactor this to something more efficient.
+	tempConfig := b.config
+	if err := tempConfig.SetEntries(source, bindDetails.Parameters, []string{
 		"share", "mount", "kerberosPrincipal", "kerberosKeytab", "readonly",
 	}); err != nil {
 		logger.Debug("parameters-error-assign-entries", lager.Data{
 			"given_source":  source,
 			"given_options": bindDetails.Parameters,
-			"source":        b.config.source,
-			"mount":         b.config.mount,
-			"sloppy_mount":  b.config.sloppyMount,
+			"source":        tempConfig.source,
+			"mount":         tempConfig.mount,
+			"sloppy_mount":  tempConfig.sloppyMount,
 		})
 		return brokerapi.Binding{}, err
 	}
 
-	mountConfig := b.config.MountConfig()
-	mountConfig["source"] = b.config.Share(source)
+	mountConfig := tempConfig.MountConfig()
+	mountConfig["source"] = tempConfig.Share(source)
 	if mode == "r" {
 		mountConfig["readonly"] = true
 		mode = "rw"
 	}
 
-
-	// TODO -- less logging!
-	logger.Info("volume-service-binding", lager.Data{"Driver": "nfsv3driver", "mountConfig": mountConfig, "source": source, "brokerConfig":b.config})
+	logger.Info("volume-service-binding", lager.Data{"Driver": "nfsv3driver", "mountConfig": mountConfig, "source": source})
 
 	s, err := b.hash(mountConfig)
 	if err != nil {
