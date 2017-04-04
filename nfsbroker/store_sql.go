@@ -10,6 +10,7 @@ import (
 	"code.cloudfoundry.org/lager"
 	"github.com/pivotal-cf/brokerapi"
 	"encoding/json"
+	"reflect"
 )
 
 type SqlStore struct {
@@ -185,4 +186,22 @@ func (s *SqlStore) keyValueInTable(logger lager.Logger, key, value, table string
 	logger.Debug("failed-query", lager.Data{"Query": query})
 	logger.Error("failed-query", err)
 	return err, true
+}
+
+func (s *SqlStore) IsInstanceConflict(id string, details ServiceInstance) bool {
+	if existing, err := s.RetrieveInstanceDetails(id); err == nil {
+		if !reflect.DeepEqual(details, existing) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *SqlStore) IsBindingConflict(id string, details brokerapi.BindDetails) bool {
+	if existing, err := s.RetrieveBindingDetails(id); err == nil {
+		if !reflect.DeepEqual(details, existing) {
+			return true
+		}
+	}
+	return false
 }

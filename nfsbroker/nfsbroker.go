@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"path"
-	"reflect"
 	"sync"
 
 	"crypto/md5"
@@ -114,10 +113,6 @@ func (b *Broker) Provision(context context.Context, instanceID string, details b
 	logger.Info("start")
 	defer logger.Info("end")
 
-	if b.instanceConflicts(details, instanceID) {
-		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrInstanceAlreadyExists
-	}
-
 	type Configuration struct {
 		Share string `json:"share"`
 	}
@@ -148,6 +143,10 @@ func (b *Broker) Provision(context context.Context, instanceID string, details b
 		details.OrganizationGUID,
 		details.SpaceGUID,
 		configuration.Share}
+
+	if b.instanceConflicts(instanceDetails, instanceID) {
+		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrInstanceAlreadyExists
+	}
 
 	err = b.store.CreateInstanceDetails(instanceID, instanceDetails)
 	if err != nil {
@@ -336,23 +335,12 @@ func (b *Broker) LastOperation(_ context.Context, instanceID string, operationDa
 	}
 }
 
-func (b *Broker) instanceConflicts(details brokerapi.ProvisionDetails, instanceID string) bool {
-
-	if existing, err := b.store.RetrieveInstanceDetails(instanceID); err == nil {
-		if !reflect.DeepEqual(details, existing) {
-			return true
-		}
-	}
-	return false
+func (b *Broker) instanceConflicts(details ServiceInstance, instanceID string) bool {
+	return b.store.IsInstanceConflict(instanceID, ServiceInstance(details))
 }
 
 func (b *Broker) bindingConflicts(bindingID string, details brokerapi.BindDetails) bool {
-	if existing, err := b.store.RetrieveBindingDetails(bindingID); err == nil {
-		if !reflect.DeepEqual(details, existing) {
-			return true
-		}
-	}
-	return false
+  return b.store.IsBindingConflict(bindingID, details)
 }
 
 func evaluateContainerPath(parameters map[string]interface{}, volId string) string {

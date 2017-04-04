@@ -150,6 +150,13 @@ var _ = Describe("FileStore", func() {
 			It("then will find instance details", func() {
 				Expect(outInstanceDetails).To(Equal(inInstanceDetails))
 			})
+
+			It("reports conflicts correctly", func() {
+				Expect(store.IsInstanceConflict(instanceID, inInstanceDetails)).To(BeFalse())
+				otherInstance := nfsbroker.ServiceInstance{ServiceID: "sample-service",PlanID:"foo"}
+				Expect(store.IsInstanceConflict(instanceID, otherInstance)).To(BeTrue())
+			})
+
 			Context("when deleting", func() {
 				JustBeforeEach(func() {
 					err = store.DeleteInstanceDetails(instanceID)
@@ -194,6 +201,13 @@ var _ = Describe("FileStore", func() {
 				It("then will find binding details", func() {
 					Expect(outBindingDetails).To(Equal(inBindingDetails))
 				})
+
+				It("reports conflicts correctly", func() {
+					Expect(store.IsBindingConflict(bindingID, inBindingDetails)).To(BeFalse())
+					otherBindingDetails := brokerapi.BindDetails{ServiceID:"sample-service",Parameters:map[string]interface{}{"foo":"foo"}}
+					Expect(store.IsBindingConflict(bindingID, otherBindingDetails)).To(BeTrue())
+				})
+
 				Context("when deleting", func() {
 					JustBeforeEach(func() {
 						err = store.DeleteBindingDetails(bindingID)

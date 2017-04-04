@@ -23,13 +23,13 @@ type FakeSqlConnection struct {
 	PingStub        func() error
 	pingMutex       sync.RWMutex
 	pingArgsForCall []struct{}
-	pingReturns     struct {
+	pingReturns struct {
 		result1 error
 	}
 	CloseStub        func() error
 	closeMutex       sync.RWMutex
 	closeArgsForCall []struct{}
-	closeReturns     struct {
+	closeReturns struct {
 		result1 error
 	}
 	SetMaxIdleConnsStub        func(n int)
@@ -50,7 +50,7 @@ type FakeSqlConnection struct {
 	StatsStub        func() sql.DBStats
 	statsMutex       sync.RWMutex
 	statsArgsForCall []struct{}
-	statsReturns     struct {
+	statsReturns struct {
 		result1 sql.DBStats
 	}
 	PrepareStub        func(query string) (*sql.Stmt, error)
@@ -94,18 +94,16 @@ type FakeSqlConnection struct {
 	BeginStub        func() (*sql.Tx, error)
 	beginMutex       sync.RWMutex
 	beginArgsForCall []struct{}
-	beginReturns     struct {
+	beginReturns struct {
 		result1 *sql.Tx
 		result2 error
 	}
 	DriverStub        func() driver.Driver
 	driverMutex       sync.RWMutex
 	driverArgsForCall []struct{}
-	driverReturns     struct {
+	driverReturns struct {
 		result1 driver.Driver
 	}
-	invocations      map[string][][]interface{}
-	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeSqlConnection) Connect(logger lager.Logger) error {
@@ -113,12 +111,12 @@ func (fake *FakeSqlConnection) Connect(logger lager.Logger) error {
 	fake.connectArgsForCall = append(fake.connectArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
-	fake.recordInvocation("Connect", []interface{}{logger})
 	fake.connectMutex.Unlock()
 	if fake.ConnectStub != nil {
 		return fake.ConnectStub(logger)
+	} else {
+		return fake.connectReturns.result1
 	}
-	return fake.connectReturns.result1
 }
 
 func (fake *FakeSqlConnection) ConnectCallCount() int {
@@ -143,12 +141,12 @@ func (fake *FakeSqlConnection) ConnectReturns(result1 error) {
 func (fake *FakeSqlConnection) Ping() error {
 	fake.pingMutex.Lock()
 	fake.pingArgsForCall = append(fake.pingArgsForCall, struct{}{})
-	fake.recordInvocation("Ping", []interface{}{})
 	fake.pingMutex.Unlock()
 	if fake.PingStub != nil {
 		return fake.PingStub()
+	} else {
+		return fake.pingReturns.result1
 	}
-	return fake.pingReturns.result1
 }
 
 func (fake *FakeSqlConnection) PingCallCount() int {
@@ -167,12 +165,12 @@ func (fake *FakeSqlConnection) PingReturns(result1 error) {
 func (fake *FakeSqlConnection) Close() error {
 	fake.closeMutex.Lock()
 	fake.closeArgsForCall = append(fake.closeArgsForCall, struct{}{})
-	fake.recordInvocation("Close", []interface{}{})
 	fake.closeMutex.Unlock()
 	if fake.CloseStub != nil {
 		return fake.CloseStub()
+	} else {
+		return fake.closeReturns.result1
 	}
-	return fake.closeReturns.result1
 }
 
 func (fake *FakeSqlConnection) CloseCallCount() int {
@@ -193,7 +191,6 @@ func (fake *FakeSqlConnection) SetMaxIdleConns(n int) {
 	fake.setMaxIdleConnsArgsForCall = append(fake.setMaxIdleConnsArgsForCall, struct {
 		n int
 	}{n})
-	fake.recordInvocation("SetMaxIdleConns", []interface{}{n})
 	fake.setMaxIdleConnsMutex.Unlock()
 	if fake.SetMaxIdleConnsStub != nil {
 		fake.SetMaxIdleConnsStub(n)
@@ -217,7 +214,6 @@ func (fake *FakeSqlConnection) SetMaxOpenConns(n int) {
 	fake.setMaxOpenConnsArgsForCall = append(fake.setMaxOpenConnsArgsForCall, struct {
 		n int
 	}{n})
-	fake.recordInvocation("SetMaxOpenConns", []interface{}{n})
 	fake.setMaxOpenConnsMutex.Unlock()
 	if fake.SetMaxOpenConnsStub != nil {
 		fake.SetMaxOpenConnsStub(n)
@@ -241,7 +237,6 @@ func (fake *FakeSqlConnection) SetConnMaxLifetime(d time.Duration) {
 	fake.setConnMaxLifetimeArgsForCall = append(fake.setConnMaxLifetimeArgsForCall, struct {
 		d time.Duration
 	}{d})
-	fake.recordInvocation("SetConnMaxLifetime", []interface{}{d})
 	fake.setConnMaxLifetimeMutex.Unlock()
 	if fake.SetConnMaxLifetimeStub != nil {
 		fake.SetConnMaxLifetimeStub(d)
@@ -263,12 +258,12 @@ func (fake *FakeSqlConnection) SetConnMaxLifetimeArgsForCall(i int) time.Duratio
 func (fake *FakeSqlConnection) Stats() sql.DBStats {
 	fake.statsMutex.Lock()
 	fake.statsArgsForCall = append(fake.statsArgsForCall, struct{}{})
-	fake.recordInvocation("Stats", []interface{}{})
 	fake.statsMutex.Unlock()
 	if fake.StatsStub != nil {
 		return fake.StatsStub()
+	} else {
+		return fake.statsReturns.result1
 	}
-	return fake.statsReturns.result1
 }
 
 func (fake *FakeSqlConnection) StatsCallCount() int {
@@ -289,12 +284,12 @@ func (fake *FakeSqlConnection) Prepare(query string) (*sql.Stmt, error) {
 	fake.prepareArgsForCall = append(fake.prepareArgsForCall, struct {
 		query string
 	}{query})
-	fake.recordInvocation("Prepare", []interface{}{query})
 	fake.prepareMutex.Unlock()
 	if fake.PrepareStub != nil {
 		return fake.PrepareStub(query)
+	} else {
+		return fake.prepareReturns.result1, fake.prepareReturns.result2
 	}
-	return fake.prepareReturns.result1, fake.prepareReturns.result2
 }
 
 func (fake *FakeSqlConnection) PrepareCallCount() int {
@@ -323,12 +318,12 @@ func (fake *FakeSqlConnection) Exec(query string, args ...interface{}) (sql.Resu
 		query string
 		args  []interface{}
 	}{query, args})
-	fake.recordInvocation("Exec", []interface{}{query, args})
 	fake.execMutex.Unlock()
 	if fake.ExecStub != nil {
 		return fake.ExecStub(query, args...)
+	} else {
+		return fake.execReturns.result1, fake.execReturns.result2
 	}
-	return fake.execReturns.result1, fake.execReturns.result2
 }
 
 func (fake *FakeSqlConnection) ExecCallCount() int {
@@ -357,12 +352,12 @@ func (fake *FakeSqlConnection) Query(query string, args ...interface{}) (*sql.Ro
 		query string
 		args  []interface{}
 	}{query, args})
-	fake.recordInvocation("Query", []interface{}{query, args})
 	fake.queryMutex.Unlock()
 	if fake.QueryStub != nil {
 		return fake.QueryStub(query, args...)
+	} else {
+		return fake.queryReturns.result1, fake.queryReturns.result2
 	}
-	return fake.queryReturns.result1, fake.queryReturns.result2
 }
 
 func (fake *FakeSqlConnection) QueryCallCount() int {
@@ -391,12 +386,12 @@ func (fake *FakeSqlConnection) QueryRow(query string, args ...interface{}) *sql.
 		query string
 		args  []interface{}
 	}{query, args})
-	fake.recordInvocation("QueryRow", []interface{}{query, args})
 	fake.queryRowMutex.Unlock()
 	if fake.QueryRowStub != nil {
 		return fake.QueryRowStub(query, args...)
+	} else {
+		return fake.queryRowReturns.result1
 	}
-	return fake.queryRowReturns.result1
 }
 
 func (fake *FakeSqlConnection) QueryRowCallCount() int {
@@ -421,12 +416,12 @@ func (fake *FakeSqlConnection) QueryRowReturns(result1 *sql.Row) {
 func (fake *FakeSqlConnection) Begin() (*sql.Tx, error) {
 	fake.beginMutex.Lock()
 	fake.beginArgsForCall = append(fake.beginArgsForCall, struct{}{})
-	fake.recordInvocation("Begin", []interface{}{})
 	fake.beginMutex.Unlock()
 	if fake.BeginStub != nil {
 		return fake.BeginStub()
+	} else {
+		return fake.beginReturns.result1, fake.beginReturns.result2
 	}
-	return fake.beginReturns.result1, fake.beginReturns.result2
 }
 
 func (fake *FakeSqlConnection) BeginCallCount() int {
@@ -446,12 +441,12 @@ func (fake *FakeSqlConnection) BeginReturns(result1 *sql.Tx, result2 error) {
 func (fake *FakeSqlConnection) Driver() driver.Driver {
 	fake.driverMutex.Lock()
 	fake.driverArgsForCall = append(fake.driverArgsForCall, struct{}{})
-	fake.recordInvocation("Driver", []interface{}{})
 	fake.driverMutex.Unlock()
 	if fake.DriverStub != nil {
 		return fake.DriverStub()
+	} else {
+		return fake.driverReturns.result1
 	}
-	return fake.driverReturns.result1
 }
 
 func (fake *FakeSqlConnection) DriverCallCount() int {
@@ -465,50 +460,6 @@ func (fake *FakeSqlConnection) DriverReturns(result1 driver.Driver) {
 	fake.driverReturns = struct {
 		result1 driver.Driver
 	}{result1}
-}
-
-func (fake *FakeSqlConnection) Invocations() map[string][][]interface{} {
-	fake.invocationsMutex.RLock()
-	defer fake.invocationsMutex.RUnlock()
-	fake.connectMutex.RLock()
-	defer fake.connectMutex.RUnlock()
-	fake.pingMutex.RLock()
-	defer fake.pingMutex.RUnlock()
-	fake.closeMutex.RLock()
-	defer fake.closeMutex.RUnlock()
-	fake.setMaxIdleConnsMutex.RLock()
-	defer fake.setMaxIdleConnsMutex.RUnlock()
-	fake.setMaxOpenConnsMutex.RLock()
-	defer fake.setMaxOpenConnsMutex.RUnlock()
-	fake.setConnMaxLifetimeMutex.RLock()
-	defer fake.setConnMaxLifetimeMutex.RUnlock()
-	fake.statsMutex.RLock()
-	defer fake.statsMutex.RUnlock()
-	fake.prepareMutex.RLock()
-	defer fake.prepareMutex.RUnlock()
-	fake.execMutex.RLock()
-	defer fake.execMutex.RUnlock()
-	fake.queryMutex.RLock()
-	defer fake.queryMutex.RUnlock()
-	fake.queryRowMutex.RLock()
-	defer fake.queryRowMutex.RUnlock()
-	fake.beginMutex.RLock()
-	defer fake.beginMutex.RUnlock()
-	fake.driverMutex.RLock()
-	defer fake.driverMutex.RUnlock()
-	return fake.invocations
-}
-
-func (fake *FakeSqlConnection) recordInvocation(key string, args []interface{}) {
-	fake.invocationsMutex.Lock()
-	defer fake.invocationsMutex.Unlock()
-	if fake.invocations == nil {
-		fake.invocations = map[string][][]interface{}{}
-	}
-	if fake.invocations[key] == nil {
-		fake.invocations[key] = [][]interface{}{}
-	}
-	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ nfsbroker.SqlConnection = new(FakeSqlConnection)

@@ -62,6 +62,24 @@ type FakeStore struct {
 	deleteBindingDetailsReturns struct {
 		result1 error
 	}
+	IsInstanceConflictStub        func(id string, details nfsbroker.ServiceInstance) bool
+	isInstanceConflictMutex       sync.RWMutex
+	isInstanceConflictArgsForCall []struct {
+		id      string
+		details nfsbroker.ServiceInstance
+	}
+	isInstanceConflictReturns struct {
+		result1 bool
+	}
+	IsBindingConflictStub        func(id string, details brokerapi.BindDetails) bool
+	isBindingConflictMutex       sync.RWMutex
+	isBindingConflictArgsForCall []struct {
+		id      string
+		details brokerapi.BindDetails
+	}
+	isBindingConflictReturns struct {
+		result1 bool
+	}
 	RestoreStub        func(logger lager.Logger) error
 	restoreMutex       sync.RWMutex
 	restoreArgsForCall []struct {
@@ -81,11 +99,9 @@ type FakeStore struct {
 	CleanupStub        func() error
 	cleanupMutex       sync.RWMutex
 	cleanupArgsForCall []struct{}
-	cleanupReturns     struct {
+	cleanupReturns struct {
 		result1 error
 	}
-	invocations      map[string][][]interface{}
-	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeStore) RetrieveInstanceDetails(id string) (nfsbroker.ServiceInstance, error) {
@@ -93,12 +109,12 @@ func (fake *FakeStore) RetrieveInstanceDetails(id string) (nfsbroker.ServiceInst
 	fake.retrieveInstanceDetailsArgsForCall = append(fake.retrieveInstanceDetailsArgsForCall, struct {
 		id string
 	}{id})
-	fake.recordInvocation("RetrieveInstanceDetails", []interface{}{id})
 	fake.retrieveInstanceDetailsMutex.Unlock()
 	if fake.RetrieveInstanceDetailsStub != nil {
 		return fake.RetrieveInstanceDetailsStub(id)
+	} else {
+		return fake.retrieveInstanceDetailsReturns.result1, fake.retrieveInstanceDetailsReturns.result2
 	}
-	return fake.retrieveInstanceDetailsReturns.result1, fake.retrieveInstanceDetailsReturns.result2
 }
 
 func (fake *FakeStore) RetrieveInstanceDetailsCallCount() int {
@@ -126,12 +142,12 @@ func (fake *FakeStore) RetrieveBindingDetails(id string) (brokerapi.BindDetails,
 	fake.retrieveBindingDetailsArgsForCall = append(fake.retrieveBindingDetailsArgsForCall, struct {
 		id string
 	}{id})
-	fake.recordInvocation("RetrieveBindingDetails", []interface{}{id})
 	fake.retrieveBindingDetailsMutex.Unlock()
 	if fake.RetrieveBindingDetailsStub != nil {
 		return fake.RetrieveBindingDetailsStub(id)
+	} else {
+		return fake.retrieveBindingDetailsReturns.result1, fake.retrieveBindingDetailsReturns.result2
 	}
-	return fake.retrieveBindingDetailsReturns.result1, fake.retrieveBindingDetailsReturns.result2
 }
 
 func (fake *FakeStore) RetrieveBindingDetailsCallCount() int {
@@ -160,12 +176,12 @@ func (fake *FakeStore) CreateInstanceDetails(id string, details nfsbroker.Servic
 		id      string
 		details nfsbroker.ServiceInstance
 	}{id, details})
-	fake.recordInvocation("CreateInstanceDetails", []interface{}{id, details})
 	fake.createInstanceDetailsMutex.Unlock()
 	if fake.CreateInstanceDetailsStub != nil {
 		return fake.CreateInstanceDetailsStub(id, details)
+	} else {
+		return fake.createInstanceDetailsReturns.result1
 	}
-	return fake.createInstanceDetailsReturns.result1
 }
 
 func (fake *FakeStore) CreateInstanceDetailsCallCount() int {
@@ -193,12 +209,12 @@ func (fake *FakeStore) CreateBindingDetails(id string, details brokerapi.BindDet
 		id      string
 		details brokerapi.BindDetails
 	}{id, details})
-	fake.recordInvocation("CreateBindingDetails", []interface{}{id, details})
 	fake.createBindingDetailsMutex.Unlock()
 	if fake.CreateBindingDetailsStub != nil {
 		return fake.CreateBindingDetailsStub(id, details)
+	} else {
+		return fake.createBindingDetailsReturns.result1
 	}
-	return fake.createBindingDetailsReturns.result1
 }
 
 func (fake *FakeStore) CreateBindingDetailsCallCount() int {
@@ -225,12 +241,12 @@ func (fake *FakeStore) DeleteInstanceDetails(id string) error {
 	fake.deleteInstanceDetailsArgsForCall = append(fake.deleteInstanceDetailsArgsForCall, struct {
 		id string
 	}{id})
-	fake.recordInvocation("DeleteInstanceDetails", []interface{}{id})
 	fake.deleteInstanceDetailsMutex.Unlock()
 	if fake.DeleteInstanceDetailsStub != nil {
 		return fake.DeleteInstanceDetailsStub(id)
+	} else {
+		return fake.deleteInstanceDetailsReturns.result1
 	}
-	return fake.deleteInstanceDetailsReturns.result1
 }
 
 func (fake *FakeStore) DeleteInstanceDetailsCallCount() int {
@@ -257,12 +273,12 @@ func (fake *FakeStore) DeleteBindingDetails(id string) error {
 	fake.deleteBindingDetailsArgsForCall = append(fake.deleteBindingDetailsArgsForCall, struct {
 		id string
 	}{id})
-	fake.recordInvocation("DeleteBindingDetails", []interface{}{id})
 	fake.deleteBindingDetailsMutex.Unlock()
 	if fake.DeleteBindingDetailsStub != nil {
 		return fake.DeleteBindingDetailsStub(id)
+	} else {
+		return fake.deleteBindingDetailsReturns.result1
 	}
-	return fake.deleteBindingDetailsReturns.result1
 }
 
 func (fake *FakeStore) DeleteBindingDetailsCallCount() int {
@@ -284,17 +300,83 @@ func (fake *FakeStore) DeleteBindingDetailsReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *FakeStore) IsInstanceConflict(id string, details nfsbroker.ServiceInstance) bool {
+	fake.isInstanceConflictMutex.Lock()
+	fake.isInstanceConflictArgsForCall = append(fake.isInstanceConflictArgsForCall, struct {
+		id      string
+		details nfsbroker.ServiceInstance
+	}{id, details})
+	fake.isInstanceConflictMutex.Unlock()
+	if fake.IsInstanceConflictStub != nil {
+		return fake.IsInstanceConflictStub(id, details)
+	} else {
+		return fake.isInstanceConflictReturns.result1
+	}
+}
+
+func (fake *FakeStore) IsInstanceConflictCallCount() int {
+	fake.isInstanceConflictMutex.RLock()
+	defer fake.isInstanceConflictMutex.RUnlock()
+	return len(fake.isInstanceConflictArgsForCall)
+}
+
+func (fake *FakeStore) IsInstanceConflictArgsForCall(i int) (string, nfsbroker.ServiceInstance) {
+	fake.isInstanceConflictMutex.RLock()
+	defer fake.isInstanceConflictMutex.RUnlock()
+	return fake.isInstanceConflictArgsForCall[i].id, fake.isInstanceConflictArgsForCall[i].details
+}
+
+func (fake *FakeStore) IsInstanceConflictReturns(result1 bool) {
+	fake.IsInstanceConflictStub = nil
+	fake.isInstanceConflictReturns = struct {
+		result1 bool
+	}{result1}
+}
+
+func (fake *FakeStore) IsBindingConflict(id string, details brokerapi.BindDetails) bool {
+	fake.isBindingConflictMutex.Lock()
+	fake.isBindingConflictArgsForCall = append(fake.isBindingConflictArgsForCall, struct {
+		id      string
+		details brokerapi.BindDetails
+	}{id, details})
+	fake.isBindingConflictMutex.Unlock()
+	if fake.IsBindingConflictStub != nil {
+		return fake.IsBindingConflictStub(id, details)
+	} else {
+		return fake.isBindingConflictReturns.result1
+	}
+}
+
+func (fake *FakeStore) IsBindingConflictCallCount() int {
+	fake.isBindingConflictMutex.RLock()
+	defer fake.isBindingConflictMutex.RUnlock()
+	return len(fake.isBindingConflictArgsForCall)
+}
+
+func (fake *FakeStore) IsBindingConflictArgsForCall(i int) (string, brokerapi.BindDetails) {
+	fake.isBindingConflictMutex.RLock()
+	defer fake.isBindingConflictMutex.RUnlock()
+	return fake.isBindingConflictArgsForCall[i].id, fake.isBindingConflictArgsForCall[i].details
+}
+
+func (fake *FakeStore) IsBindingConflictReturns(result1 bool) {
+	fake.IsBindingConflictStub = nil
+	fake.isBindingConflictReturns = struct {
+		result1 bool
+	}{result1}
+}
+
 func (fake *FakeStore) Restore(logger lager.Logger) error {
 	fake.restoreMutex.Lock()
 	fake.restoreArgsForCall = append(fake.restoreArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
-	fake.recordInvocation("Restore", []interface{}{logger})
 	fake.restoreMutex.Unlock()
 	if fake.RestoreStub != nil {
 		return fake.RestoreStub(logger)
+	} else {
+		return fake.restoreReturns.result1
 	}
-	return fake.restoreReturns.result1
 }
 
 func (fake *FakeStore) RestoreCallCount() int {
@@ -321,12 +403,12 @@ func (fake *FakeStore) Save(logger lager.Logger) error {
 	fake.saveArgsForCall = append(fake.saveArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
-	fake.recordInvocation("Save", []interface{}{logger})
 	fake.saveMutex.Unlock()
 	if fake.SaveStub != nil {
 		return fake.SaveStub(logger)
+	} else {
+		return fake.saveReturns.result1
 	}
-	return fake.saveReturns.result1
 }
 
 func (fake *FakeStore) SaveCallCount() int {
@@ -351,12 +433,12 @@ func (fake *FakeStore) SaveReturns(result1 error) {
 func (fake *FakeStore) Cleanup() error {
 	fake.cleanupMutex.Lock()
 	fake.cleanupArgsForCall = append(fake.cleanupArgsForCall, struct{}{})
-	fake.recordInvocation("Cleanup", []interface{}{})
 	fake.cleanupMutex.Unlock()
 	if fake.CleanupStub != nil {
 		return fake.CleanupStub()
+	} else {
+		return fake.cleanupReturns.result1
 	}
-	return fake.cleanupReturns.result1
 }
 
 func (fake *FakeStore) CleanupCallCount() int {
@@ -370,42 +452,6 @@ func (fake *FakeStore) CleanupReturns(result1 error) {
 	fake.cleanupReturns = struct {
 		result1 error
 	}{result1}
-}
-
-func (fake *FakeStore) Invocations() map[string][][]interface{} {
-	fake.invocationsMutex.RLock()
-	defer fake.invocationsMutex.RUnlock()
-	fake.retrieveInstanceDetailsMutex.RLock()
-	defer fake.retrieveInstanceDetailsMutex.RUnlock()
-	fake.retrieveBindingDetailsMutex.RLock()
-	defer fake.retrieveBindingDetailsMutex.RUnlock()
-	fake.createInstanceDetailsMutex.RLock()
-	defer fake.createInstanceDetailsMutex.RUnlock()
-	fake.createBindingDetailsMutex.RLock()
-	defer fake.createBindingDetailsMutex.RUnlock()
-	fake.deleteInstanceDetailsMutex.RLock()
-	defer fake.deleteInstanceDetailsMutex.RUnlock()
-	fake.deleteBindingDetailsMutex.RLock()
-	defer fake.deleteBindingDetailsMutex.RUnlock()
-	fake.restoreMutex.RLock()
-	defer fake.restoreMutex.RUnlock()
-	fake.saveMutex.RLock()
-	defer fake.saveMutex.RUnlock()
-	fake.cleanupMutex.RLock()
-	defer fake.cleanupMutex.RUnlock()
-	return fake.invocations
-}
-
-func (fake *FakeStore) recordInvocation(key string, args []interface{}) {
-	fake.invocationsMutex.Lock()
-	defer fake.invocationsMutex.Unlock()
-	if fake.invocations == nil {
-		fake.invocations = map[string][][]interface{}{}
-	}
-	if fake.invocations[key] == nil {
-		fake.invocations[key] = [][]interface{}{}
-	}
-	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ nfsbroker.Store = new(FakeStore)

@@ -131,9 +131,19 @@ var _ = Describe("Broker", func() {
 				})
 			})
 
+			Context("when the service instance already exists with the same details", func() {
+				BeforeEach(func() {
+					fakeStore.IsInstanceConflictReturns(false)
+				})
+
+				It("should not error", func() {
+					Expect(err).NotTo(HaveOccurred())
+				})
+			})
+
 			Context("when the service instance already exists with different details", func() {
 				BeforeEach(func() {
-					fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{ServiceID:"different-service-id"},nil)
+					fakeStore.IsInstanceConflictReturns(true)
 				})
 
 				It("should error", func() {
@@ -351,14 +361,13 @@ var _ = Describe("Broker", func() {
 			Context("when the binding already exists", func() {
 
 				It("doesn't error when binding the same details", func() {
-					fakeStore.RetrieveBindingDetailsReturns(bindDetails, nil)
+					fakeStore.IsBindingConflictReturns(false)
 					_, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
 				It("errors when binding different details", func() {
-					fakeStore.RetrieveBindingDetailsReturns(brokerapi.BindDetails{}, nil)
-					bindDetails.AppGUID = "different"
+					fakeStore.IsBindingConflictReturns(true)
 					_, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
 					Expect(err).To(Equal(brokerapi.ErrBindingAlreadyExists))
 				})

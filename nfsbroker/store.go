@@ -17,6 +17,8 @@ type Store interface {
 	DeleteInstanceDetails(id string) error
 	DeleteBindingDetails(id string) error
 
+	IsInstanceConflict(id string, details ServiceInstance) bool
+	IsBindingConflict(id string, details brokerapi.BindDetails) bool
 
 	Restore(logger lager.Logger) error
 	Save(logger lager.Logger) error

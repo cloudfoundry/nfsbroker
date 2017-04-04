@@ -9,6 +9,7 @@ import (
 	"code.cloudfoundry.org/goshims/ioutilshim"
 	"code.cloudfoundry.org/lager"
 	"github.com/pivotal-cf/brokerapi"
+	"reflect"
 )
 
 type fileStore struct {
@@ -123,3 +124,22 @@ func (s *fileStore) DeleteBindingDetails(id string) error {
 	delete(s.dynamicState.BindingMap,id)
 	return nil
 }
+
+func (s *fileStore) IsInstanceConflict(id string, details ServiceInstance) bool {
+	if existing, err := s.RetrieveInstanceDetails(id); err == nil {
+		if !reflect.DeepEqual(details, existing) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *fileStore) IsBindingConflict(id string, details brokerapi.BindDetails) bool {
+	if existing, err := s.RetrieveBindingDetails(id); err == nil {
+		if !reflect.DeepEqual(details, existing) {
+			return true
+		}
+	}
+	return false
+}
+

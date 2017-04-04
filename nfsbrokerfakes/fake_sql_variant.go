@@ -30,11 +30,9 @@ type FakeSqlVariant struct {
 	CloseStub        func() error
 	closeMutex       sync.RWMutex
 	closeArgsForCall []struct{}
-	closeReturns     struct {
+	closeReturns struct {
 		result1 error
 	}
-	invocations      map[string][][]interface{}
-	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeSqlVariant) Connect(logger lager.Logger) (sqlshim.SqlDB, error) {
@@ -42,12 +40,12 @@ func (fake *FakeSqlVariant) Connect(logger lager.Logger) (sqlshim.SqlDB, error) 
 	fake.connectArgsForCall = append(fake.connectArgsForCall, struct {
 		logger lager.Logger
 	}{logger})
-	fake.recordInvocation("Connect", []interface{}{logger})
 	fake.connectMutex.Unlock()
 	if fake.ConnectStub != nil {
 		return fake.ConnectStub(logger)
+	} else {
+		return fake.connectReturns.result1, fake.connectReturns.result2
 	}
-	return fake.connectReturns.result1, fake.connectReturns.result2
 }
 
 func (fake *FakeSqlVariant) ConnectCallCount() int {
@@ -75,12 +73,12 @@ func (fake *FakeSqlVariant) Flavorify(query string) string {
 	fake.flavorifyArgsForCall = append(fake.flavorifyArgsForCall, struct {
 		query string
 	}{query})
-	fake.recordInvocation("Flavorify", []interface{}{query})
 	fake.flavorifyMutex.Unlock()
 	if fake.FlavorifyStub != nil {
 		return fake.FlavorifyStub(query)
+	} else {
+		return fake.flavorifyReturns.result1
 	}
-	return fake.flavorifyReturns.result1
 }
 
 func (fake *FakeSqlVariant) FlavorifyCallCount() int {
@@ -105,12 +103,12 @@ func (fake *FakeSqlVariant) FlavorifyReturns(result1 string) {
 func (fake *FakeSqlVariant) Close() error {
 	fake.closeMutex.Lock()
 	fake.closeArgsForCall = append(fake.closeArgsForCall, struct{}{})
-	fake.recordInvocation("Close", []interface{}{})
 	fake.closeMutex.Unlock()
 	if fake.CloseStub != nil {
 		return fake.CloseStub()
+	} else {
+		return fake.closeReturns.result1
 	}
-	return fake.closeReturns.result1
 }
 
 func (fake *FakeSqlVariant) CloseCallCount() int {
@@ -124,30 +122,6 @@ func (fake *FakeSqlVariant) CloseReturns(result1 error) {
 	fake.closeReturns = struct {
 		result1 error
 	}{result1}
-}
-
-func (fake *FakeSqlVariant) Invocations() map[string][][]interface{} {
-	fake.invocationsMutex.RLock()
-	defer fake.invocationsMutex.RUnlock()
-	fake.connectMutex.RLock()
-	defer fake.connectMutex.RUnlock()
-	fake.flavorifyMutex.RLock()
-	defer fake.flavorifyMutex.RUnlock()
-	fake.closeMutex.RLock()
-	defer fake.closeMutex.RUnlock()
-	return fake.invocations
-}
-
-func (fake *FakeSqlVariant) recordInvocation(key string, args []interface{}) {
-	fake.invocationsMutex.Lock()
-	defer fake.invocationsMutex.Unlock()
-	if fake.invocations == nil {
-		fake.invocations = map[string][][]interface{}{}
-	}
-	if fake.invocations[key] == nil {
-		fake.invocations[key] = [][]interface{}{}
-	}
-	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ nfsbroker.SqlVariant = new(FakeSqlVariant)
