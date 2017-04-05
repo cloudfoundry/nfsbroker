@@ -195,16 +195,20 @@ var _ = Describe("FileStore", func() {
 			Context("when details found", func() {
 				BeforeEach(func() {
 					bindingID = "somethingGood"
-					inBindingDetails = brokerapi.BindDetails{ServiceID:"sample-service"}
+					inBindingDetails = brokerapi.BindDetails{ServiceID:"sample-service",Parameters:map[string]interface{}{"ping":"pong"}}
 					store.CreateBindingDetails(bindingID, inBindingDetails)
 				})
 				It("then will find binding details", func() {
-					Expect(outBindingDetails).To(Equal(inBindingDetails))
+					Expect(outBindingDetails.ServiceID).To(Equal(inBindingDetails.ServiceID))
 				})
 
 				It("reports conflicts correctly", func() {
 					Expect(store.IsBindingConflict(bindingID, inBindingDetails)).To(BeFalse())
 					otherBindingDetails := brokerapi.BindDetails{ServiceID:"sample-service",Parameters:map[string]interface{}{"foo":"foo"}}
+					Expect(store.IsBindingConflict(bindingID, otherBindingDetails)).To(BeTrue())
+					otherBindingDetails = brokerapi.BindDetails{ServiceID:"sample-service"}
+					Expect(store.IsBindingConflict(bindingID, otherBindingDetails)).To(BeTrue())
+					otherBindingDetails = brokerapi.BindDetails{ServiceID:"sample-service",Parameters:map[string]interface{}{}}
 					Expect(store.IsBindingConflict(bindingID, otherBindingDetails)).To(BeTrue())
 				})
 
