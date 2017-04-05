@@ -140,7 +140,9 @@ func (s *SqlStore) RetrieveBindingDetails(id string) (brokerapi.BindDetails, err
 }
 
 func (s *SqlStore) CreateBindingDetails(id string, details brokerapi.BindDetails) error {
-	jsonData, err := json.Marshal(details)
+	storeDetails, err := redactBindingDetails(details)
+
+	jsonData, err := json.Marshal(storeDetails)
 	if err != nil {
 		return err
 	}
@@ -198,10 +200,5 @@ func (s *SqlStore) IsInstanceConflict(id string, details ServiceInstance) bool {
 }
 
 func (s *SqlStore) IsBindingConflict(id string, details brokerapi.BindDetails) bool {
-	if existing, err := s.RetrieveBindingDetails(id); err == nil {
-		if !reflect.DeepEqual(details, existing) {
-			return true
-		}
-	}
-	return false
+	return isBindingConflict(s, id, details)
 }

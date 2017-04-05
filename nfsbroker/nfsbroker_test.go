@@ -217,7 +217,7 @@ var _ = Describe("Broker", func() {
 					_ = json.NewEncoder(buf).Encode(configuration)
 					provisionDetails = brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
 					asyncAllowed = false
-					fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{ServiceID:instanceID},nil)
+					fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{ServiceID: instanceID}, nil)
 					previousSaveCallCount = fakeStore.SaveCallCount()
 				})
 
@@ -226,7 +226,7 @@ var _ = Describe("Broker", func() {
 				})
 
 				It("save state", func() {
-					Expect(fakeStore.SaveCallCount()).To(Equal(previousSaveCallCount+1))
+					Expect(fakeStore.SaveCallCount()).To(Equal(previousSaveCallCount + 1))
 				})
 
 				Context("when deletion of the instance fails", func() {
@@ -271,8 +271,8 @@ var _ = Describe("Broker", func() {
 				uid = "1234"
 				gid = "5678"
 
-				fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{ServiceID:instanceID,Share:"server:/some-share"}, nil)
-				fakeStore.RetrieveBindingDetailsReturns(brokerapi.BindDetails{},errors.New("yar"))
+				fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{ServiceID: instanceID, Share: "server:/some-share"}, nil)
+				fakeStore.RetrieveBindingDetailsReturns(brokerapi.BindDetails{}, errors.New("yar"))
 
 				bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{
 					nfsbroker.Username: "principal name",
@@ -326,7 +326,7 @@ var _ = Describe("Broker", func() {
 			//	bindDetails.Parameters["readonly"] = true
 			//	binding, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
 			//	Expect(err).NotTo(HaveOccurred())
-      //
+			//
 			//	Expect(binding.VolumeMounts[0].Mode).To(Equal("r"))
 			//	Expect(binding.VolumeMounts[0].Device.MountConfig["readonly"]).To(Equal(true))
 			//})
@@ -403,7 +403,7 @@ var _ = Describe("Broker", func() {
 
 			Context("when the binding cannot be stored", func() {
 				var (
-					err       error
+					err error
 				)
 
 				BeforeEach(func() {
@@ -420,7 +420,7 @@ var _ = Describe("Broker", func() {
 
 			Context("when the save fails", func() {
 				var (
-					err       error
+					err error
 				)
 				BeforeEach(func() {
 					fakeStore.SaveReturns(errors.New("badness"))
@@ -572,7 +572,7 @@ var _ = Describe("Broker", func() {
 			})
 
 			It("fails when trying to unbind a instance that has not been provisioned", func() {
-				fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{},errors.New("Shazaam!"))
+				fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{}, errors.New("Shazaam!"))
 				err := broker.Unbind(ctx, "some-other-instance-id", "binding-id", brokerapi.UnbindDetails{})
 				Expect(err).To(Equal(brokerapi.ErrInstanceDoesNotExist))
 			})

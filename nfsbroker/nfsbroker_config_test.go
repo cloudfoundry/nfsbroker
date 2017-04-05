@@ -99,7 +99,7 @@ var _ = Describe("BrokerConfigDetails", func() {
 
 		source, source2 *ConfigDetails
 		mounts, mounts2 *ConfigDetails
-		config *Config
+		config          *Config
 
 		errorEntries error
 	)
@@ -545,7 +545,7 @@ var _ = Describe("BrokerConfigDetails", func() {
 
 			Context("when the whole config is copied", func() {
 				var config2 *Config
-				BeforeEach(func(){
+				BeforeEach(func() {
 					config2 = config.Copy()
 				})
 				It("should flow the arbitrary config into the mount command parameters ", func() {
@@ -664,7 +664,7 @@ var _ = Describe("BrokerConfigDetails", func() {
 				Expect(source2.IsSloppyMount()).To(BeFalse())
 				Expect(mounts2.IsSloppyMount()).To(BeFalse())
 			})
-			
+
 		})
 	})
 })

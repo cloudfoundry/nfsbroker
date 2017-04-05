@@ -110,4 +110,3 @@ var _ = Describe("MysqlVariant", func() {
 		})
 	})
 })
-

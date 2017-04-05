@@ -199,7 +199,6 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 		}
 	}()
 
-
 	logger.Info("starting-nfsbroker-bind")
 	instanceDetails, err := b.store.RetrieveInstanceDetails(instanceID)
 	if err != nil {
@@ -302,7 +301,6 @@ func (b *Broker) Unbind(context context.Context, instanceID string, bindingID st
 		}
 	}()
 
-
 	if _, err := b.store.RetrieveInstanceDetails(instanceID); err != nil {
 		return brokerapi.ErrInstanceDoesNotExist
 	}
@@ -340,7 +338,7 @@ func (b *Broker) instanceConflicts(details ServiceInstance, instanceID string) b
 }
 
 func (b *Broker) bindingConflicts(bindingID string, details brokerapi.BindDetails) bool {
-  return b.store.IsBindingConflict(bindingID, details)
+	return b.store.IsBindingConflict(bindingID, details)
 }
 
 func evaluateContainerPath(parameters map[string]interface{}, volId string) string {

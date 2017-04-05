@@ -8,30 +8,48 @@ import (
 
 	"code.cloudfoundry.org/goshims/sqlshim/sql_fake"
 	"code.cloudfoundry.org/nfsbroker/nfsbrokerfakes"
+	"database/sql"
+	"database/sql/driver"
+	"encoding/json"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 	"reflect"
-	"encoding/json"
-	"database/sql"
+	"strings"
 )
+
+type redactedStuff struct{}
+
+func (a redactedStuff) Match(v driver.Value) bool {
+	if s, ok := v.(string); ok {
+		if strings.Contains(s, nfsbroker.HashKey) {
+			return true
+		}
+	}
+	if b, ok := v.([]byte); ok {
+		if strings.Contains(string(b), nfsbroker.HashKey) {
+			return true
+		}
+	}
+	return false
+}
 
 var _ = Describe("SqlStore", func() {
 	var (
-		store nfsbroker.Store
-		logger lager.Logger
-		state nfsbroker.DynamicState
-		fakeSqlDb = &sql_fake.FakeSqlDB{}
-		fakeVariant = &nfsbrokerfakes.FakeSqlVariant{}
-		err error
+		store                                                            nfsbroker.Store
+		logger                                                           lager.Logger
+		state                                                            nfsbroker.DynamicState
+		fakeSqlDb                                                        = &sql_fake.FakeSqlDB{}
+		fakeVariant                                                      = &nfsbrokerfakes.FakeSqlVariant{}
+		err                                                              error
 		bindingID, serviceID, planID, orgGUID, spaceGUID, appGUID, share string
-		serviceInstance nfsbroker.ServiceInstance
-		sqlStore nfsbroker.SqlStore
-		db *sql.DB
-		mock sqlmock.Sqlmock
-		bindResource brokerapi.BindResource
-	  parameters map[string]interface{}
-	  bindDetails brokerapi.BindDetails
+		serviceInstance                                                  nfsbroker.ServiceInstance
+		sqlStore                                                         nfsbroker.SqlStore
+		db                                                               *sql.DB
+		mock                                                             sqlmock.Sqlmock
+		bindResource                                                     brokerapi.BindResource
+		parameters                                                       map[string]interface{}
+		bindDetails                                                      brokerapi.BindDetails
 	)
 
 	BeforeEach(func() {
@@ -51,8 +69,8 @@ var _ = Describe("SqlStore", func() {
 			BindingMap: map[string]brokerapi.BindDetails{},
 		}
 		db, mock, err = sqlmock.New()
-		sqlStore = nfsbroker.SqlStore{Database:nfsbrokerfakes.FakeSQLMockConnection{db},
-			StoreType:"mysql"}
+		sqlStore = nfsbroker.SqlStore{Database: nfsbrokerfakes.FakeSQLMockConnection{db},
+			StoreType: "mysql"}
 	})
 
 	It("should open a db connection", func() {
@@ -108,9 +126,9 @@ var _ = Describe("SqlStore", func() {
 				columns := []string{"id", "value"}
 
 				rows := sqlmock.NewRows(columns)
-				jsonvalue, err := json.Marshal(nfsbroker.ServiceInstance{Share:share, PlanID: planID, ServiceID: serviceID, OrganizationGUID: orgGUID, SpaceGUID: spaceGUID})
+				jsonvalue, err := json.Marshal(nfsbroker.ServiceInstance{Share: share, PlanID: planID, ServiceID: serviceID, OrganizationGUID: orgGUID, SpaceGUID: spaceGUID})
 				Expect(err).NotTo(HaveOccurred())
-				rows.AddRow(serviceID,jsonvalue)
+				rows.AddRow(serviceID, jsonvalue)
 
 				mock.ExpectQuery("SELECT id, value FROM service_instances WHERE id = ?").WithArgs(serviceID).WillReturnRows(rows)
 			})
@@ -137,7 +155,7 @@ var _ = Describe("SqlStore", func() {
 			})
 			It("should return an error", func() {
 				Expect(err).To(HaveOccurred())
-				Expect(reflect.DeepEqual(serviceInstance,nfsbroker.ServiceInstance{})).To(BeTrue())
+				Expect(reflect.DeepEqual(serviceInstance, nfsbroker.ServiceInstance{})).To(BeTrue())
 			})
 		})
 
@@ -198,15 +216,15 @@ var _ = Describe("SqlStore", func() {
 			serviceID = "service_123"
 			spaceGUID = "space_123"
 			share = "share_123"
-			serviceInstance = nfsbroker.ServiceInstance{ServiceID:serviceID,PlanID:planID,OrganizationGUID:orgGUID,SpaceGUID:spaceGUID,Share:share}
+			serviceInstance = nfsbroker.ServiceInstance{ServiceID: serviceID, PlanID: planID, OrganizationGUID: orgGUID, SpaceGUID: spaceGUID, Share: share}
 			jsonValue, err := json.Marshal(serviceInstance)
 			Expect(err).NotTo(HaveOccurred())
 
-			result := sqlmock.NewResult(1,1)
-			mock.ExpectExec("INSERT INTO service_instances").WithArgs(serviceID,jsonValue).WillReturnResult(result)
+			result := sqlmock.NewResult(1, 1)
+			mock.ExpectExec("INSERT INTO service_instances").WithArgs(serviceID, jsonValue).WillReturnResult(result)
 		})
 		JustBeforeEach(func() {
-			err = sqlStore.CreateInstanceDetails(serviceID,serviceInstance)
+			err = sqlStore.CreateInstanceDetails(serviceID, serviceInstance)
 		})
 		It("should not error and call INSERT INTO on the db", func() {
 			Expect(err).To(BeNil())
@@ -223,19 +241,35 @@ var _ = Describe("SqlStore", func() {
 			bindingID = "binding_123"
 			bindResource = brokerapi.BindResource{AppGuid: appGUID, Route: "binding-route"}
 			bindDetails = brokerapi.BindDetails{AppGUID: appGUID, PlanID: planID, ServiceID: serviceID, BindResource: &bindResource, Parameters: parameters}
-
-			jsonValue, err := json.Marshal(bindDetails)
-			Expect(err).NotTo(HaveOccurred())
-
-			result := sqlmock.NewResult(1,1)
-			mock.ExpectExec("INSERT INTO service_bindings").WithArgs(bindingID,jsonValue).WillReturnResult(result)
 		})
 		JustBeforeEach(func() {
-			err = sqlStore.CreateBindingDetails(bindingID,bindDetails)
+			err = sqlStore.CreateBindingDetails(bindingID, bindDetails)
 		})
-		It("should not error and call INSERT INTO on the db", func() {
-			Expect(err).To(BeNil())
-			Expect(mock.ExpectationsWereMet()).Should(Succeed())
+
+		Context("when there are no parameters in the binding", func() {
+			BeforeEach(func() {
+				jsonValue, err := json.Marshal(bindDetails)
+				Expect(err).NotTo(HaveOccurred())
+
+				result := sqlmock.NewResult(1, 1)
+				mock.ExpectExec("INSERT INTO service_bindings").WithArgs(bindingID, jsonValue).WillReturnResult(result)
+			})
+			It("should not error and call INSERT INTO on the db", func() {
+				Expect(err).To(BeNil())
+				Expect(mock.ExpectationsWereMet()).Should(Succeed())
+			})
+		})
+
+		Context("when there are parameters with secrets in the binding", func() {
+			BeforeEach(func() {
+				bindDetails = brokerapi.BindDetails{AppGUID: appGUID, PlanID: planID, ServiceID: serviceID, BindResource: &bindResource, Parameters: map[string]interface{}{"secret": "don't tell"}}
+				result := sqlmock.NewResult(1, 1)
+				mock.ExpectExec("INSERT INTO service_bindings").WithArgs(bindingID, &redactedStuff{}).WillReturnResult(result)
+			})
+			It("should redact parameters before saving records to the db", func() {
+				Expect(err).To(BeNil())
+				Expect(mock.ExpectationsWereMet()).Should(Succeed())
+			})
 		})
 	})
 
@@ -243,7 +277,7 @@ var _ = Describe("SqlStore", func() {
 		BeforeEach(func() {
 			Expect(err).NotTo(HaveOccurred())
 			serviceID = "my_service"
-			result := sqlmock.NewResult(1,1)
+			result := sqlmock.NewResult(1, 1)
 			mock.ExpectExec("DELETE FROM service_instances WHERE id = ?").WithArgs(serviceID).WillReturnResult(result)
 		})
 		JustBeforeEach(func() {
@@ -255,12 +289,10 @@ var _ = Describe("SqlStore", func() {
 		})
 	})
 	Describe("DeleteBindingDetails", func() {
-
-
 		BeforeEach(func() {
 			Expect(err).NotTo(HaveOccurred())
 			bindingID = "my_binding"
-			result := sqlmock.NewResult(1,1)
+			result := sqlmock.NewResult(1, 1)
 			mock.ExpectExec("DELETE FROM service_bindings WHERE id = ?").WithArgs(bindingID).WillReturnResult(result)
 		})
 		JustBeforeEach(func() {

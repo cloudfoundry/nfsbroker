@@ -15,10 +15,10 @@ import (
 
 var _ = Describe("FileStore", func() {
 	var (
-		store nfsbroker.Store
+		store      nfsbroker.Store
 		fakeIoutil *ioutil_fake.FakeIoutil
-		logger lager.Logger
-		state nfsbroker.DynamicState
+		logger     lager.Logger
+		state      nfsbroker.DynamicState
 	)
 
 	BeforeEach(func() {
@@ -122,10 +122,10 @@ var _ = Describe("FileStore", func() {
 
 	Describe("Create, Retrieve and Delete InstanceDetails", func() {
 		var (
-			instanceID string
-			err error
+			instanceID         string
+			err                error
 			outInstanceDetails nfsbroker.ServiceInstance
-			inInstanceDetails nfsbroker.ServiceInstance
+			inInstanceDetails  nfsbroker.ServiceInstance
 		)
 		JustBeforeEach(func() {
 			outInstanceDetails, err = store.RetrieveInstanceDetails(instanceID)
@@ -153,7 +153,7 @@ var _ = Describe("FileStore", func() {
 
 			It("reports conflicts correctly", func() {
 				Expect(store.IsInstanceConflict(instanceID, inInstanceDetails)).To(BeFalse())
-				otherInstance := nfsbroker.ServiceInstance{ServiceID: "sample-service",PlanID:"foo"}
+				otherInstance := nfsbroker.ServiceInstance{ServiceID: "sample-service", PlanID: "foo"}
 				Expect(store.IsInstanceConflict(instanceID, otherInstance)).To(BeTrue())
 			})
 
@@ -173,10 +173,10 @@ var _ = Describe("FileStore", func() {
 		})
 		Describe("Create, Retrieve and Delete BindingDetails", func() {
 			var (
-				bindingID string
-				err error
+				bindingID         string
+				err               error
 				outBindingDetails brokerapi.BindDetails
-				inBindingDetails brokerapi.BindDetails
+				inBindingDetails  brokerapi.BindDetails
 			)
 			JustBeforeEach(func() {
 				outBindingDetails, err = store.RetrieveBindingDetails(bindingID)
@@ -195,7 +195,7 @@ var _ = Describe("FileStore", func() {
 			Context("when details found", func() {
 				BeforeEach(func() {
 					bindingID = "somethingGood"
-					inBindingDetails = brokerapi.BindDetails{ServiceID:"sample-service",Parameters:map[string]interface{}{"ping":"pong"}}
+					inBindingDetails = brokerapi.BindDetails{ServiceID: "sample-service", Parameters: map[string]interface{}{"ping": "pong"}}
 					store.CreateBindingDetails(bindingID, inBindingDetails)
 				})
 				It("then will find binding details", func() {
@@ -204,11 +204,11 @@ var _ = Describe("FileStore", func() {
 
 				It("reports conflicts correctly", func() {
 					Expect(store.IsBindingConflict(bindingID, inBindingDetails)).To(BeFalse())
-					otherBindingDetails := brokerapi.BindDetails{ServiceID:"sample-service",Parameters:map[string]interface{}{"foo":"foo"}}
+					otherBindingDetails := brokerapi.BindDetails{ServiceID: "sample-service", Parameters: map[string]interface{}{"foo": "foo"}}
 					Expect(store.IsBindingConflict(bindingID, otherBindingDetails)).To(BeTrue())
-					otherBindingDetails = brokerapi.BindDetails{ServiceID:"sample-service"}
+					otherBindingDetails = brokerapi.BindDetails{ServiceID: "sample-service"}
 					Expect(store.IsBindingConflict(bindingID, otherBindingDetails)).To(BeTrue())
-					otherBindingDetails = brokerapi.BindDetails{ServiceID:"sample-service",Parameters:map[string]interface{}{}}
+					otherBindingDetails = brokerapi.BindDetails{ServiceID: "sample-service", Parameters: map[string]interface{}{}}
 					Expect(store.IsBindingConflict(bindingID, otherBindingDetails)).To(BeTrue())
 				})
 

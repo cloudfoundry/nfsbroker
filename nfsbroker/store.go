@@ -3,7 +3,10 @@ package nfsbroker
 import (
 	"code.cloudfoundry.org/goshims/ioutilshim"
 	"code.cloudfoundry.org/lager"
+	"encoding/json"
 	"github.com/pivotal-cf/brokerapi"
+	"golang.org/x/crypto/bcrypt"
+	"reflect"
 )
 
 //go:generate counterfeiter -o ../nfsbrokerfakes/fake_store.go . Store
@@ -35,4 +38,62 @@ func NewStore(logger lager.Logger, dbDriver, dbUsername, dbPassword, dbHostname,
 	} else {
 		return NewFileStore(fileName, &ioutilshim.IoutilShim{})
 	}
+}
+
+// Utility methods for storing bindings with secrets stripped out
+const HashKey = "paramsHash"
+
+func redactBindingDetails(details brokerapi.BindDetails) (brokerapi.BindDetails, error) {
+	if details.Parameters == nil {
+		return details, nil
+	}
+	if len(details.Parameters) == 1 {
+		if _, ok := details.Parameters[HashKey]; ok {
+			return details, nil
+		}
+	}
+
+	s, err := json.Marshal(details.Parameters)
+	if err != nil {
+		return brokerapi.BindDetails{}, err
+	}
+	s, err = bcrypt.GenerateFromPassword(s, bcrypt.DefaultCost)
+	if err != nil {
+		return brokerapi.BindDetails{}, err
+	}
+	details.Parameters = map[string]interface{}{HashKey: string(s)}
+	return details, nil
+}
+
+func isBindingConflict(s Store, id string, details brokerapi.BindDetails) bool {
+	if existing, err := s.RetrieveBindingDetails(id); err == nil {
+		if existing.AppGUID != details.AppGUID {
+			return true
+		}
+		if existing.PlanID != details.PlanID {
+			return true
+		}
+		if existing.ServiceID != details.ServiceID {
+			return true
+		}
+		if !reflect.DeepEqual(details.BindResource, existing.BindResource) {
+			return true
+		}
+		if (details.Parameters == nil) && (existing.Parameters == nil) {
+			return false
+		}
+		if (details.Parameters == nil) || (existing.Parameters == nil) {
+			return true
+		}
+
+		s, err := json.Marshal(details.Parameters)
+		if err != nil {
+			return true
+		}
+		h, _ := existing.Parameters[HashKey]
+		if bcrypt.CompareHashAndPassword([]byte(h.(string)), s) != nil {
+			return true
+		}
+	}
+	return false
 }
