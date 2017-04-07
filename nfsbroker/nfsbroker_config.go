@@ -9,7 +9,6 @@ import (
 
 type ConfigDetails struct {
 	Allowed   []string
-	Mandatory []string
 
 	Forced  map[string]string
 	Options map[string]string
@@ -54,7 +53,6 @@ func NewNfsBrokerConfigDetails() *ConfigDetails {
 	myConf := new(ConfigDetails)
 
 	myConf.Allowed = make([]string, 0)
-	myConf.Mandatory = make([]string, 0)
 	myConf.Options = make(map[string]string, 0)
 	myConf.Forced = make(map[string]string, 0)
 
@@ -65,7 +63,6 @@ func (rhs *ConfigDetails) Copy() *ConfigDetails {
 	myConf := new(ConfigDetails)
 
 	myConf.Allowed = rhs.Allowed
-	myConf.Mandatory = rhs.Mandatory
 
 	myConf.Forced = make(map[string]string, 0)
 	myConf.Options = make(map[string]string, 0)
@@ -96,11 +93,6 @@ func (m *Config) SetEntries(share string, opts map[string]interface{}, ignoreLis
 
 	if len(errorList) > 0 && m.sloppyMount != true {
 		err := errors.New("Not allowed options: " + strings.Join(errorList, ", "))
-		return err
-	}
-
-	if mdtErr := append(m.source.CheckMandatory(), m.mount.CheckMandatory()...); len(mdtErr) > 0 {
-		err := errors.New("Missing mandatory options: " + strings.Join(mdtErr, ", "))
 		return err
 	}
 
@@ -150,34 +142,14 @@ func (m *ConfigDetails) readConfDefault(flagString string) {
 	}
 }
 
-func (m *ConfigDetails) ReadConf(allowedFlag string, defaultFlag string, mandatoryFields []string) error {
+func (m *ConfigDetails) ReadConf(allowedFlag string, defaultFlag string) error {
 	if len(allowedFlag) > 0 {
 		m.Allowed = strings.Split(allowedFlag, ",")
 	}
 
 	m.readConfDefault(defaultFlag)
 
-	if len(mandatoryFields) > 0 {
-		m.Mandatory = mandatoryFields
-	}
-
 	return nil
-}
-
-func (m ConfigDetails) CheckMandatory() []string {
-	var result []string
-
-	for _, k := range m.Mandatory {
-
-		_, oko := m.Options[k]
-		_, okf := m.Forced[k]
-
-		if !okf && !oko {
-			result = append(result, k)
-		}
-	}
-
-	return result
 }
 
 func (m ConfigDetails) parseConfig(listEntry []string) map[string]string {

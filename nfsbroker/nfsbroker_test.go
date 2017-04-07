@@ -40,9 +40,9 @@ var _ = Describe("Broker", func() {
 	Context("when creating first time", func() {
 		BeforeEach(func() {
 			source := nfsbroker.NewNfsBrokerConfigDetails()
-			source.ReadConf("uid,gid", "", []string{"uid", "gid"})
+			source.ReadConf("uid,gid", "")
 			mounts := nfsbroker.NewNfsBrokerConfigDetails()
-			mounts.ReadConf("sloppy_mount,allow_other,allow_root,multithread,default_permissions,fusenfs_uid,fusenfs_gid", "sloppy_mount:true", []string{})
+			mounts.ReadConf("sloppy_mount,allow_other,allow_root,multithread,default_permissions,fusenfs_uid,fusenfs_gid", "sloppy_mount:true")
 			broker = nfsbroker.New(
 				logger,
 				"service-name", "service-id", "/fake-dir",
@@ -443,12 +443,12 @@ var _ = Describe("Broker", func() {
 				Expect(err).To(Equal(brokerapi.ErrAppGuidNotProvided))
 			})
 
-			Context("given allowed, default and mandatory parameters are empty", func() {
+			Context("given allowed and default parameters are empty", func() {
 				BeforeEach(func() {
 					source := nfsbroker.NewNfsBrokerConfigDetails()
-					source.ReadConf("", "", []string{})
+					source.ReadConf("", "")
 					mounts := nfsbroker.NewNfsBrokerConfigDetails()
-					mounts.ReadConf("", "", []string{})
+					mounts.ReadConf("", "")
 					broker = nfsbroker.New(
 						logger,
 						"service-name", "service-id", "/fake-dir",
@@ -476,12 +476,12 @@ var _ = Describe("Broker", func() {
 				})
 			})
 
-			Context("given allowed, default and mandatory parameters are empty, excepted for mount default with sloppy_mount=true is supplied ", func() {
+			Context("given allowed and default parameters are empty, except for mount default with sloppy_mount=true is supplied ", func() {
 				BeforeEach(func() {
 					source := nfsbroker.NewNfsBrokerConfigDetails()
-					source.ReadConf("", "", []string{})
+					source.ReadConf("", "")
 					mounts := nfsbroker.NewNfsBrokerConfigDetails()
-					mounts.ReadConf("", "sloppy_mount:true", []string{})
+					mounts.ReadConf("", "sloppy_mount:true")
 					broker = nfsbroker.New(
 						logger,
 						"service-name", "service-id", "/fake-dir",
@@ -502,7 +502,7 @@ var _ = Describe("Broker", func() {
 						}
 					})
 
-					It("do not flows allow_root option through", func() {
+					It("does not pass allow_root option through", func() {
 						binding, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
 						Expect(err).NotTo(HaveOccurred())
 
@@ -514,12 +514,12 @@ var _ = Describe("Broker", func() {
 				})
 			})
 
-			Context("given default and mandatory parameters are empty, allowed parameters contain allow_root", func() {
+			Context("given default parameters are empty, allowed parameters contain allow_root", func() {
 				BeforeEach(func() {
 					source := nfsbroker.NewNfsBrokerConfigDetails()
-					source.ReadConf("", "", []string{})
+					source.ReadConf("", "")
 					mounts := nfsbroker.NewNfsBrokerConfigDetails()
-					mounts.ReadConf("allow_root", "", []string{})
+					mounts.ReadConf("allow_root", "")
 					broker = nfsbroker.New(
 						logger,
 						"service-name", "service-id", "/fake-dir",
@@ -540,7 +540,7 @@ var _ = Describe("Broker", func() {
 						}
 					})
 
-					It("flows allow_root=true option through", func() {
+					It("passes allow_root=true option through", func() {
 						binding, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
 						Expect(err).NotTo(HaveOccurred())
 

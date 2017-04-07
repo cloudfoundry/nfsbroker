@@ -89,17 +89,15 @@ var _ = Describe("BrokerConfigDetails", func() {
 		AbitraryConfig  map[string]interface{}
 		IgnoreConfigKey []string
 
-		SourceAllowed   []string
-		SourceOptions   map[string]string
-		SourceMandatory []string
+		SourceAllowed []string
+		SourceOptions map[string]string
 
-		MountsAllowed   []string
-		MountsOptions   map[string]string
-		MountsMandatory []string
+		MountsAllowed []string
+		MountsOptions map[string]string
 
-		source, source2 *ConfigDetails
-		mounts, mounts2 *ConfigDetails
-		config          *Config
+		source *ConfigDetails
+		mounts *ConfigDetails
+		config *Config
 
 		errorEntries error
 	)
@@ -108,7 +106,7 @@ var _ = Describe("BrokerConfigDetails", func() {
 		logger = lagertest.NewTestLogger("test-broker-config")
 	})
 
-	Context("Given no mandatory and empty params", func() {
+	Context("Given empty params", func() {
 		BeforeEach(func() {
 			ClientShare = "nfs://1.2.3.4"
 			AbitraryConfig = make(map[string]interface{}, 0)
@@ -116,17 +114,15 @@ var _ = Describe("BrokerConfigDetails", func() {
 
 			SourceAllowed = make([]string, 0)
 			SourceOptions = make(map[string]string, 0)
-			SourceMandatory = make([]string, 0)
 
 			MountsAllowed = make([]string, 0)
 			MountsOptions = make(map[string]string, 0)
-			MountsMandatory = make([]string, 0)
 
 			source = NewNfsBrokerConfigDetails()
-			source.ReadConf(strings.Join(SourceAllowed, ","), map2string(SourceOptions, ":", "", ","), SourceMandatory)
+			source.ReadConf(strings.Join(SourceAllowed, ","), map2string(SourceOptions, ":", "", ","))
 
 			mounts = NewNfsBrokerConfigDetails()
-			mounts.ReadConf(strings.Join(MountsAllowed, ","), map2string(MountsOptions, ":", "", ","), MountsMandatory)
+			mounts.ReadConf(strings.Join(MountsAllowed, ","), map2string(MountsOptions, ":", "", ","))
 
 			config = NewNfsBrokerConfig(source, mounts)
 			logger.Debug("debug-config-initiated", lager.Data{"source": source, "mount": mounts})
@@ -155,11 +151,6 @@ var _ = Describe("BrokerConfigDetails", func() {
 			Expect(mounts.IsSloppyMount()).To(BeFalse())
 		})
 
-		It("should returns no missing mandatory fields", func() {
-			Expect(len(source.CheckMandatory())).To(Equal(0))
-			Expect(len(mounts.CheckMandatory())).To(Equal(0))
-		})
-
 		It("should returns no error on given client abitrary config", func() {
 			Expect(errorEntries).To(BeNil())
 		})
@@ -177,104 +168,29 @@ var _ = Describe("BrokerConfigDetails", func() {
 		})
 	})
 
-	Context("Given source mandatory, no mount mandatory and empty params", func() {
-		BeforeEach(func() {
-			ClientShare = "nfs://1.2.3.4"
-			AbitraryConfig = make(map[string]interface{}, 0)
-			IgnoreConfigKey = make([]string, 0)
-
-			SourceAllowed = make([]string, 0)
-			SourceOptions = make(map[string]string, 0)
-			SourceMandatory = []string{"uid", "gid"}
-
-			MountsAllowed = make([]string, 0)
-			MountsOptions = make(map[string]string, 0)
-			MountsMandatory = make([]string, 0)
-
-			source = NewNfsBrokerConfigDetails()
-			source.ReadConf(strings.Join(SourceAllowed, ","), map2string(SourceOptions, ":", "", ","), SourceMandatory)
-
-			mounts = NewNfsBrokerConfigDetails()
-			mounts.ReadConf(strings.Join(MountsAllowed, ","), map2string(MountsOptions, ":", "", ","), MountsMandatory)
-
-			config = NewNfsBrokerConfig(source, mounts)
-			logger.Debug("debug-config-initiated", lager.Data{"source": source, "mount": mounts})
-
-			errorEntries = config.SetEntries(ClientShare, AbitraryConfig, IgnoreConfigKey)
-			logger.Debug("debug-config-updated", lager.Data{"config": config, "source": source, "mount": mounts})
-		})
-
-		It("should returns empty allowed list", func() {
-			Expect(len(source.Allowed)).To(Equal(0))
-			Expect(len(mounts.Allowed)).To(Equal(0))
-		})
-
-		It("should returns empty forced list", func() {
-			Expect(len(source.Forced)).To(Equal(0))
-			Expect(len(mounts.Forced)).To(Equal(0))
-		})
-
-		It("should returns empty options list", func() {
-			Expect(len(source.Options)).To(Equal(0))
-			Expect(len(mounts.Options)).To(Equal(0))
-		})
-
-		It("should flow sloppy_mount as disabled", func() {
-			Expect(source.IsSloppyMount()).To(BeFalse())
-			Expect(mounts.IsSloppyMount()).To(BeFalse())
-		})
-
-		It("should returns no missing mount mandatory fields", func() {
-			Expect(len(mounts.CheckMandatory())).To(Equal(0))
-		})
-
-		It("should flow the mandatory config as missing mandatory field", func() {
-			Expect(len(source.CheckMandatory())).To(Equal(2))
-			Expect(source.CheckMandatory()).To(Equal(SourceMandatory))
-		})
-
-		It("should occures an error because there are missing fields", func() {
-			Expect(errorEntries).To(HaveOccurred())
-		})
-
-		It("should returns no mount command parameters", func() {
-			Expect(len(config.Mount())).To(Equal(0))
-		})
-
-		It("should returns no MountOptions struct", func() {
-			Expect(len(config.MountConfig())).To(Equal(0))
-		})
-
-		It("should returns no added parameters to the client share", func() {
-			Expect(config.Share(ClientShare)).To(Equal(ClientShare))
-		})
-	})
-
-	Context("Given mandatory, allowed and default params", func() {
+	Context("Given allowed and default params", func() {
 		BeforeEach(func() {
 			ClientShare = "nfs://1.2.3.4"
 			AbitraryConfig = make(map[string]interface{}, 0)
 			IgnoreConfigKey = make([]string, 0)
 
 			SourceAllowed = []string{"uid", "gid", "auto-traverse-mounts", "dircache"}
-			SourceMandatory = []string{"uid", "gid"}
 			SourceOptions = map[string]string{
 				"uid": "1004",
 				"gid": "1002",
 			}
 
 			MountsAllowed = []string{"sloppy_mount", "nfs_uid", "nfs_gid", "allow_other"}
-			MountsMandatory = make([]string, 0)
 			MountsOptions = map[string]string{
 				"nfs_uid": "1003",
 				"nfs_gid": "1001",
 			}
 
 			source = NewNfsBrokerConfigDetails()
-			source.ReadConf(strings.Join(SourceAllowed, ","), map2string(SourceOptions, ":", "", ","), SourceMandatory)
+			source.ReadConf(strings.Join(SourceAllowed, ","), map2string(SourceOptions, ":", "", ","))
 
 			mounts = NewNfsBrokerConfigDetails()
-			mounts.ReadConf(strings.Join(MountsAllowed, ","), map2string(MountsOptions, ":", "", ","), MountsMandatory)
+			mounts.ReadConf(strings.Join(MountsAllowed, ","), map2string(MountsOptions, ":", "", ","))
 
 			config = NewNfsBrokerConfig(source, mounts)
 			logger.Debug("debug-config-initiated", lager.Data{"config": config, "source": source, "mount": mounts})
@@ -298,11 +214,6 @@ var _ = Describe("BrokerConfigDetails", func() {
 		It("should flow sloppy_mount as disabled", func() {
 			Expect(source.IsSloppyMount()).To(BeFalse())
 			Expect(mounts.IsSloppyMount()).To(BeFalse())
-		})
-
-		It("should return empty missing mandatory field", func() {
-			Expect(len(source.CheckMandatory())).To(Equal(0))
-			Expect(len(mounts.CheckMandatory())).To(Equal(0))
 		})
 
 		Context("Given empty abitrary params and share without any params", func() {
@@ -587,84 +498,6 @@ var _ = Describe("BrokerConfigDetails", func() {
 				})
 
 			})
-		})
-	})
-
-	Context("Given mandatory and default params but with empty allowed", func() {
-		BeforeEach(func() {
-			ClientShare = "nfs://1.2.3.4"
-			AbitraryConfig = make(map[string]interface{}, 0)
-			IgnoreConfigKey = make([]string, 0)
-
-			SourceAllowed = make([]string, 0)
-			SourceMandatory = []string{"uid", "gid"}
-			SourceOptions = map[string]string{
-				"uid": "1004",
-				"gid": "1002",
-			}
-
-			MountsAllowed = make([]string, 0)
-			MountsMandatory = make([]string, 0)
-			MountsOptions = map[string]string{
-				"auto_cache": "true",
-			}
-
-			source = NewNfsBrokerConfigDetails()
-			source.ReadConf(strings.Join(SourceAllowed, ","), map2string(SourceOptions, ":", "", ","), SourceMandatory)
-
-			mounts = NewNfsBrokerConfigDetails()
-			mounts.ReadConf(strings.Join(MountsAllowed, ","), map2string(MountsOptions, ":", "", ","), MountsMandatory)
-		})
-
-		It("should return empty allowed list", func() {
-			Expect(len(source.Allowed)).To(Equal(0))
-			Expect(len(mounts.Allowed)).To(Equal(0))
-		})
-
-		It("should flow the default list as forced", func() {
-			Expect(source.Forced).To(Equal(SourceOptions))
-			Expect(mounts.Forced).To(Equal(MountsOptions))
-		})
-
-		It("should return empty options list", func() {
-			Expect(len(source.Options)).To(Equal(0))
-			Expect(len(mounts.Options)).To(Equal(0))
-		})
-
-		It("should flow sloppy_mount as disabled", func() {
-			Expect(source.IsSloppyMount()).To(BeFalse())
-			Expect(mounts.IsSloppyMount()).To(BeFalse())
-		})
-
-		It("should return empty missing mandatory field", func() {
-			Expect(len(source.CheckMandatory())).To(Equal(0))
-			Expect(len(mounts.CheckMandatory())).To(Equal(0))
-		})
-		Context("When the config is copied", func() {
-			BeforeEach(func() {
-				source2 = source.Copy()
-				mounts2 = mounts.Copy()
-			})
-			It("should return empty allowed list", func() {
-				Expect(len(source2.Allowed)).To(Equal(0))
-				Expect(len(mounts2.Allowed)).To(Equal(0))
-			})
-
-			It("should flow the default list as forced", func() {
-				Expect(source2.Forced).To(Equal(SourceOptions))
-				Expect(mounts2.Forced).To(Equal(MountsOptions))
-			})
-
-			It("should return empty options list", func() {
-				Expect(len(source2.Options)).To(Equal(0))
-				Expect(len(mounts2.Options)).To(Equal(0))
-			})
-
-			It("should flow sloppy_mount as disabled", func() {
-				Expect(source2.IsSloppyMount()).To(BeFalse())
-				Expect(mounts2.IsSloppyMount()).To(BeFalse())
-			})
-
 		})
 	})
 })
