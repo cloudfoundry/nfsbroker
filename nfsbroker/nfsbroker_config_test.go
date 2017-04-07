@@ -1,14 +1,15 @@
 package nfsbroker_test
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "code.cloudfoundry.org/nfsbroker/nfsbroker"
-	"fmt"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"strconv"
-	"strings"
 )
 
 func map2string(entry map[string]string, joinKeyVal string, prefix string, joinElemnts string) string {
@@ -85,19 +86,15 @@ var _ = Describe("BrokerConfigDetails", func() {
 	var (
 		logger lager.Logger
 
-		ClientShare     string
-		AbitraryConfig  map[string]interface{}
-		IgnoreConfigKey []string
+		clientShare     string
+		arbitraryConfig  map[string]interface{}
+		ignoreConfigKey []string
 
-		SourceAllowed []string
-		SourceOptions map[string]string
+		allowed      []string
+		mountOptions map[string]string
 
-		MountsAllowed []string
-		MountsOptions map[string]string
-
-		source *ConfigDetails
-		mounts *ConfigDetails
-		config *Config
+		configDetails *ConfigDetails
+		config        *Config
 
 		errorEntries error
 	)
@@ -108,50 +105,40 @@ var _ = Describe("BrokerConfigDetails", func() {
 
 	Context("Given empty params", func() {
 		BeforeEach(func() {
-			ClientShare = "nfs://1.2.3.4"
-			AbitraryConfig = make(map[string]interface{}, 0)
-			IgnoreConfigKey = make([]string, 0)
+			clientShare = "nfs://1.2.3.4"
+			arbitraryConfig = make(map[string]interface{}, 0)
+			ignoreConfigKey = make([]string, 0)
 
-			SourceAllowed = make([]string, 0)
-			SourceOptions = make(map[string]string, 0)
+			allowed = make([]string, 0)
+			mountOptions = make(map[string]string, 0)
 
-			MountsAllowed = make([]string, 0)
-			MountsOptions = make(map[string]string, 0)
+			configDetails = NewNfsBrokerConfigDetails()
+			configDetails.ReadConf(strings.Join(allowed, ","), map2string(mountOptions, ":", "", ","))
 
-			source = NewNfsBrokerConfigDetails()
-			source.ReadConf(strings.Join(SourceAllowed, ","), map2string(SourceOptions, ":", "", ","))
+			config = NewNfsBrokerConfig(configDetails)
+			logger.Debug("debug-config-initiated", lager.Data{"mount": configDetails})
 
-			mounts = NewNfsBrokerConfigDetails()
-			mounts.ReadConf(strings.Join(MountsAllowed, ","), map2string(MountsOptions, ":", "", ","))
-
-			config = NewNfsBrokerConfig(source, mounts)
-			logger.Debug("debug-config-initiated", lager.Data{"source": source, "mount": mounts})
-
-			errorEntries = config.SetEntries(ClientShare, AbitraryConfig, IgnoreConfigKey)
-			logger.Debug("debug-config-updated", lager.Data{"source": source, "mount": mounts})
+			errorEntries = config.SetEntries(clientShare, arbitraryConfig, ignoreConfigKey)
+			logger.Debug("debug-config-updated", lager.Data{"mount": configDetails})
 		})
 
 		It("should returns empty allowed list", func() {
-			Expect(len(source.Allowed)).To(Equal(0))
-			Expect(len(mounts.Allowed)).To(Equal(0))
+			Expect(len(configDetails.Allowed)).To(Equal(0))
 		})
 
 		It("should returns empty forced list", func() {
-			Expect(len(source.Forced)).To(Equal(0))
-			Expect(len(mounts.Forced)).To(Equal(0))
+			Expect(len(configDetails.Forced)).To(Equal(0))
 		})
 
 		It("should returns empty options list", func() {
-			Expect(len(source.Options)).To(Equal(0))
-			Expect(len(mounts.Options)).To(Equal(0))
+			Expect(len(configDetails.Options)).To(Equal(0))
 		})
 
 		It("should flow sloppy_mount as disabled", func() {
-			Expect(source.IsSloppyMount()).To(BeFalse())
-			Expect(mounts.IsSloppyMount()).To(BeFalse())
+			Expect(configDetails.IsSloppyMount()).To(BeFalse())
 		})
 
-		It("should returns no error on given client abitrary config", func() {
+		It("should returns no error on given client arbitrary config", func() {
 			Expect(errorEntries).To(BeNil())
 		})
 
@@ -164,71 +151,60 @@ var _ = Describe("BrokerConfigDetails", func() {
 		})
 
 		It("returns no added parameters to the client share", func() {
-			Expect(config.Share(ClientShare)).To(Equal(ClientShare))
+			Expect(config.Share(clientShare)).To(Equal(clientShare))
 		})
 	})
 
 	Context("Given allowed and default params", func() {
 		BeforeEach(func() {
-			ClientShare = "nfs://1.2.3.4"
-			AbitraryConfig = make(map[string]interface{}, 0)
-			IgnoreConfigKey = make([]string, 0)
+			clientShare = "nfs://1.2.3.4"
+			arbitraryConfig = make(map[string]interface{}, 0)
+			ignoreConfigKey = make([]string, 0)
 
-			SourceAllowed = []string{"uid", "gid", "auto-traverse-mounts", "dircache"}
-			SourceOptions = map[string]string{
-				"uid": "1004",
-				"gid": "1002",
-			}
-
-			MountsAllowed = []string{"sloppy_mount", "nfs_uid", "nfs_gid", "allow_other"}
-			MountsOptions = map[string]string{
+			allowed = []string{"sloppy_mount", "nfs_uid", "nfs_gid", "allow_other", "uid", "gid", "auto-traverse-mounts", "dircache"}
+			mountOptions = map[string]string{
 				"nfs_uid": "1003",
 				"nfs_gid": "1001",
+				"uid":     "1004",
+				"gid":     "1002",
 			}
 
-			source = NewNfsBrokerConfigDetails()
-			source.ReadConf(strings.Join(SourceAllowed, ","), map2string(SourceOptions, ":", "", ","))
+			configDetails = NewNfsBrokerConfigDetails()
+			configDetails.ReadConf(strings.Join(allowed, ","), map2string(mountOptions, ":", "", ","))
 
-			mounts = NewNfsBrokerConfigDetails()
-			mounts.ReadConf(strings.Join(MountsAllowed, ","), map2string(MountsOptions, ":", "", ","))
-
-			config = NewNfsBrokerConfig(source, mounts)
-			logger.Debug("debug-config-initiated", lager.Data{"config": config, "source": source, "mount": mounts})
+			config = NewNfsBrokerConfig(configDetails)
+			logger.Debug("debug-config-initiated", lager.Data{"config": config, "mount": configDetails})
 		})
 
 		It("should flow the allowed list", func() {
-			Expect(source.Allowed).To(Equal(SourceAllowed))
-			Expect(mounts.Allowed).To(Equal(MountsAllowed))
+			Expect(configDetails.Allowed).To(Equal(allowed))
 		})
 
 		It("should return empty forced list", func() {
-			Expect(len(source.Forced)).To(Equal(0))
-			Expect(len(mounts.Forced)).To(Equal(0))
+			Expect(len(configDetails.Forced)).To(Equal(0))
 		})
 
 		It("should flow the default params as options list", func() {
-			Expect(source.Options).To(Equal(SourceOptions))
-			Expect(mounts.Options).To(Equal(MountsOptions))
+			Expect(configDetails.Options).To(Equal(mountOptions))
 		})
 
 		It("should flow sloppy_mount as disabled", func() {
-			Expect(source.IsSloppyMount()).To(BeFalse())
-			Expect(mounts.IsSloppyMount()).To(BeFalse())
+			Expect(configDetails.IsSloppyMount()).To(BeFalse())
 		})
 
-		Context("Given empty abitrary params and share without any params", func() {
+		Context("Given empty arbitrary params and share without any params", func() {
 			BeforeEach(func() {
-				errorEntries = config.SetEntries(ClientShare, AbitraryConfig, IgnoreConfigKey)
-				logger.Debug("debug-config-updated", lager.Data{"config": config, "source": source, "mount": mounts})
+				errorEntries = config.SetEntries(clientShare, arbitraryConfig, ignoreConfigKey)
+				logger.Debug("debug-config-updated", lager.Data{"config": config, "mount": configDetails})
 			})
 
 			It("should return nil result on setting end users'entries", func() {
 				Expect(errorEntries).To(BeNil())
 			})
 
-			It("flow the mount default options into the mount command parameters ", func() {
+			It("passes the mount default options into the mount command parameters ", func() {
 				actualRes := config.Mount()
-				expectRes := map2slice(MountsOptions, "=", "--")
+				expectRes := map2slice(mountOptions, "=", "--")
 
 				for _, exp := range expectRes {
 					logger.Debug("checking-actual-res-contains-part", lager.Data{"actualRes": actualRes, "part": exp})
@@ -241,9 +217,9 @@ var _ = Describe("BrokerConfigDetails", func() {
 				}
 			})
 
-			It("should flow the mount default options into the MountOptions struct", func() {
+			It("should pass the default options into the MountOptions struct", func() {
 				actualRes := config.MountConfig()
-				expectRes := mapstring2mapinterface(MountsOptions)
+				expectRes := mapstring2mapinterface(mountOptions)
 
 				for k, exp := range expectRes {
 					logger.Debug("checking-expect-res-contains-part", lager.Data{"expectRes": expectRes, "key": k, "val": exp})
@@ -256,41 +232,35 @@ var _ = Describe("BrokerConfigDetails", func() {
 				}
 			})
 
-			It("should flow the source default options as parameters into the client share url", func() {
-
-				share := config.Share(ClientShare)
-				Expect(share).To(ContainSubstring(ClientShare + "?"))
-
-				for _, exp := range map2slice(SourceOptions, "=", "") {
-					logger.Debug("checking-share-contains-part", lager.Data{"share": share, "part": exp})
-					Expect(share).To(ContainSubstring(exp))
-				}
+			It("should pass no options into the client share url", func() {
+				share := config.Share(clientShare)
+				Expect(share).NotTo(ContainSubstring(clientShare + "?"))
 			})
 		})
 
-		Context("Given bad abitrary params and bad share params", func() {
+		Context("Given bad arbitrary params and bad share params", func() {
 
 			BeforeEach(func() {
-				ClientShare = "nfs://1.2.3.4?err=true&test=err"
-				AbitraryConfig = map[string]interface{}{
+				clientShare = "nfs://1.2.3.4?err=true&test=err"
+				arbitraryConfig = map[string]interface{}{
 					"missing": true,
 					"wrong":   1234,
 					"search":  "notfound",
 				}
-				IgnoreConfigKey = make([]string, 0)
+				ignoreConfigKey = make([]string, 0)
 
-				errorEntries = config.SetEntries(ClientShare, AbitraryConfig, IgnoreConfigKey)
-				logger.Debug("debug-config-updated", lager.Data{"config": config, "source": source, "mount": mounts})
+				errorEntries = config.SetEntries(clientShare, arbitraryConfig, ignoreConfigKey)
+				logger.Debug("debug-config-updated", lager.Data{"config": config, "mount": configDetails})
 			})
 
-			It("should occured an error", func() {
+			It("should return an error", func() {
 				Expect(errorEntries).To(HaveOccurred())
-				logger.Debug("debug-config-updated with entry", lager.Data{"config": config, "source": source, "mount": mounts})
+				logger.Debug("debug-config-updated with entry", lager.Data{"config": config, "mount": configDetails})
 			})
 
 			It("should flow the mount default options into the mount command parameters ", func() {
 				actualRes := config.Mount()
-				expectRes := map2slice(MountsOptions, "=", "--")
+				expectRes := map2slice(mountOptions, "=", "--")
 
 				for _, exp := range expectRes {
 					logger.Debug("checking-actual-res-contains-part", lager.Data{"actualRes": actualRes, "part": exp})
@@ -305,7 +275,7 @@ var _ = Describe("BrokerConfigDetails", func() {
 
 			It("should flow the mount default options into the MountOptions struct", func() {
 				actualRes := config.MountConfig()
-				expectRes := mapstring2mapinterface(MountsOptions)
+				expectRes := mapstring2mapinterface(mountOptions)
 
 				for k, exp := range expectRes {
 					logger.Debug("checking-expect-res-contains-part", lager.Data{"expectRes": expectRes, "key": k, "val": exp})
@@ -318,23 +288,16 @@ var _ = Describe("BrokerConfigDetails", func() {
 				}
 			})
 
-			It("should flow the source default options as parameters into the client share url", func() {
-
-				share := config.Share(ClientShare)
-				Expect(share).To(ContainSubstring("nfs://1.2.3.4?"))
-
-				for _, exp := range map2slice(SourceOptions, "=", "") {
-					logger.Debug("checking-share-contains-part", lager.Data{"share": share, "part": exp})
-					Expect(share).To(ContainSubstring(exp))
-				}
+			It("should remove all options from the client share url", func() {
+				share := config.Share(clientShare)
+				Expect(share).To(Equal("nfs://1.2.3.4"))
 			})
 		})
 
-		Context("Given bad abitrary params and bad share params with sloppy_mount mode", func() {
-
+		Context("Given bad params with sloppy_mount mode", func() {
 			BeforeEach(func() {
-				ClientShare = "nfs://1.2.3.4?err=true&test=err"
-				AbitraryConfig = map[string]interface{}{
+				clientShare = "nfs://1.2.3.4"
+				arbitraryConfig = map[string]interface{}{
 					"sloppy_mount":         true,
 					"allow_other":          true,
 					"auto-traverse-mounts": true,
@@ -343,20 +306,20 @@ var _ = Describe("BrokerConfigDetails", func() {
 					"wrong":                1234,
 					"search":               "notfound",
 				}
-				IgnoreConfigKey = make([]string, 0)
+				ignoreConfigKey = make([]string, 0)
 
-				errorEntries = config.SetEntries(ClientShare, AbitraryConfig, IgnoreConfigKey)
-				logger.Debug("debug-config-updated", lager.Data{"config": config, "source": source, "mount": mounts})
+				errorEntries = config.SetEntries(clientShare, arbitraryConfig, ignoreConfigKey)
+				logger.Debug("debug-config-updated", lager.Data{"config": config, "mount": configDetails})
 			})
 
-			It("should not occured an error, return nil", func() {
+			It("should not error", func() {
 				Expect(errorEntries).To(BeNil())
-				logger.Debug("debug-config-updated with entry", lager.Data{"config": config, "source": source, "mount": mounts})
+				logger.Debug("debug-config-updated with entry", lager.Data{"config": config, "mount": configDetails})
 			})
 
-			It("should flow the mount default options into the mount command parameters ", func() {
+			It("should flow the options into the mount command parameters ", func() {
 				actualRes := config.Mount()
-				expectRes := append(map2slice(MountsOptions, "=", "--"), []string{"--allow_other"}...)
+				expectRes := append(map2slice(mountOptions, "=", "--"), []string{"--allow_other", "--dircache=0", "--auto-traverse-mounts=1"}...)
 
 				for _, exp := range expectRes {
 					logger.Debug("checking-actual-res-contains-part", lager.Data{"actualRes": actualRes, "part": exp})
@@ -372,8 +335,10 @@ var _ = Describe("BrokerConfigDetails", func() {
 			It("should flow the mount default options into the MountOptions struct", func() {
 				actualRes := config.MountConfig()
 
-				expectRes := mapstring2mapinterface(MountsOptions)
+				expectRes := mapstring2mapinterface(mountOptions)
 				expectRes["allow_other"] = "true"
+				expectRes["auto-traverse-mounts"] = "1"
+				expectRes["dircache"] = "0"
 
 				for k, exp := range expectRes {
 					logger.Debug("checking-expect-res-contains-part", lager.Data{"actualRes": actualRes, "key": k, "val": exp})
@@ -385,31 +350,22 @@ var _ = Describe("BrokerConfigDetails", func() {
 					Expect(inMapInt(expectRes, k, exp)).To(BeTrue())
 				}
 			})
-
-			It("should flow the source default options as parameters into the client share url", func() {
-
-				share := config.Share(ClientShare)
-				Expect(share).To(ContainSubstring("nfs://1.2.3.4?"))
-
-				for _, exp := range append(map2slice(SourceOptions, "=", ""), []string{"auto-traverse-mounts=1"}...) {
-					logger.Debug("checking-share-contains-part", lager.Data{"share": share, "part": exp})
-					Expect(share).To(ContainSubstring(exp))
-				}
-			})
 		})
 
-		Context("Given good abitrary params and good share params", func() {
+		Context("Given good arbitrary params", func() {
 
 			BeforeEach(func() {
-				ClientShare = "nfs://1.2.3.4?uid=2999&gid=1999"
-				AbitraryConfig = map[string]interface{}{
+				clientShare = "nfs://1.2.3.4"
+				arbitraryConfig = map[string]interface{}{
 					"nfs_uid": "1234",
 					"nfs_gid": "5678",
+					"uid":     "2999",
+					"gid":     "1999",
 				}
-				IgnoreConfigKey = make([]string, 0)
+				ignoreConfigKey = make([]string, 0)
 
-				errorEntries = config.SetEntries(ClientShare, AbitraryConfig, IgnoreConfigKey)
-				logger.Debug("debug-config-updated", lager.Data{"config": config, "source": source, "mount": mounts})
+				errorEntries = config.SetEntries(clientShare, arbitraryConfig, ignoreConfigKey)
+				logger.Debug("debug-config-updated", lager.Data{"config": config, "mount": configDetails})
 			})
 
 			It("should not error", func() {
@@ -418,7 +374,7 @@ var _ = Describe("BrokerConfigDetails", func() {
 
 			It("should flow the arbitrary config into the mount command parameters ", func() {
 				actualRes := config.Mount()
-				expectRes := mapint2slice(AbitraryConfig, "=", "--")
+				expectRes := mapint2slice(arbitraryConfig, "=", "--")
 
 				for _, exp := range expectRes {
 					logger.Debug("checking-actual-res-contains-part", lager.Data{"actualRes": actualRes, "part": exp})
@@ -433,7 +389,7 @@ var _ = Describe("BrokerConfigDetails", func() {
 
 			It("should flow the arbitrary config into the MountOptions struct", func() {
 				actualRes := config.MountConfig()
-				expectRes := AbitraryConfig
+				expectRes := arbitraryConfig
 
 				for k, exp := range expectRes {
 					logger.Debug("checking-expect-res-contains-part", lager.Data{"expectRes": expectRes, "key": k, "val": exp})
@@ -446,12 +402,9 @@ var _ = Describe("BrokerConfigDetails", func() {
 				}
 			})
 
-			It("should flow the source default options overrided by the share good params into the mount share url", func() {
-				share := config.Share(ClientShare)
-
-				Expect(share).To(ContainSubstring("nfs://1.2.3.4?"))
-				Expect(share).To(ContainSubstring("uid=2999"))
-				Expect(share).To(ContainSubstring("gid=1999"))
+			It("should not modify the mount share url", func() {
+				share := config.Share(clientShare)
+				Expect(share).To(Equal(clientShare))
 			})
 
 			Context("when the whole config is copied", func() {
@@ -459,9 +412,9 @@ var _ = Describe("BrokerConfigDetails", func() {
 				BeforeEach(func() {
 					config2 = config.Copy()
 				})
-				It("should flow the arbitrary config into the mount command parameters ", func() {
+				It("should pass the arbitrary config into the mount command parameters ", func() {
 					actualRes := config2.Mount()
-					expectRes := mapint2slice(AbitraryConfig, "=", "--")
+					expectRes := mapint2slice(arbitraryConfig, "=", "--")
 
 					for _, exp := range expectRes {
 						logger.Debug("checking-actual-res-contains-part", lager.Data{"actualRes": actualRes, "part": exp})
@@ -476,7 +429,7 @@ var _ = Describe("BrokerConfigDetails", func() {
 
 				It("should flow the arbitrary config into the MountOptions struct", func() {
 					actualRes := config2.MountConfig()
-					expectRes := AbitraryConfig
+					expectRes := arbitraryConfig
 
 					for k, exp := range expectRes {
 						logger.Debug("checking-expect-res-contains-part", lager.Data{"expectRes": expectRes, "key": k, "val": exp})
@@ -489,14 +442,10 @@ var _ = Describe("BrokerConfigDetails", func() {
 					}
 				})
 
-				It("should flow the source default options overrided by the share good params into the mount share url", func() {
-					share := config2.Share(ClientShare)
-
-					Expect(share).To(ContainSubstring("nfs://1.2.3.4?"))
-					Expect(share).To(ContainSubstring("uid=2999"))
-					Expect(share).To(ContainSubstring("gid=1999"))
+				It("should not modify the mount share url", func() {
+					share := config2.Share(clientShare)
+					Expect(share).To(Equal(clientShare))
 				})
-
 			})
 		})
 	})

@@ -8,8 +8,8 @@ import (
 	"database/sql"
 
 	"code.cloudfoundry.org/lager"
-	"github.com/pivotal-cf/brokerapi"
 	"encoding/json"
+	"github.com/pivotal-cf/brokerapi"
 	"reflect"
 )
 
@@ -46,7 +46,7 @@ func NewSqlStoreWithVariant(logger lager.Logger, toDatabase SqlVariant) (Store, 
 	}
 
 	return &SqlStore{
-		Database:  database,
+		Database: database,
 	}, nil
 }
 
@@ -116,10 +116,10 @@ func (s *SqlStore) RetrieveInstanceDetails(id string) (ServiceInstance, error) {
 		}
 		return serviceInstance, nil
 	} else if err == sql.ErrNoRows {
-	  return ServiceInstance{}, brokerapi.ErrInstanceDoesNotExist
-	}	else {
-	  return ServiceInstance{}, err
-  }
+		return ServiceInstance{}, brokerapi.ErrInstanceDoesNotExist
+	} else {
+		return ServiceInstance{}, err
+	}
 }
 
 func (s *SqlStore) RetrieveBindingDetails(id string) (brokerapi.BindDetails, error) {
@@ -134,7 +134,7 @@ func (s *SqlStore) RetrieveBindingDetails(id string) (brokerapi.BindDetails, err
 		return bindDetails, nil
 	} else if err == sql.ErrNoRows {
 		return brokerapi.BindDetails{}, brokerapi.ErrInstanceDoesNotExist
-	}	else {
+	} else {
 		return brokerapi.BindDetails{}, err
 	}
 }

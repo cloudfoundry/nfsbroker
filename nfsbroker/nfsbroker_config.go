@@ -8,14 +8,13 @@ import (
 )
 
 type ConfigDetails struct {
-	Allowed   []string
+	Allowed []string
 
 	Forced  map[string]string
 	Options map[string]string
 }
 
 type Config struct {
-	source      ConfigDetails
 	mount       ConfigDetails
 	sloppyMount bool
 }
@@ -30,10 +29,9 @@ func inArray(list []string, key string) bool {
 	return false
 }
 
-func NewNfsBrokerConfig(sourceDetails *ConfigDetails, mountDetails *ConfigDetails) *Config {
+func NewNfsBrokerConfig(mountDetails *ConfigDetails) *Config {
 	myConf := new(Config)
 
-	myConf.source = *sourceDetails
 	myConf.mount = *mountDetails
 	myConf.sloppyMount = false
 
@@ -43,7 +41,6 @@ func NewNfsBrokerConfig(sourceDetails *ConfigDetails, mountDetails *ConfigDetail
 func (rhs *Config) Copy() *Config {
 	myConf := new(Config)
 
-	myConf.source = *rhs.source.Copy()
 	myConf.mount = *rhs.mount.Copy()
 	myConf.sloppyMount = rhs.sloppyMount
 	return myConf
@@ -76,13 +73,10 @@ func (rhs *ConfigDetails) Copy() *ConfigDetails {
 }
 
 func (m *Config) SetEntries(share string, opts map[string]interface{}, ignoreList []string) error {
-
-	m.source.parseMap(opts, ignoreList)
 	m.mount.parseMap(opts, ignoreList)
 
-	allowed := append(ignoreList, m.source.Allowed...)
-	allowed = append(allowed, m.mount.Allowed...)
-	errorList := m.source.parseUrl(share, ignoreList)
+	allowed := append(ignoreList, m.mount.Allowed...)
+	errorList := m.mount.parseUrl(share, ignoreList)
 	m.sloppyMount = m.mount.IsSloppyMount()
 
 	for k, _ := range opts {
@@ -100,29 +94,15 @@ func (m *Config) SetEntries(share string, opts map[string]interface{}, ignoreLis
 }
 
 func (m Config) Share(share string) string {
-
 	srcPart := strings.SplitN(share, "?", 2)
-
-	if len(srcPart) < 2 {
-		srcPart = append(srcPart, "")
-	}
-
-	srcPart[1] = strings.Join(m.source.makeParams(""), "&")
-
-	if len(srcPart[1]) < 1 {
-		srcPart = srcPart[:len(srcPart)-1]
-	}
-
-	return strings.Join(srcPart, "?")
+	return srcPart[0]
 }
 
 func (m Config) Mount() []string {
-
 	return m.mount.makeParams("--")
 }
 
 func (m Config) MountConfig() map[string]interface{} {
-
 	return m.mount.makeConfig()
 }
 

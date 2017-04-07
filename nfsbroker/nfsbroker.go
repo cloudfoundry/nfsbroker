@@ -237,7 +237,6 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 		logger.Debug("parameters-error-assign-entries", lager.Data{
 			"given_source":  source,
 			"given_options": bindDetails.Parameters,
-			"source":        tempConfig.source,
 			"mount":         tempConfig.mount,
 			"sloppy_mount":  tempConfig.sloppyMount,
 		})

@@ -82,26 +82,14 @@ var cfServiceName = flag.String(
 	"(optional) For CF pushed apps, the service name in VCAP_SERVICES where we should find database credentials.  dbDriver must be defined if this option is set, but all other db parameters will be extracted from the service binding.",
 )
 
-var sourceFlagAllowed = flag.String(
-	"allowed-in-source",
-	"uid,gid",
-	"A comma separated list of parameters allowed to be set in share url.",
+var allowedOptions = flag.String(
+	"allowedOptions",
+	"auto_cache,uid,gid",
+	"A comma separated list of parameters allowed to be set in config.",
 )
 
-var sourceFlagDefault = flag.String(
-	"default-in-source",
-	"",
-	"A comma separated list of defaults specified as param:value. If a parameter has a default value and is not in the allowed list, this default value becomes a fixed value that cannot be overridden",
-)
-
-var mountFlagAllowed = flag.String(
-	"allowed-in-mount",
-	"auto_cache",
-	"A comma separated list of parameters allowed to be set in extra config.",
-)
-
-var mountFlagDefault = flag.String(
-	"default-in-mount",
+var defaultOptions = flag.String(
+	"defaultOptions",
 	"auto_cache:true",
 	"A comma separated list of defaults specified as param:value. If a parameter has a default value and is not in the allowed list, this default value becomes a fixed value that cannot be overridden",
 )
@@ -206,13 +194,10 @@ func createServer(logger lager.Logger) ifrit.Runner {
 
 	store := nfsbroker.NewStore(logger, *dbDriver, dbUsername, dbPassword, *dbHostname, *dbPort, *dbName, *dbCACert, fileName)
 
-	source := nfsbroker.NewNfsBrokerConfigDetails()
-	source.ReadConf(*sourceFlagAllowed, *sourceFlagDefault, []string{})
-
 	mounts := nfsbroker.NewNfsBrokerConfigDetails()
-	mounts.ReadConf(*mountFlagAllowed, *mountFlagDefault, []string{})
+	mounts.ReadConf(*allowedOptions, *defaultOptions)
 
-	config := nfsbroker.NewNfsBrokerConfig(source, mounts)
+	config := nfsbroker.NewNfsBrokerConfig(mounts)
 
 	serviceBroker := nfsbroker.New(logger,
 		*serviceName, *serviceId,

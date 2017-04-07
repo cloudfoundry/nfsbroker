@@ -11,8 +11,6 @@ import (
 
 	"encoding/json"
 
-	"fmt"
-
 	"code.cloudfoundry.org/goshims/osshim/os_fake"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/nfsbroker/nfsbroker"
@@ -39,17 +37,15 @@ var _ = Describe("Broker", func() {
 
 	Context("when creating first time", func() {
 		BeforeEach(func() {
-			source := nfsbroker.NewNfsBrokerConfigDetails()
-			source.ReadConf("uid,gid", "")
 			mounts := nfsbroker.NewNfsBrokerConfigDetails()
-			mounts.ReadConf("sloppy_mount,allow_other,allow_root,multithread,default_permissions,fusenfs_uid,fusenfs_gid", "sloppy_mount:true")
+			mounts.ReadConf("sloppy_mount,allow_other,allow_root,multithread,default_permissions,fusenfs_uid,fusenfs_gid,uid,gid", "sloppy_mount:true")
 			broker = nfsbroker.New(
 				logger,
 				"service-name", "service-id", "/fake-dir",
 				fakeOs,
 				nil,
 				fakeStore,
-				nfsbroker.NewNfsBrokerConfig(source, mounts),
+				nfsbroker.NewNfsBrokerConfig(mounts),
 			)
 		})
 
@@ -274,12 +270,14 @@ var _ = Describe("Broker", func() {
 				fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{ServiceID: instanceID, Share: "server:/some-share"}, nil)
 				fakeStore.RetrieveBindingDetailsReturns(brokerapi.BindDetails{}, errors.New("yar"))
 
-				bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{
-					nfsbroker.Username: "principal name",
-					nfsbroker.Secret:   "some keytab data",
-					"uid":              uid,
-					"gid":              gid,
-				},
+				bindDetails = brokerapi.BindDetails{
+					AppGUID: "guid",
+					Parameters: map[string]interface{}{
+						nfsbroker.Username: "principal name",
+						nfsbroker.Secret:   "some keytab data",
+						"uid":              uid,
+						"gid":              gid,
+					},
 				}
 			})
 
@@ -288,12 +286,16 @@ var _ = Describe("Broker", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				mc := binding.VolumeMounts[0].Device.MountConfig
-				share, ok := mc["source"].(string)
 
+				v, ok := mc["source"].(string)
 				Expect(ok).To(BeTrue())
-				Expect(share).To(ContainSubstring("nfs://server:/some-share?"))
-				Expect(share).To(ContainSubstring(fmt.Sprintf("uid=%s", uid)))
-				Expect(share).To(ContainSubstring(fmt.Sprintf("gid=%s", gid)))
+				Expect(v).To(Equal("nfs://server:/some-share"))
+				v, ok = mc["uid"].(string)
+				Expect(ok).To(BeTrue())
+				Expect(v).To(Equal(uid))
+				v, ok = mc["gid"].(string)
+				Expect(ok).To(BeTrue())
+				Expect(v).To(Equal(gid))
 			})
 
 			It("includes empty credentials to prevent CAPI crash", func() {
@@ -445,8 +447,6 @@ var _ = Describe("Broker", func() {
 
 			Context("given allowed and default parameters are empty", func() {
 				BeforeEach(func() {
-					source := nfsbroker.NewNfsBrokerConfigDetails()
-					source.ReadConf("", "")
 					mounts := nfsbroker.NewNfsBrokerConfigDetails()
 					mounts.ReadConf("", "")
 					broker = nfsbroker.New(
@@ -455,7 +455,7 @@ var _ = Describe("Broker", func() {
 						fakeOs,
 						nil,
 						fakeStore,
-						nfsbroker.NewNfsBrokerConfig(source, mounts),
+						nfsbroker.NewNfsBrokerConfig(mounts),
 					)
 				})
 
@@ -478,8 +478,6 @@ var _ = Describe("Broker", func() {
 
 			Context("given allowed and default parameters are empty, except for mount default with sloppy_mount=true is supplied ", func() {
 				BeforeEach(func() {
-					source := nfsbroker.NewNfsBrokerConfigDetails()
-					source.ReadConf("", "")
 					mounts := nfsbroker.NewNfsBrokerConfigDetails()
 					mounts.ReadConf("", "sloppy_mount:true")
 					broker = nfsbroker.New(
@@ -488,7 +486,7 @@ var _ = Describe("Broker", func() {
 						fakeOs,
 						nil,
 						fakeStore,
-						nfsbroker.NewNfsBrokerConfig(source, mounts),
+						nfsbroker.NewNfsBrokerConfig(mounts),
 					)
 				})
 
@@ -516,8 +514,6 @@ var _ = Describe("Broker", func() {
 
 			Context("given default parameters are empty, allowed parameters contain allow_root", func() {
 				BeforeEach(func() {
-					source := nfsbroker.NewNfsBrokerConfigDetails()
-					source.ReadConf("", "")
 					mounts := nfsbroker.NewNfsBrokerConfigDetails()
 					mounts.ReadConf("allow_root", "")
 					broker = nfsbroker.New(
@@ -526,7 +522,7 @@ var _ = Describe("Broker", func() {
 						fakeOs,
 						nil,
 						fakeStore,
-						nfsbroker.NewNfsBrokerConfig(source, mounts),
+						nfsbroker.NewNfsBrokerConfig(mounts),
 					)
 				})
 
