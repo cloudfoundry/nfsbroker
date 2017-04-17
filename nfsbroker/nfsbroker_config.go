@@ -2,7 +2,6 @@ package nfsbroker
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -96,10 +95,6 @@ func (m *Config) SetEntries(share string, opts map[string]interface{}, ignoreLis
 func (m Config) Share(share string) string {
 	srcPart := strings.SplitN(share, "?", 2)
 	return srcPart[0]
-}
-
-func (m Config) Mount() []string {
-	return m.mount.makeParams("--")
 }
 
 func (m Config) MountConfig() map[string]interface{} {
@@ -268,33 +263,6 @@ func (m *ConfigDetails) parseMap(entryList map[string]interface{}, ignoreList []
 	}
 
 	return errorList
-}
-
-func (m ConfigDetails) makeParams(prefix string) []string {
-	params := []string{}
-
-	for k, v := range m.makeConfig() {
-
-		if k == "sloppy_mount" {
-			continue
-		}
-
-		if val, err := strconv.ParseInt(v.(string), 10, 16); err == nil {
-			params = append(params, fmt.Sprintf("%s%s=%d", prefix, k, val))
-			continue
-		}
-
-		if val, err := strconv.ParseBool(v.(string)); err == nil {
-			if val {
-				params = append(params, fmt.Sprintf("%s%s", prefix, k))
-			}
-			continue
-		}
-
-		params = append(params, fmt.Sprintf("%s%s=%s", prefix, k, v.(string)))
-	}
-
-	return params
 }
 
 func (m *ConfigDetails) makeConfig() map[string]interface{} {

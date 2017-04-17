@@ -142,10 +142,6 @@ var _ = Describe("BrokerConfigDetails", func() {
 			Expect(errorEntries).To(BeNil())
 		})
 
-		It("should returns no mount command parameters", func() {
-			Expect(len(config.Mount())).To(Equal(0))
-		})
-
 		It("should returns no MountOptions struct", func() {
 			Expect(len(config.MountConfig())).To(Equal(0))
 		})
@@ -202,21 +198,6 @@ var _ = Describe("BrokerConfigDetails", func() {
 				Expect(errorEntries).To(BeNil())
 			})
 
-			It("passes the mount default options into the mount command parameters ", func() {
-				actualRes := config.Mount()
-				expectRes := map2slice(mountOptions, "=", "--")
-
-				for _, exp := range expectRes {
-					logger.Debug("checking-actual-res-contains-part", lager.Data{"actualRes": actualRes, "part": exp})
-					Expect(inSliceString(actualRes, exp)).To(BeTrue())
-				}
-
-				for _, exp := range actualRes {
-					logger.Debug("checking-expect-res-contains-part", lager.Data{"expectRes": expectRes, "part": exp})
-					Expect(inSliceString(expectRes, exp)).To(BeTrue())
-				}
-			})
-
 			It("should pass the default options into the MountOptions struct", func() {
 				actualRes := config.MountConfig()
 				expectRes := mapstring2mapinterface(mountOptions)
@@ -256,21 +237,6 @@ var _ = Describe("BrokerConfigDetails", func() {
 			It("should return an error", func() {
 				Expect(errorEntries).To(HaveOccurred())
 				logger.Debug("debug-config-updated with entry", lager.Data{"config": config, "mount": configDetails})
-			})
-
-			It("should flow the mount default options into the mount command parameters ", func() {
-				actualRes := config.Mount()
-				expectRes := map2slice(mountOptions, "=", "--")
-
-				for _, exp := range expectRes {
-					logger.Debug("checking-actual-res-contains-part", lager.Data{"actualRes": actualRes, "part": exp})
-					Expect(inSliceString(actualRes, exp)).To(BeTrue())
-				}
-
-				for _, exp := range actualRes {
-					logger.Debug("checking-expect-res-contains-part", lager.Data{"expectRes": expectRes, "part": exp})
-					Expect(inSliceString(expectRes, exp)).To(BeTrue())
-				}
 			})
 
 			It("should flow the mount default options into the MountOptions struct", func() {
@@ -317,21 +283,6 @@ var _ = Describe("BrokerConfigDetails", func() {
 				logger.Debug("debug-config-updated with entry", lager.Data{"config": config, "mount": configDetails})
 			})
 
-			It("should flow the options into the mount command parameters ", func() {
-				actualRes := config.Mount()
-				expectRes := append(map2slice(mountOptions, "=", "--"), []string{"--allow_other", "--dircache=0", "--auto-traverse-mounts=1"}...)
-
-				for _, exp := range expectRes {
-					logger.Debug("checking-actual-res-contains-part", lager.Data{"actualRes": actualRes, "part": exp})
-					Expect(inSliceString(actualRes, exp)).To(BeTrue())
-				}
-
-				for _, exp := range actualRes {
-					logger.Debug("checking-expect-res-contains-part", lager.Data{"expectRes": expectRes, "part": exp})
-					Expect(inSliceString(expectRes, exp)).To(BeTrue())
-				}
-			})
-
 			It("should flow the mount default options into the MountOptions struct", func() {
 				actualRes := config.MountConfig()
 
@@ -372,21 +323,6 @@ var _ = Describe("BrokerConfigDetails", func() {
 				Expect(errorEntries).To(BeNil())
 			})
 
-			It("should flow the arbitrary config into the mount command parameters ", func() {
-				actualRes := config.Mount()
-				expectRes := mapint2slice(arbitraryConfig, "=", "--")
-
-				for _, exp := range expectRes {
-					logger.Debug("checking-actual-res-contains-part", lager.Data{"actualRes": actualRes, "part": exp})
-					Expect(inSliceString(actualRes, exp)).To(BeTrue())
-				}
-
-				for _, exp := range actualRes {
-					logger.Debug("checking-expect-res-contains-part", lager.Data{"expectRes": expectRes, "part": exp})
-					Expect(inSliceString(expectRes, exp)).To(BeTrue())
-				}
-			})
-
 			It("should flow the arbitrary config into the MountOptions struct", func() {
 				actualRes := config.MountConfig()
 				expectRes := arbitraryConfig
@@ -412,21 +348,6 @@ var _ = Describe("BrokerConfigDetails", func() {
 				BeforeEach(func() {
 					config2 = config.Copy()
 				})
-				It("should pass the arbitrary config into the mount command parameters ", func() {
-					actualRes := config2.Mount()
-					expectRes := mapint2slice(arbitraryConfig, "=", "--")
-
-					for _, exp := range expectRes {
-						logger.Debug("checking-actual-res-contains-part", lager.Data{"actualRes": actualRes, "part": exp})
-						Expect(inSliceString(actualRes, exp)).To(BeTrue())
-					}
-
-					for _, exp := range actualRes {
-						logger.Debug("checking-expect-res-contains-part", lager.Data{"expectRes": expectRes, "part": exp})
-						Expect(inSliceString(expectRes, exp)).To(BeTrue())
-					}
-				})
-
 				It("should flow the arbitrary config into the MountOptions struct", func() {
 					actualRes := config2.MountConfig()
 					expectRes := arbitraryConfig
