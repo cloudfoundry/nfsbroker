@@ -193,23 +193,20 @@ func (m ConfigDetails) uniformKeyData(key string, data interface{}) string {
 
 func (m ConfigDetails) uniformData(data interface{}, boolAsInt bool) string {
 
-	switch data.(type) {
-	case int:
-		return strconv.FormatInt(int64(data.(int)), 10)
-
-	case string:
-		return data.(string)
-
-	case bool:
+	if boolval, ok := data.(bool); ok {
 		if boolAsInt {
-			if data.(bool) {
+			if boolval {
 				return "1"
 			} else {
 				return "0"
 			}
 		} else {
-			return strconv.FormatBool(data.(bool))
+			return strconv.FormatBool(boolval)
 		}
+	} else if stringval, ok := data.(string); ok {
+		return stringval
+	} else if intval, ok := data.(int64); ok {
+		return strconv.FormatInt(intval, 10)
 	}
 
 	return ""
