@@ -391,12 +391,6 @@ var _ = Describe("BrokerConfigDetails", func() {
 				Expect(errorEntries).To(BeNil())
 			})
 
-			It("should flow the arbitrary config into the mount command parameters ", func() {
-				actualRes := config.Mount()
-
-				Expect(actualRes).To(ContainElement("--foo=56"))
-			})
-
 			It("should flow the arbitrary config into the MountOptions struct", func() {
 				actualRes := config.MountConfig()
 
@@ -404,7 +398,6 @@ var _ = Describe("BrokerConfigDetails", func() {
 
 				Expect(ok).To(BeTrue())
 				Expect(v).To(Equal("56"))
-
 			})
 		})
 	})
