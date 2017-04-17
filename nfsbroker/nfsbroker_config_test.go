@@ -118,7 +118,7 @@ var _ = Describe("BrokerConfigDetails", func() {
 			config = NewNfsBrokerConfig(configDetails)
 			logger.Debug("debug-config-initiated", lager.Data{"mount": configDetails})
 
-			errorEntries = config.SetEntries(clientShare, arbitraryConfig, ignoreConfigKey)
+			errorEntries = config.SetEntries(logger, clientShare, arbitraryConfig, ignoreConfigKey)
 			logger.Debug("debug-config-updated", lager.Data{"mount": configDetails})
 		})
 
@@ -190,7 +190,7 @@ var _ = Describe("BrokerConfigDetails", func() {
 
 		Context("Given empty arbitrary params and share without any params", func() {
 			BeforeEach(func() {
-				errorEntries = config.SetEntries(clientShare, arbitraryConfig, ignoreConfigKey)
+				errorEntries = config.SetEntries(logger, clientShare, arbitraryConfig, ignoreConfigKey)
 				logger.Debug("debug-config-updated", lager.Data{"config": config, "mount": configDetails})
 			})
 
@@ -230,7 +230,7 @@ var _ = Describe("BrokerConfigDetails", func() {
 				}
 				ignoreConfigKey = make([]string, 0)
 
-				errorEntries = config.SetEntries(clientShare, arbitraryConfig, ignoreConfigKey)
+				errorEntries = config.SetEntries(logger, clientShare, arbitraryConfig, ignoreConfigKey)
 				logger.Debug("debug-config-updated", lager.Data{"config": config, "mount": configDetails})
 			})
 
@@ -274,7 +274,7 @@ var _ = Describe("BrokerConfigDetails", func() {
 				}
 				ignoreConfigKey = make([]string, 0)
 
-				errorEntries = config.SetEntries(clientShare, arbitraryConfig, ignoreConfigKey)
+				errorEntries = config.SetEntries(logger, clientShare, arbitraryConfig, ignoreConfigKey)
 				logger.Debug("debug-config-updated", lager.Data{"config": config, "mount": configDetails})
 			})
 
@@ -315,7 +315,7 @@ var _ = Describe("BrokerConfigDetails", func() {
 				}
 				ignoreConfigKey = make([]string, 0)
 
-				errorEntries = config.SetEntries(clientShare, arbitraryConfig, ignoreConfigKey)
+				errorEntries = config.SetEntries(logger, clientShare, arbitraryConfig, ignoreConfigKey)
 				logger.Debug("debug-config-updated", lager.Data{"config": config, "mount": configDetails})
 			})
 
@@ -383,7 +383,7 @@ var _ = Describe("BrokerConfigDetails", func() {
 				}
 				ignoreConfigKey = make([]string, 0)
 
-				errorEntries = config.SetEntries(clientShare, arbitraryConfig, ignoreConfigKey)
+				errorEntries = config.SetEntries(logger, clientShare, arbitraryConfig, ignoreConfigKey)
 				logger.Debug("debug-config-updated", lager.Data{"config": config, "mount": configDetails})
 			})
 

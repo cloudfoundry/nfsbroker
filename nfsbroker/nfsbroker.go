@@ -231,10 +231,10 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 	// TODO--be stateless.  Until we do that, we will just make a local copy, but we should really
 	// TODO--refactor this to something more efficient.
 	tempConfig := b.config.Copy()
-	if err := tempConfig.SetEntries(source, bindDetails.Parameters, []string{
+	if err := tempConfig.SetEntries(logger, source, bindDetails.Parameters, []string{
 		"share", "mount", "kerberosPrincipal", "kerberosKeytab", "readonly",
 	}); err != nil {
-		logger.Debug("parameters-error-assign-entries", lager.Data{
+		logger.Info("parameters-error-assign-entries", lager.Data{
 			"given_source":  source,
 			"given_options": bindDetails.Parameters,
 			"mount":         tempConfig.mount,

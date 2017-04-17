@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"code.cloudfoundry.org/lager"
 )
 
 type ConfigDetails struct {
@@ -71,8 +72,8 @@ func (rhs *ConfigDetails) Copy() *ConfigDetails {
 	return myConf
 }
 
-func (m *Config) SetEntries(share string, opts map[string]interface{}, ignoreList []string) error {
-	m.mount.parseMap(opts, ignoreList)
+func (m *Config) SetEntries(logger lager.Logger, share string, opts map[string]interface{}, ignoreList []string) error {
+	m.mount.parseMap(logger, opts, ignoreList)
 
 	allowed := append(ignoreList, m.mount.Allowed...)
 	errorList := m.mount.parseUrl(share, ignoreList)
@@ -243,13 +244,14 @@ func (m *ConfigDetails) parseUrlParams(urlParams string, ignoreList []string) st
 	return op[0]
 }
 
-func (m *ConfigDetails) parseMap(entryList map[string]interface{}, ignoreList []string) []string {
+func (m *ConfigDetails) parseMap(logger lager.Logger, entryList map[string]interface{}, ignoreList []string) []string {
 
 	var errorList []string
 
 	for k, v := range entryList {
 
 		value := m.uniformKeyData(k, v)
+		logger.Debug("parsemap-uniform-key-data", lager.Data{"k": k, "v": v, "value": value})
 
 		if value == "" || len(k) < 1 || inArray(ignoreList, k) {
 			continue
