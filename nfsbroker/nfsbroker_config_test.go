@@ -87,7 +87,7 @@ var _ = Describe("BrokerConfigDetails", func() {
 		logger lager.Logger
 
 		clientShare     string
-		arbitraryConfig  map[string]interface{}
+		arbitraryConfig map[string]interface{}
 		ignoreConfigKey []string
 
 		allowed      []string
@@ -157,7 +157,7 @@ var _ = Describe("BrokerConfigDetails", func() {
 			arbitraryConfig = make(map[string]interface{}, 0)
 			ignoreConfigKey = make([]string, 0)
 
-			allowed = []string{"sloppy_mount", "nfs_uid", "nfs_gid", "allow_other", "uid", "gid", "auto-traverse-mounts", "dircache", "foo"}
+			allowed = []string{"sloppy_mount", "nfs_uid", "nfs_gid", "allow_other", "uid", "gid", "auto-traverse-mounts", "dircache", "foo", "bar", "flo"}
 			mountOptions = map[string]string{
 				"nfs_uid": "1003",
 				"nfs_gid": "1001",
@@ -375,11 +375,17 @@ var _ = Describe("BrokerConfigDetails", func() {
 			BeforeEach(func() {
 				clientShare = "nfs://1.2.3.4"
 				var fooval int64
+				var barval int8
+				var floval float64
 				fooval = 56
+				barval = 5
+				floval = 10
 				arbitraryConfig = map[string]interface{}{
-					"uid":     2999,
-					"gid":     1999,
-					"foo":		 fooval,
+					"uid": 2999,
+					"gid": 1999,
+					"foo": fooval,
+					"bar": barval,
+					"flo": floval,
 				}
 				ignoreConfigKey = make([]string, 0)
 
@@ -391,13 +397,21 @@ var _ = Describe("BrokerConfigDetails", func() {
 				Expect(errorEntries).To(BeNil())
 			})
 
-			It("should flow the arbitrary config into the MountOptions struct", func() {
+			FIt("should flow the arbitrary config into the MountOptions struct", func() {
 				actualRes := config.MountConfig()
 
 				v, ok := actualRes["foo"]
-
 				Expect(ok).To(BeTrue())
 				Expect(v).To(Equal("56"))
+				v, ok = actualRes["uid"]
+				Expect(ok).To(BeTrue())
+				Expect(v).To(Equal("2999"))
+				v, ok = actualRes["bar"]
+				Expect(ok).To(BeTrue())
+				Expect(v).To(Equal("5"))
+				v, ok = actualRes["flo"]
+				Expect(ok).To(BeTrue())
+				Expect(v).To(Equal("10"))
 			})
 		})
 	})

@@ -1,10 +1,11 @@
 package nfsbroker
 
 import (
+	"code.cloudfoundry.org/lager"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
-	"code.cloudfoundry.org/lager"
 )
 
 type ConfigDetails struct {
@@ -189,20 +190,23 @@ func (m ConfigDetails) uniformKeyData(key string, data interface{}) string {
 
 func (m ConfigDetails) uniformData(data interface{}, boolAsInt bool) string {
 
-	if boolval, ok := data.(bool); ok {
+	switch data.(type) {
+	case int, int8, int16, int32, int64, float32, float64:
+		return fmt.Sprintf("%#v", data)
+
+	case string:
+		return data.(string)
+
+	case bool:
 		if boolAsInt {
-			if boolval {
+			if data.(bool) {
 				return "1"
 			} else {
 				return "0"
 			}
 		} else {
-			return strconv.FormatBool(boolval)
+			return strconv.FormatBool(data.(bool))
 		}
-	} else if stringval, ok := data.(string); ok {
-		return stringval
-	} else if intval, ok := data.(int64); ok {
-		return strconv.FormatInt(intval, 10)
 	}
 
 	return ""
@@ -251,7 +255,6 @@ func (m *ConfigDetails) parseMap(logger lager.Logger, entryList map[string]inter
 	for k, v := range entryList {
 
 		value := m.uniformKeyData(k, v)
-		logger.Debug("parsemap-uniform-key-data", lager.Data{"k": k, "v": v, "value": value})
 
 		if value == "" || len(k) < 1 || inArray(ignoreList, k) {
 			continue
