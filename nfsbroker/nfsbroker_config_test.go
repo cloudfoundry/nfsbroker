@@ -397,7 +397,7 @@ var _ = Describe("BrokerConfigDetails", func() {
 				Expect(errorEntries).To(BeNil())
 			})
 
-			FIt("should flow the arbitrary config into the MountOptions struct", func() {
+			It("should flow the arbitrary config into the MountOptions struct", func() {
 				actualRes := config.MountConfig()
 
 				v, ok := actualRes["foo"]
