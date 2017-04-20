@@ -3,7 +3,6 @@ package nfsbroker
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 
 	"reflect"
@@ -45,16 +44,16 @@ func (s *fileStore) Restore(logger lager.Logger) error {
 
 	serviceData, err := s.ioutil.ReadFile(s.fileName)
 	if err != nil {
-		logger.Error(fmt.Sprintf("failed-to-read-state-file: %s", s.fileName), err)
+		logger.Error("failed-to-read-state-file", err, lager.Data{"fileName": s.fileName})
 		return err
 	}
 
 	err = json.Unmarshal(serviceData, s.dynamicState)
 	if err != nil {
-		logger.Error(fmt.Sprintf("failed-to-unmarshall-state from state-file: %s", s.fileName), err)
+		logger.Error("failed-to-unmarshall-state from state-file", err, lager.Data{"fileName": s.fileName})
 		return err
 	}
-	logger.Info("state-restored", lager.Data{"state-file": s.fileName})
+	logger.Info("state-restored", lager.Data{"fileName": s.fileName})
 
 	return err
 }
@@ -72,7 +71,7 @@ func (s *fileStore) Save(logger lager.Logger) error {
 
 	err = s.ioutil.WriteFile(s.fileName, stateData, os.ModePerm)
 	if err != nil {
-		logger.Error(fmt.Sprintf("failed-to-write-state-file: %s", s.fileName), err)
+		logger.Error("failed-to-write-state-file", err, lager.Data{"fileName": s.fileName})
 		return err
 	}
 
