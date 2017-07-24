@@ -10,6 +10,7 @@
     # if the database is provided via cf bind, DBSERVICENAME must be set otherwise
     # it should be omitted and the other db connection parameters should be set.
     DBSERVICENAME: p-mysql #service name for db service as seen in `cf marketplace`
+    ALLOWED_OPTIONS: "uid,gid,auto_cache,username,password"
 
 #   DBHOST: 10.244.0.30
 #   DBPORT: 3306
