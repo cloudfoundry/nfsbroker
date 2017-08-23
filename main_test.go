@@ -1,4 +1,4 @@
-package main_test
+package main
 
 import (
 	"io"
@@ -20,6 +20,9 @@ import (
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
+	"code.cloudfoundry.org/goshims/osshim/os_fake"
+	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -114,6 +117,79 @@ func (r failRunner) Run(sigChan <-chan os.Signal, ready chan<- struct{}) error {
 }
 
 var _ = Describe("nfsbroker Main", func() {
+	Context("Parse VCAP_SERVICES tests", func() {
+		var (
+			port   string
+			fakeOs os_fake.FakeOs = os_fake.FakeOs{}
+			logger lager.Logger
+		)
+
+		BeforeEach(func() {
+			*dbDriver = "postgres"
+			*cfServiceName = "postgresql"
+			logger = lagertest.NewTestLogger("test-broker-main")
+		})
+		JustBeforeEach(func() {
+			env:=fmt.Sprintf(`
+				{
+					"postgresql":[
+						{
+							"credentials":{
+								"dbType":"postgresql",
+								"hostname":"8.8.8.8",
+								"name":"foo",
+								"password":"foo",
+								"port":%s,
+								"uri":"postgresql://foo:foo@8.8.8.8:9999/foo",
+								"username":"foo"
+							},
+							"label":"postgresql",
+							"name":"foobroker",
+							"plan":"amanaplanacanalpanama",
+							"provider":null,
+							"syslog_drain_url":null,
+							"tags":[
+								"postgresql",
+								"cache"
+							],
+							"volume_mounts":[]
+						}
+					]
+				}`,port)
+			fakeOs.LookupEnvReturns(env,true)
+		})
+
+		Context("when port is a string", func() {
+			BeforeEach(func() {
+				port = `"9999"`
+			})
+
+			It("should succeed", func() {
+				Expect(func() { parseVcapServices(logger, &fakeOs) }).NotTo(Panic())
+				Expect(*dbPort).To(Equal("9999"))
+			})
+		})
+		Context("when port is a number", func() {
+			BeforeEach(func() {
+				port = `9999`
+			})
+
+			It("should succeed", func() {
+				Expect(func() { parseVcapServices(logger, &fakeOs) }).NotTo(Panic())
+				Expect(*dbPort).To(Equal("9999"))
+			})
+		})
+		Context("when port is an array", func() {
+			BeforeEach(func() {
+				port = `[9999]`
+			})
+
+			It("should panic", func() {
+				Expect(func() { parseVcapServices(logger, &fakeOs) }).To(Panic())
+			})
+		})
+	})
+
 	Context("Missing required args", func() {
 		var process ifrit.Process
 		It("shows usage", func() {

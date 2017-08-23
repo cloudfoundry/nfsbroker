@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"os"
 
-	"code.cloudfoundry.org/lager/lagerflags"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/debugserver"
 	"code.cloudfoundry.org/goshims/osshim"
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/lagerflags"
 	"code.cloudfoundry.org/nfsbroker/nfsbroker"
 	"code.cloudfoundry.org/nfsbroker/utils"
 
@@ -150,7 +150,7 @@ func checkParams() {
 	}
 }
 
-func parseVcapServices(logger lager.Logger) {
+func parseVcapServices(logger lager.Logger, os osshim.Os) {
 	if *dbDriver == "" {
 		logger.Fatal("missing-db-driver-parameter", errors.New("dbDriver parameter is required for cf deployed broker"))
 	}
@@ -180,7 +180,9 @@ func parseVcapServices(logger lager.Logger) {
 	dbUsername = credentials["username"].(string)
 	dbPassword = credentials["password"].(string)
 	*dbHostname = credentials["hostname"].(string)
-	*dbPort = fmt.Sprintf("%.0f", credentials["port"].(float64))
+	if *dbPort, ok = credentials["port"].(string); !ok {
+		*dbPort = fmt.Sprintf("%.0f", credentials["port"].(float64))
+	}
 	*dbName = credentials["name"].(string)
 }
 
@@ -189,7 +191,7 @@ func createServer(logger lager.Logger) ifrit.Runner {
 
 	// if we are CF pushed
 	if *cfServiceName != "" {
-		parseVcapServices(logger)
+		parseVcapServices(logger, &osshim.OsShim{})
 	}
 
 	store := nfsbroker.NewStore(logger, *dbDriver, dbUsername, dbPassword, *dbHostname, *dbPort, *dbName, *dbCACert, fileName)
