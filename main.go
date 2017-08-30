@@ -198,6 +198,7 @@ func createServer(logger lager.Logger) ifrit.Runner {
 
 	mounts := nfsbroker.NewNfsBrokerConfigDetails()
 	mounts.ReadConf(*allowedOptions, *defaultOptions)
+	logger.Debug("nfsbroker-startup-config", lager.Data{"config", mounts})
 
 	config := nfsbroker.NewNfsBrokerConfig(mounts)
 

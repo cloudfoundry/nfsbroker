@@ -75,6 +75,7 @@ func (rhs *ConfigDetails) Copy() *ConfigDetails {
 
 func (m *Config) SetEntries(logger lager.Logger, share string, opts map[string]interface{}, ignoreList []string) error {
 	m.mount.parseMap(logger, opts, ignoreList)
+	logger.Debug("setentries-parsed-config", lager.Data{"config", m.mount})
 
 	allowed := append(ignoreList, m.mount.Allowed...)
 	errorList := m.mount.parseUrl(share, ignoreList)
