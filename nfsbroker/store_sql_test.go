@@ -6,16 +6,17 @@ import (
 	"code.cloudfoundry.org/nfsbroker/nfsbroker"
 	"github.com/pivotal-cf/brokerapi"
 
-	"code.cloudfoundry.org/goshims/sqlshim/sql_fake"
-	"code.cloudfoundry.org/nfsbroker/nfsbrokerfakes"
 	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
+	"reflect"
+	"strings"
+
+	"code.cloudfoundry.org/goshims/sqlshim/sql_fake"
+	"code.cloudfoundry.org/nfsbroker/nfsbrokerfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
-	"reflect"
-	"strings"
 )
 
 type redactedStuff struct{}
@@ -48,7 +49,7 @@ var _ = Describe("SqlStore", func() {
 		db                                                               *sql.DB
 		mock                                                             sqlmock.Sqlmock
 		bindResource                                                     brokerapi.BindResource
-		parameters                                                       map[string]interface{}
+		parameters                                                       json.RawMessage
 		bindDetails                                                      brokerapi.BindDetails
 	)
 
@@ -173,7 +174,7 @@ var _ = Describe("SqlStore", func() {
 
 				columns := []string{"id", "value"}
 				rows := sqlmock.NewRows(columns)
-				jsonvalue, err := json.Marshal(brokerapi.BindDetails{AppGUID: appGUID, PlanID: planID, ServiceID: serviceID, BindResource: &bindResource, Parameters: parameters})
+				jsonvalue, err := json.Marshal(brokerapi.BindDetails{AppGUID: appGUID, PlanID: planID, ServiceID: serviceID, BindResource: &bindResource, RawParameters: parameters})
 				Expect(err).NotTo(HaveOccurred())
 				rows.AddRow(bindingID, jsonvalue)
 
@@ -191,7 +192,7 @@ var _ = Describe("SqlStore", func() {
 				Expect(bindDetails.AppGUID).To(Equal(appGUID))
 				Expect(bindDetails.BindResource.AppGuid).To(Equal(appGUID))
 				Expect(bindDetails.BindResource.Route).To(Equal("binding-route"))
-				Expect(bindDetails.Parameters).To(Equal(parameters))
+				Expect(bindDetails.RawParameters).To(Equal(parameters))
 			})
 		})
 		Context("When the binding does not exist", func() {
@@ -240,7 +241,7 @@ var _ = Describe("SqlStore", func() {
 			serviceID = "service_123"
 			bindingID = "binding_123"
 			bindResource = brokerapi.BindResource{AppGuid: appGUID, Route: "binding-route"}
-			bindDetails = brokerapi.BindDetails{AppGUID: appGUID, PlanID: planID, ServiceID: serviceID, BindResource: &bindResource, Parameters: parameters}
+			bindDetails = brokerapi.BindDetails{AppGUID: appGUID, PlanID: planID, ServiceID: serviceID, BindResource: &bindResource, RawParameters: parameters}
 		})
 		JustBeforeEach(func() {
 			err = sqlStore.CreateBindingDetails(bindingID, bindDetails)
@@ -262,7 +263,10 @@ var _ = Describe("SqlStore", func() {
 
 		Context("when there are parameters with secrets in the binding", func() {
 			BeforeEach(func() {
-				bindDetails = brokerapi.BindDetails{AppGUID: appGUID, PlanID: planID, ServiceID: serviceID, BindResource: &bindResource, Parameters: map[string]interface{}{"secret": "don't tell"}}
+				bindParameters := map[string]interface{}{"secret": "don't tell"}
+				bindMessage, err := json.Marshal(bindParameters)
+				Expect(err).NotTo(HaveOccurred())
+				bindDetails = brokerapi.BindDetails{AppGUID: appGUID, PlanID: planID, ServiceID: serviceID, BindResource: &bindResource, RawParameters: bindMessage}
 				result := sqlmock.NewResult(1, 1)
 				mock.ExpectExec("INSERT INTO service_bindings").WithArgs(bindingID, &redactedStuff{}).WillReturnResult(result)
 			})

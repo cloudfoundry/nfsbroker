@@ -1,12 +1,13 @@
 package nfsbroker
 
 import (
+	"encoding/json"
+	"reflect"
+
 	"code.cloudfoundry.org/goshims/ioutilshim"
 	"code.cloudfoundry.org/lager"
-	"encoding/json"
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/crypto/bcrypt"
-	"reflect"
 )
 
 //go:generate counterfeiter -o ../nfsbrokerfakes/fake_store.go . Store
@@ -44,16 +45,20 @@ func NewStore(logger lager.Logger, dbDriver, dbUsername, dbPassword, dbHostname,
 const HashKey = "paramsHash"
 
 func redactBindingDetails(details brokerapi.BindDetails) (brokerapi.BindDetails, error) {
-	if details.Parameters == nil {
+	if len(details.RawParameters) == 0 {
 		return details, nil
 	}
-	if len(details.Parameters) == 1 {
-		if _, ok := details.Parameters[HashKey]; ok {
+	var opts map[string]interface{}
+	if err := json.Unmarshal(details.RawParameters, &opts); err != nil {
+		return details, err
+	}
+	if len(opts) == 1 {
+		if _, ok := opts[HashKey]; ok {
 			return details, nil
 		}
 	}
 
-	s, err := json.Marshal(details.Parameters)
+	s, err := json.Marshal(opts)
 	if err != nil {
 		return brokerapi.BindDetails{}, err
 	}
@@ -61,7 +66,11 @@ func redactBindingDetails(details brokerapi.BindDetails) (brokerapi.BindDetails,
 	if err != nil {
 		return brokerapi.BindDetails{}, err
 	}
-	details.Parameters = map[string]interface{}{HashKey: string(s)}
+	redacted := map[string]interface{}{HashKey: string(s)}
+	details.RawParameters, err = json.Marshal(redacted)
+	if err != nil {
+		return brokerapi.BindDetails{}, err
+	}
 	return details, nil
 }
 
@@ -79,19 +88,20 @@ func isBindingConflict(s Store, id string, details brokerapi.BindDetails) bool {
 		if !reflect.DeepEqual(details.BindResource, existing.BindResource) {
 			return true
 		}
-		if (details.Parameters == nil) && (existing.Parameters == nil) {
+		if (len(details.RawParameters) == 0) && (len(existing.RawParameters) == 0) {
 			return false
 		}
-		if (details.Parameters == nil) || (existing.Parameters == nil) {
+		if (len(details.RawParameters) == 0) || (len(existing.RawParameters) == 0) {
 			return true
 		}
 
-		s, err := json.Marshal(details.Parameters)
-		if err != nil {
-			return true
+		var opts map[string]interface{}
+		if err := json.Unmarshal(existing.RawParameters, &opts); err != nil {
+			return false
 		}
-		h, _ := existing.Parameters[HashKey]
-		if bcrypt.CompareHashAndPassword([]byte(h.(string)), s) != nil {
+
+		h, _ := opts[HashKey]
+		if bcrypt.CompareHashAndPassword([]byte(h.(string)), details.RawParameters) != nil {
 			return true
 		}
 	}

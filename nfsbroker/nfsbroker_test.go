@@ -256,8 +256,9 @@ var _ = Describe("Broker", func() {
 
 		Context(".Bind", func() {
 			var (
-				instanceID  string
-				bindDetails brokerapi.BindDetails
+				instanceID     string
+				bindDetails    brokerapi.BindDetails
+				bindParameters map[string]interface{}
 
 				uid, gid string
 			)
@@ -270,14 +271,18 @@ var _ = Describe("Broker", func() {
 				fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{ServiceID: instanceID, Share: "server:/some-share"}, nil)
 				fakeStore.RetrieveBindingDetailsReturns(brokerapi.BindDetails{}, errors.New("yar"))
 
+				bindParameters = map[string]interface{}{
+					nfsbroker.Username: "principal name",
+					nfsbroker.Secret:   "some keytab data",
+					"uid":              uid,
+					"gid":              gid,
+				}
+				bindMessage, err := json.Marshal(bindParameters)
+				Expect(err).NotTo(HaveOccurred())
+
 				bindDetails = brokerapi.BindDetails{
-					AppGUID: "guid",
-					Parameters: map[string]interface{}{
-						nfsbroker.Username: "principal name",
-						nfsbroker.Secret:   "some keytab data",
-						"uid":              uid,
-						"gid":              gid,
-					},
+					AppGUID:       "guid",
+					RawParameters: bindMessage,
 				}
 			})
 
@@ -312,7 +317,9 @@ var _ = Describe("Broker", func() {
 			})
 
 			It("flows container path through", func() {
-				bindDetails.Parameters["mount"] = "/var/vcap/otherdir/something"
+				var err error
+				bindParameters["mount"] = "/var/vcap/otherdir/something"
+				bindDetails.RawParameters, err = json.Marshal(bindParameters)
 				binding, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(binding.VolumeMounts[0].ContainerDir).To(Equal("/var/vcap/otherdir/something"))
@@ -341,8 +348,10 @@ var _ = Describe("Broker", func() {
 			})
 
 			It("errors if mode is not a boolean", func() {
-				bindDetails.Parameters["readonly"] = ""
-				_, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
+				var err error
+				bindParameters["readonly"] = ""
+				bindDetails.RawParameters, err = json.Marshal(bindParameters)
+				_, err = broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
 				Expect(err).To(Equal(brokerapi.ErrRawParamsInvalid))
 			})
 
@@ -391,8 +400,10 @@ var _ = Describe("Broker", func() {
 						bindSpec2 brokerapi.Binding
 					)
 					BeforeEach(func() {
-						bindDetails.Parameters["uid"] = "3000"
-						bindDetails.Parameters["gid"] = "3000"
+						var err error
+						bindParameters["uid"] = "3000"
+						bindParameters["gid"] = "3000"
+						bindDetails.RawParameters, err = json.Marshal(bindParameters)
 						bindSpec2, err = broker.Bind(ctx, "some-instance-id", "binding-id-2", bindDetails)
 						Expect(err).NotTo(HaveOccurred())
 					})
@@ -461,12 +472,14 @@ var _ = Describe("Broker", func() {
 
 				Context("given allow_root=true is supplied", func() {
 					BeforeEach(func() {
-						bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{
+						bindParameters := map[string]interface{}{
 							nfsbroker.Username: "principal name",
 							nfsbroker.Secret:   "some keytab data",
 							"allow_root":       true,
-						},
 						}
+						bindMessage, err := json.Marshal(bindParameters)
+						Expect(err).NotTo(HaveOccurred())
+						bindDetails = brokerapi.BindDetails{AppGUID: "guid", RawParameters: bindMessage}
 					})
 
 					It("should return with an error", func() {
@@ -492,12 +505,14 @@ var _ = Describe("Broker", func() {
 
 				Context("given allow_root=true is supplied", func() {
 					BeforeEach(func() {
-						bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{
+						bindParameters := map[string]interface{}{
 							nfsbroker.Username: "principal name",
 							nfsbroker.Secret:   "some keytab data",
 							"allow_root":       true,
-						},
 						}
+						bindMessage, err := json.Marshal(bindParameters)
+						Expect(err).NotTo(HaveOccurred())
+						bindDetails = brokerapi.BindDetails{AppGUID: "guid", RawParameters: bindMessage}
 					})
 
 					It("does not pass allow_root option through", func() {
@@ -528,12 +543,14 @@ var _ = Describe("Broker", func() {
 
 				Context("given allow_root=true is supplied", func() {
 					BeforeEach(func() {
-						bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{
+						bindParameters := map[string]interface{}{
 							nfsbroker.Username: "principal name",
 							nfsbroker.Secret:   "some keytab data",
 							"allow_root":       true,
-						},
 						}
+						bindMessage, err := json.Marshal(bindParameters)
+						Expect(err).NotTo(HaveOccurred())
+						bindDetails = brokerapi.BindDetails{AppGUID: "guid", RawParameters: bindMessage}
 					})
 
 					It("passes allow_root=true option through", func() {
@@ -558,7 +575,15 @@ var _ = Describe("Broker", func() {
 
 			BeforeEach(func() {
 				instanceID = "some-instance-id"
-				bindDetails = brokerapi.BindDetails{AppGUID: "guid", Parameters: map[string]interface{}{nfsbroker.Username: "principal name", nfsbroker.Secret: "some keytab data", "uid": "1000", "gid": "1000"}}
+				bindParameters := map[string]interface{}{
+					nfsbroker.Username: "principal name",
+					nfsbroker.Secret:   "some keytab data",
+					"uid":              "1000",
+					"gid":              "1000",
+				}
+				bindMessage, err := json.Marshal(bindParameters)
+				Expect(err).NotTo(HaveOccurred())
+				bindDetails = brokerapi.BindDetails{AppGUID: "guid", RawParameters: bindMessage}
 
 				fakeStore.RetrieveBindingDetailsReturns(bindDetails, nil)
 			})
