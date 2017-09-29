@@ -217,7 +217,11 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 		return brokerapi.Binding{}, brokerapi.ErrAppGuidNotProvided
 	}
 
-	mode, err := evaluateMode(bindDetails.Parameters)
+	var opts map[string]interface{}
+	if err := json.Unmarshal(bindDetails.RawParameters, &opts); err != nil {
+		return brokerapi.Binding{}, err
+	}
+	mode, err := evaluateMode(opts)
 	if err != nil {
 		return brokerapi.Binding{}, err
 	}
@@ -239,12 +243,12 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 	// TODO--be stateless.  Until we do that, we will just make a local copy, but we should really
 	// TODO--refactor this to something more efficient.
 	tempConfig := b.config.Copy()
-	if err := tempConfig.SetEntries(logger, source, bindDetails.Parameters, []string{
+	if err := tempConfig.SetEntries(logger, source, opts, []string{
 		"share", "mount", "kerberosPrincipal", "kerberosKeytab", "readonly",
 	}); err != nil {
 		logger.Info("parameters-error-assign-entries", lager.Data{
 			"given_source":  source,
-			"given_options": bindDetails.Parameters,
+			"given_options": opts,
 			"mount":         tempConfig.mount,
 			"sloppy_mount":  tempConfig.sloppyMount,
 		})
@@ -270,7 +274,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 	ret := brokerapi.Binding{
 		Credentials: struct{}{}, // if nil, cloud controller chokes on response
 		VolumeMounts: []brokerapi.VolumeMount{{
-			ContainerDir: evaluateContainerPath(bindDetails.Parameters, instanceID),
+			ContainerDir: evaluateContainerPath(opts, instanceID),
 			Mode:         mode,
 			Driver:       "nfsv3driver",
 			DeviceType:   "shared",

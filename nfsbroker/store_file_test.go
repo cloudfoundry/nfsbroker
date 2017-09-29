@@ -1,6 +1,7 @@
 package nfsbroker_test
 
 import (
+	"encoding/json"
 	"errors"
 
 	"code.cloudfoundry.org/goshims/ioutilshim/ioutil_fake"
@@ -195,7 +196,10 @@ var _ = Describe("FileStore", func() {
 			Context("when details found", func() {
 				BeforeEach(func() {
 					bindingID = "somethingGood"
-					inBindingDetails = brokerapi.BindDetails{ServiceID: "sample-service", Parameters: map[string]interface{}{"ping": "pong"}}
+					bindParameters := map[string]interface{}{"ping": "pong"}
+					bindMessage, err := json.Marshal(bindParameters)
+					Expect(err).NotTo(HaveOccurred())
+					inBindingDetails = brokerapi.BindDetails{ServiceID: "sample-service", RawParameters: bindMessage}
 					store.CreateBindingDetails(bindingID, inBindingDetails)
 				})
 				It("then will find binding details", func() {
@@ -204,11 +208,17 @@ var _ = Describe("FileStore", func() {
 
 				It("reports conflicts correctly", func() {
 					Expect(store.IsBindingConflict(bindingID, inBindingDetails)).To(BeFalse())
-					otherBindingDetails := brokerapi.BindDetails{ServiceID: "sample-service", Parameters: map[string]interface{}{"foo": "foo"}}
+
+					bindParameters := map[string]interface{}{"foo": "foo"}
+					bindMessage, err := json.Marshal(bindParameters)
+					Expect(err).NotTo(HaveOccurred())
+					otherBindingDetails := brokerapi.BindDetails{ServiceID: "sample-service", RawParameters: bindMessage}
 					Expect(store.IsBindingConflict(bindingID, otherBindingDetails)).To(BeTrue())
+
 					otherBindingDetails = brokerapi.BindDetails{ServiceID: "sample-service"}
 					Expect(store.IsBindingConflict(bindingID, otherBindingDetails)).To(BeTrue())
-					otherBindingDetails = brokerapi.BindDetails{ServiceID: "sample-service", Parameters: map[string]interface{}{}}
+
+					otherBindingDetails = brokerapi.BindDetails{ServiceID: "sample-service", RawParameters: json.RawMessage([]byte{})}
 					Expect(store.IsBindingConflict(bindingID, otherBindingDetails)).To(BeTrue())
 				})
 
