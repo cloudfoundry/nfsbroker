@@ -79,7 +79,7 @@ var _ = Describe("Broker", func() {
 			BeforeEach(func() {
 				instanceID = "some-instance-id"
 
-				configuration := map[string]interface{}{"share": "server:/some-share"}
+				configuration := map[string]interface{}{"share": "server/some-share"}
 				buf := &bytes.Buffer{}
 				_ = json.NewEncoder(buf).Encode(configuration)
 				provisionDetails = brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
@@ -124,6 +124,32 @@ var _ = Describe("Broker", func() {
 
 				It("errors", func() {
 					Expect(err).To(Equal(errors.New("config requires a \"share\" key")))
+				})
+			})
+
+			Context("create-service was given a server share with colon after server", func() {
+				BeforeEach(func() {
+					configuration := map[string]interface{}{"share": "server:/some-share"}
+					buf := &bytes.Buffer{}
+					_ = json.NewEncoder(buf).Encode(configuration)
+					provisionDetails = brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
+				})
+
+				It("errors", func() {
+					Expect(err).To(Equal(errors.New("syntax error for share: no colon allowed after server")))
+				})
+			})
+
+			Context("create-service was given a server share with colon after nfs directory", func() {
+				BeforeEach(func() {
+					configuration := map[string]interface{}{"share": "server/some-share:dir/"}
+					buf := &bytes.Buffer{}
+					_ = json.NewEncoder(buf).Encode(configuration)
+					provisionDetails = brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
+				})
+
+				It("should not error", func() {
+					Expect(err).NotTo(HaveOccurred())
 				})
 			})
 

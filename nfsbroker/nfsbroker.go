@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"path"
+	"regexp"
 	"sync"
 
 	"crypto/md5"
@@ -126,6 +127,13 @@ func (b *Broker) Provision(context context.Context, instanceID string, details b
 
 	if configuration.Share == "" {
 		return brokerapi.ProvisionedServiceSpec{}, errors.New("config requires a \"share\" key")
+	}
+
+	re := regexp.MustCompile("^[^/]+:/")
+	match := re.MatchString(configuration.Share)
+
+	if match {
+		return brokerapi.ProvisionedServiceSpec{}, errors.New("syntax error for share: no colon allowed after server")
 	}
 
 	b.mutex.Lock()
