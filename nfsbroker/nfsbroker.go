@@ -15,6 +15,7 @@ import (
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/goshims/osshim"
 	"code.cloudfoundry.org/lager"
+	"github.com/cloudfoundry-incubator/service-broker-store/brokerstore"
 	"github.com/pivotal-cf/brokerapi"
 )
 
@@ -33,14 +34,6 @@ type staticState struct {
 	ServiceId   string `json:"ServiceId"`
 }
 
-type ServiceInstance struct {
-	ServiceID        string `json:"service_id"`
-	PlanID           string `json:"plan_id"`
-	OrganizationGUID string `json:"organization_guid"`
-	SpaceGUID        string `json:"space_guid"`
-	Share            string
-}
-
 type lock interface {
 	Lock()
 	Unlock()
@@ -53,7 +46,7 @@ type Broker struct {
 	mutex   lock
 	clock   clock.Clock
 	static  staticState
-	store   Store
+	store   brokerstore.Store
 	config  Config
 }
 
@@ -62,7 +55,7 @@ func New(
 	serviceName, serviceId, dataDir string,
 	os osshim.Os,
 	clock clock.Clock,
-	store Store,
+	store brokerstore.Store,
 	config *Config,
 ) *Broker {
 
@@ -145,7 +138,7 @@ func (b *Broker) Provision(context context.Context, instanceID string, details b
 		}
 	}()
 
-	instanceDetails := ServiceInstance{
+	instanceDetails := brokerstore.ServiceInstance{
 		details.ServiceID,
 		details.PlanID,
 		details.OrganizationGUID,
@@ -237,7 +230,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 		return brokerapi.Binding{}, err
 	}
 
-	source := fmt.Sprintf("nfs://%s", instanceDetails.Share)
+	source := fmt.Sprintf("nfs://%s", instanceDetails.ServiceFingerPrint)
 
 	// TODO--brokerConfig is not re-entrant because it stores state in SetEntries--we should modify it to
 	// TODO--be stateless.  Until we do that, we will just make a local copy, but we should really
@@ -344,8 +337,8 @@ func (b *Broker) LastOperation(_ context.Context, instanceID string, operationDa
 	}
 }
 
-func (b *Broker) instanceConflicts(details ServiceInstance, instanceID string) bool {
-	return b.store.IsInstanceConflict(instanceID, ServiceInstance(details))
+func (b *Broker) instanceConflicts(details brokerstore.ServiceInstance, instanceID string) bool {
+	return b.store.IsInstanceConflict(instanceID, brokerstore.ServiceInstance(details))
 }
 
 func (b *Broker) bindingConflicts(bindingID string, details brokerapi.BindDetails) bool {

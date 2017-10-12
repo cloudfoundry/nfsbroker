@@ -14,7 +14,8 @@ import (
 	"code.cloudfoundry.org/goshims/osshim/os_fake"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/nfsbroker/nfsbroker"
-	"code.cloudfoundry.org/nfsbroker/nfsbrokerfakes"
+	"github.com/cloudfoundry-incubator/service-broker-store/brokerstore"
+	"github.com/cloudfoundry-incubator/service-broker-store/brokerstore/brokerstorefakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -25,14 +26,14 @@ var _ = Describe("Broker", func() {
 		fakeOs    *os_fake.FakeOs
 		logger    lager.Logger
 		ctx       context.Context
-		fakeStore *nfsbrokerfakes.FakeStore
+		fakeStore *brokerstorefakes.FakeStore
 	)
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test-broker")
 		ctx = context.TODO()
 		fakeOs = &os_fake.FakeOs{}
-		fakeStore = &nfsbrokerfakes.FakeStore{}
+		fakeStore = &brokerstorefakes.FakeStore{}
 	})
 
 	Context("when creating first time", func() {
@@ -84,7 +85,7 @@ var _ = Describe("Broker", func() {
 				_ = json.NewEncoder(buf).Encode(configuration)
 				provisionDetails = brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
 				asyncAllowed = false
-				fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{}, errors.New("not found"))
+				fakeStore.RetrieveInstanceDetailsReturns(brokerstore.ServiceInstance{}, errors.New("not found"))
 			})
 
 			JustBeforeEach(func() {
@@ -218,7 +219,7 @@ var _ = Describe("Broker", func() {
 			Context("when the instance does not exist", func() {
 				BeforeEach(func() {
 					instanceID = "does-not-exist"
-					fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{}, brokerapi.ErrInstanceDoesNotExist)
+					fakeStore.RetrieveInstanceDetailsReturns(brokerstore.ServiceInstance{}, brokerapi.ErrInstanceDoesNotExist)
 				})
 
 				It("should fail", func() {
@@ -239,7 +240,7 @@ var _ = Describe("Broker", func() {
 					_ = json.NewEncoder(buf).Encode(configuration)
 					provisionDetails = brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
 					asyncAllowed = false
-					fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{ServiceID: instanceID}, nil)
+					fakeStore.RetrieveInstanceDetailsReturns(brokerstore.ServiceInstance{ServiceID: instanceID}, nil)
 					previousSaveCallCount = fakeStore.SaveCallCount()
 				})
 
@@ -294,7 +295,7 @@ var _ = Describe("Broker", func() {
 				uid = "1234"
 				gid = "5678"
 
-				fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{ServiceID: instanceID, Share: "server:/some-share"}, nil)
+				fakeStore.RetrieveInstanceDetailsReturns(brokerstore.ServiceInstance{ServiceID: instanceID, ServiceFingerPrint: "server:/some-share"}, nil)
 				fakeStore.RetrieveBindingDetailsReturns(brokerapi.BindDetails{}, errors.New("yar"))
 
 				bindParameters = map[string]interface{}{
@@ -472,7 +473,7 @@ var _ = Describe("Broker", func() {
 			})
 
 			It("errors when the service instance does not exist", func() {
-				fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{}, errors.New("Awesome!"))
+				fakeStore.RetrieveInstanceDetailsReturns(brokerstore.ServiceInstance{}, errors.New("Awesome!"))
 				_, err := broker.Bind(ctx, "nonexistent-instance-id", "binding-id", brokerapi.BindDetails{AppGUID: "guid"})
 				Expect(err).To(Equal(brokerapi.ErrInstanceDoesNotExist))
 			})
@@ -619,7 +620,7 @@ var _ = Describe("Broker", func() {
 			})
 
 			It("fails when trying to unbind a instance that has not been provisioned", func() {
-				fakeStore.RetrieveInstanceDetailsReturns(nfsbroker.ServiceInstance{}, errors.New("Shazaam!"))
+				fakeStore.RetrieveInstanceDetailsReturns(brokerstore.ServiceInstance{}, errors.New("Shazaam!"))
 				err := broker.Unbind(ctx, "some-other-instance-id", "binding-id", brokerapi.UnbindDetails{})
 				Expect(err).To(Equal(brokerapi.ErrInstanceDoesNotExist))
 			})

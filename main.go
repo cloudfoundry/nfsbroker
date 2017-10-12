@@ -17,6 +17,8 @@ import (
 	"path/filepath"
 
 	"encoding/json"
+
+	"github.com/cloudfoundry-incubator/service-broker-store/brokerstore"
 	"github.com/go-sql-driver/mysql"
 	"github.com/lib/pq"
 	"github.com/pivotal-cf/brokerapi"
@@ -194,7 +196,7 @@ func createServer(logger lager.Logger) ifrit.Runner {
 		parseVcapServices(logger, &osshim.OsShim{})
 	}
 
-	store := nfsbroker.NewStore(logger, *dbDriver, dbUsername, dbPassword, *dbHostname, *dbPort, *dbName, *dbCACert, fileName)
+	store := brokerstore.NewStore(logger, *dbDriver, dbUsername, dbPassword, *dbHostname, *dbPort, *dbName, *dbCACert, fileName)
 
 	mounts := nfsbroker.NewNfsBrokerConfigDetails()
 	mounts.ReadConf(*allowedOptions, *defaultOptions)
