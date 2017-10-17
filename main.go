@@ -18,7 +18,7 @@ import (
 
 	"encoding/json"
 
-	"github.com/cloudfoundry-incubator/service-broker-store/brokerstore"
+	"code.cloudfoundry.org/service-broker-store/brokerstore"
 	"github.com/go-sql-driver/mysql"
 	"github.com/lib/pq"
 	"github.com/pivotal-cf/brokerapi"

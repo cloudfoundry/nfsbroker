@@ -14,8 +14,8 @@ import (
 	"code.cloudfoundry.org/goshims/osshim/os_fake"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/nfsbroker/nfsbroker"
-	"github.com/cloudfoundry-incubator/service-broker-store/brokerstore"
-	"github.com/cloudfoundry-incubator/service-broker-store/brokerstore/brokerstorefakes"
+	"code.cloudfoundry.org/service-broker-store/brokerstore"
+	"code.cloudfoundry.org/service-broker-store/brokerstore/brokerstorefakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
