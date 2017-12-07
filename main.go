@@ -179,13 +179,23 @@ func parseVcapServices(logger lager.Logger, os osshim.Os) {
 	credentials := stuff3["credentials"].(map[string]interface{})
 	logger.Debug("credentials-parsed", lager.Data{"credentials": credentials})
 
-	dbUsername = credentials["username"].(string)
-	dbPassword = credentials["password"].(string)
-	*dbHostname = credentials["hostname"].(string)
-	if *dbPort, ok = credentials["port"].(string); !ok {
-		*dbPort = fmt.Sprintf("%.0f", credentials["port"].(float64))
+	dbUsername = getByAlias(credentials, "user", "username").(string)
+	dbPassword = getByAlias(credentials, "pass", "password").(string)
+	*dbHostname = getByAlias(credentials, "host", "hostname").(string)
+	if *dbPort, ok = getByAlias(credentials, "port").(string); !ok {
+		*dbPort = fmt.Sprintf("%.0f", getByAlias(credentials, "port").(float64))
 	}
-	*dbName = credentials["name"].(string)
+	*dbName = getByAlias(credentials, "name", "db_name").(string)
+}
+
+func getByAlias(data map[string]interface{}, keys ...string) interface{} {
+	for _, key := range keys {
+		value, ok := data[key]
+		if ok {
+			return value
+		}
+	}
+	return nil
 }
 
 func createServer(logger lager.Logger) ifrit.Runner {
