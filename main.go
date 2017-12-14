@@ -42,12 +42,12 @@ var atAddress = flag.String(
 var serviceName = flag.String(
 	"serviceName",
 	"nfsvolume",
-	"name of the service to register with cloud controller",
+	"(deprecated) name of the service to register with cloud controller",
 )
 var serviceId = flag.String(
 	"serviceId",
 	"service-guid",
-	"ID of the service to register with cloud controller",
+	"(deprecated) ID of the service to register with cloud controller",
 )
 var dbDriver = flag.String(
 	"dbDriver",

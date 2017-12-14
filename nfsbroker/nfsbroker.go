@@ -83,23 +83,42 @@ func (b *Broker) Services(_ context.Context) []brokerapi.Service {
 	logger.Info("start")
 	defer logger.Info("end")
 
-	return []brokerapi.Service{{
-		ID:            b.static.ServiceId,
-		Name:          b.static.ServiceName,
-		Description:   "Existing NFSv3 volumes (see: https://code.cloudfoundry.org/nfs-volume-release/)",
-		Bindable:      true,
-		PlanUpdatable: false,
-		Tags:          []string{"nfs"},
-		Requires:      []brokerapi.RequiredPermission{PermissionVolumeMount},
+	return []brokerapi.Service{
+		{
+			ID:            b.static.ServiceId,
+			Name:          b.static.ServiceName,
+			Description:   "Existing NFSv3 volumes (see: https://code.cloudfoundry.org/nfs-volume-release/)",
+			Bindable:      true,
+			PlanUpdatable: false,
+			Tags:          []string{"nfs"},
+			Requires:      []brokerapi.RequiredPermission{PermissionVolumeMount},
 
-		Plans: []brokerapi.ServicePlan{
-			{
-				Name:        "Existing",
-				ID:          "Existing",
-				Description: "A preexisting filesystem",
+			Plans: []brokerapi.ServicePlan{
+				{
+					Name:        "Existing",
+					ID:          "Existing",
+					Description: "A preexisting filesystem",
+				},
+			},
+		}, {
+			ID:            "997f8f26-e10c-11e7-80c1-9a214cf093ae",
+			Name:          "nfs-experimental",
+			Description:   "Experimental support for NFSv3 and v4",
+			Bindable:      true,
+			PlanUpdatable: false,
+			Tags:          []string{"nfs"},
+			Requires:      []brokerapi.RequiredPermission{PermissionVolumeMount},
+
+			Plans: []brokerapi.ServicePlan{
+				{
+					Name:        "Existing",
+					ID:          "09a09260-1df5-4445-9ed7-1ba56dadbbc8",
+					Description: "A preexisting filesystem",
+				},
 			},
 		},
-	}}
+	}
+
 }
 
 func (b *Broker) Provision(context context.Context, instanceID string, details brokerapi.ProvisionDetails, asyncAllowed bool) (_ brokerapi.ProvisionedServiceSpec, e error) {

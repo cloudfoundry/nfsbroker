@@ -52,7 +52,8 @@ var _ = Describe("Broker", func() {
 
 		Context(".Services", func() {
 			It("returns the service catalog as appropriate", func() {
-				result := broker.Services(ctx)[0]
+				results := broker.Services(ctx)
+				result := results[0]
 				Expect(result.ID).To(Equal("service-id"))
 				Expect(result.Name).To(Equal("service-name"))
 				Expect(result.Description).To(Equal("Existing NFSv3 volumes (see: https://code.cloudfoundry.org/nfs-volume-release/)"))
@@ -64,6 +65,14 @@ var _ = Describe("Broker", func() {
 				Expect(result.Plans[0].Name).To(Equal("Existing"))
 				Expect(result.Plans[0].ID).To(Equal("Existing"))
 				Expect(result.Plans[0].Description).To(Equal("A preexisting filesystem"))
+
+				result = results[1]
+				Expect(result.ID).To(Equal("997f8f26-e10c-11e7-80c1-9a214cf093ae"))
+				Expect(result.Name).To(Equal("nfs-experimental"))
+				Expect(result.Tags).To(ContainElement("nfs"))
+				Expect(result.Requires).To(ContainElement(brokerapi.RequiredPermission("volume_mount")))
+
+				Expect(results).To(HaveLen(2))
 			})
 		})
 
