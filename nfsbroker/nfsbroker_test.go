@@ -292,7 +292,7 @@ var _ = Describe("Broker", func() {
 
 		Context(".Bind", func() {
 			var (
-				instanceID     string
+				instanceID, serviceID     string
 				bindDetails    brokerapi.BindDetails
 				bindParameters map[string]interface{}
 
@@ -301,10 +301,11 @@ var _ = Describe("Broker", func() {
 
 			BeforeEach(func() {
 				instanceID = "some-instance-id"
+				serviceID = "some-service-id"
 				uid = "1234"
 				gid = "5678"
 
-				fakeStore.RetrieveInstanceDetailsReturns(brokerstore.ServiceInstance{ServiceID: instanceID, ServiceFingerPrint: "server:/some-share"}, nil)
+				fakeStore.RetrieveInstanceDetailsReturns(brokerstore.ServiceInstance{ServiceID: serviceID, ServiceFingerPrint: "server:/some-share"}, nil)
 				fakeStore.RetrieveBindingDetailsReturns(brokerapi.BindDetails{}, errors.New("yar"))
 
 				bindParameters = map[string]interface{}{
@@ -403,6 +404,22 @@ var _ = Describe("Broker", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(binding.VolumeMounts[0].Device.VolumeId).To(ContainSubstring("some-instance-id"))
+			})
+
+			Context("when the service id is an experimental service", func() {
+				BeforeEach(func(){
+					fakeStore.RetrieveInstanceDetailsReturns(brokerstore.ServiceInstance{ServiceID: nfsbroker.EXPERIMENTAL_SERVICE_ID, ServiceFingerPrint: "server:/some-share"}, nil)
+				})
+
+				It("includes 'experimental' in the service binding mount config", func() {
+					binding, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
+					Expect(err).NotTo(HaveOccurred())
+
+					mc := binding.VolumeMounts[0].Device.MountConfig
+					_, ok := mc[nfsbroker.EXPERIMENTAL_TAG]
+
+					Expect(ok).To(BeTrue())
+				})
 			})
 
 			Context("when the binding already exists", func() {

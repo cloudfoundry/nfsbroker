@@ -20,8 +20,11 @@ import (
 )
 
 const (
-	PermissionVolumeMount = brokerapi.RequiredPermission("volume_mount")
-	DefaultContainerPath  = "/var/vcap/data"
+	VOLUME_MOUNT_PERMISSION = brokerapi.RequiredPermission("volume_mount")
+	DEFAULT_CONTAINER_PATH = "/var/vcap/data"
+	EXPERIMENTAL_SERVICE_ID = "997f8f26-e10c-11e7-80c1-9a214cf093ae"
+	EXPERIMENTAL_PLAN_ID = "09a09260-1df5-4445-9ed7-1ba56dadbbc8"
+	EXPERIMENTAL_TAG = "experimental"
 )
 
 const (
@@ -91,7 +94,7 @@ func (b *Broker) Services(_ context.Context) []brokerapi.Service {
 			Bindable:      true,
 			PlanUpdatable: false,
 			Tags:          []string{"nfs"},
-			Requires:      []brokerapi.RequiredPermission{PermissionVolumeMount},
+			Requires:      []brokerapi.RequiredPermission{VOLUME_MOUNT_PERMISSION},
 
 			Plans: []brokerapi.ServicePlan{
 				{
@@ -101,18 +104,18 @@ func (b *Broker) Services(_ context.Context) []brokerapi.Service {
 				},
 			},
 		}, {
-			ID:            "997f8f26-e10c-11e7-80c1-9a214cf093ae",
+			ID:            EXPERIMENTAL_SERVICE_ID,
 			Name:          "nfs-experimental",
 			Description:   "Experimental support for NFSv3 and v4",
 			Bindable:      true,
 			PlanUpdatable: false,
-			Tags:          []string{"nfs"},
-			Requires:      []brokerapi.RequiredPermission{PermissionVolumeMount},
+			Tags:          []string{"nfs",EXPERIMENTAL_TAG},
+			Requires:      []brokerapi.RequiredPermission{VOLUME_MOUNT_PERMISSION},
 
 			Plans: []brokerapi.ServicePlan{
 				{
 					Name:        "Existing",
-					ID:          "09a09260-1df5-4445-9ed7-1ba56dadbbc8",
+					ID:          EXPERIMENTAL_PLAN_ID,
 					Description: "A preexisting filesystem",
 				},
 			},
@@ -274,6 +277,18 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 		mode = "rw"
 	}
 
+	// if this is an experimental service, set EXPERIMENTAL_TAG to true in the mount config
+	var services []brokerapi.Service
+	services = b.Services(context)
+	for _, s := range services {
+		if s.ID == instanceDetails.ServiceID {
+			if inArray(s.Tags, EXPERIMENTAL_TAG) {
+				mountConfig[EXPERIMENTAL_TAG] = true
+			}
+			break
+		}
+	}
+
 	logger.Info("volume-service-binding", lager.Data{"Driver": "nfsv3driver", "mountConfig": mountConfig, "source": source})
 
 	s, err := b.hash(mountConfig)
@@ -369,7 +384,7 @@ func evaluateContainerPath(parameters map[string]interface{}, volId string) stri
 		return containerPath.(string)
 	}
 
-	return path.Join(DefaultContainerPath, volId)
+	return path.Join(DEFAULT_CONTAINER_PATH, volId)
 }
 
 func evaluateMode(parameters map[string]interface{}) (string, error) {
