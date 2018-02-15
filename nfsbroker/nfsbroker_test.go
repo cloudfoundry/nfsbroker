@@ -292,9 +292,9 @@ var _ = Describe("Broker", func() {
 
 		Context(".Bind", func() {
 			var (
-				instanceID, serviceID     string
-				bindDetails    brokerapi.BindDetails
-				bindParameters map[string]interface{}
+				instanceID, serviceID string
+				bindDetails           brokerapi.BindDetails
+				bindParameters        map[string]interface{}
 
 				uid, gid string
 			)
@@ -407,7 +407,7 @@ var _ = Describe("Broker", func() {
 			})
 
 			Context("when the service id is an experimental service", func() {
-				BeforeEach(func(){
+				BeforeEach(func() {
 					fakeStore.RetrieveInstanceDetailsReturns(brokerstore.ServiceInstance{ServiceID: nfsbroker.EXPERIMENTAL_SERVICE_ID, ServiceFingerPrint: "server:/some-share"}, nil)
 				})
 

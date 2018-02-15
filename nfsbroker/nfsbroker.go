@@ -21,10 +21,10 @@ import (
 
 const (
 	VOLUME_MOUNT_PERMISSION = brokerapi.RequiredPermission("volume_mount")
-	DEFAULT_CONTAINER_PATH = "/var/vcap/data"
+	DEFAULT_CONTAINER_PATH  = "/var/vcap/data"
 	EXPERIMENTAL_SERVICE_ID = "997f8f26-e10c-11e7-80c1-9a214cf093ae"
-	EXPERIMENTAL_PLAN_ID = "09a09260-1df5-4445-9ed7-1ba56dadbbc8"
-	EXPERIMENTAL_TAG = "experimental"
+	EXPERIMENTAL_PLAN_ID    = "09a09260-1df5-4445-9ed7-1ba56dadbbc8"
+	EXPERIMENTAL_TAG        = "experimental"
 )
 
 const (
@@ -109,7 +109,7 @@ func (b *Broker) Services(_ context.Context) []brokerapi.Service {
 			Description:   "Experimental support for NFSv3 and v4",
 			Bindable:      true,
 			PlanUpdatable: false,
-			Tags:          []string{"nfs",EXPERIMENTAL_TAG},
+			Tags:          []string{"nfs", EXPERIMENTAL_TAG},
 			Requires:      []brokerapi.RequiredPermission{VOLUME_MOUNT_PERMISSION},
 
 			Plans: []brokerapi.ServicePlan{
