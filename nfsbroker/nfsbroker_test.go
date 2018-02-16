@@ -305,7 +305,13 @@ var _ = Describe("Broker", func() {
 				uid = "1234"
 				gid = "5678"
 
-				fakeStore.RetrieveInstanceDetailsReturns(brokerstore.ServiceInstance{ServiceID: serviceID, ServiceFingerPrint: "server:/some-share"}, nil)
+				fakeStore.RetrieveInstanceDetailsReturns(
+					brokerstore.ServiceInstance{
+						ServiceID: serviceID,
+						ServiceFingerPrint: nfsbroker.Configuration{
+							Share: "server:/some-share",
+						},
+					}, nil)
 				fakeStore.RetrieveBindingDetailsReturns(brokerapi.BindDetails{}, errors.New("yar"))
 
 				bindParameters = map[string]interface{}{
@@ -408,7 +414,13 @@ var _ = Describe("Broker", func() {
 
 			Context("when the service id is an experimental service", func() {
 				BeforeEach(func() {
-					fakeStore.RetrieveInstanceDetailsReturns(brokerstore.ServiceInstance{ServiceID: nfsbroker.EXPERIMENTAL_SERVICE_ID, ServiceFingerPrint: "server:/some-share"}, nil)
+					fakeStore.RetrieveInstanceDetailsReturns(
+						brokerstore.ServiceInstance{
+							ServiceID: nfsbroker.EXPERIMENTAL_SERVICE_ID,
+							ServiceFingerPrint: nfsbroker.Configuration{
+								Share: "server:/some-share",
+							},
+						}, nil)
 				})
 
 				It("includes 'experimental' in the service binding mount config", func() {
@@ -419,6 +431,30 @@ var _ = Describe("Broker", func() {
 					_, ok := mc[nfsbroker.EXPERIMENTAL_TAG]
 
 					Expect(ok).To(BeTrue())
+				})
+			})
+
+			Context("when using nfs version", func() {
+				BeforeEach(func() {
+					fakeStore.RetrieveInstanceDetailsReturns(
+						brokerstore.ServiceInstance{
+							ServiceID: nfsbroker.EXPERIMENTAL_SERVICE_ID,
+							ServiceFingerPrint: nfsbroker.Configuration{
+								Share:   "server:/some-share",
+								Version: "4.1",
+							},
+						}, nil)
+				})
+
+				It("includes version in the service binding mount config", func() {
+					binding, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
+					Expect(err).NotTo(HaveOccurred())
+
+					mc := binding.VolumeMounts[0].Device.MountConfig
+					version, ok := mc["version"]
+
+					Expect(ok).To(BeTrue())
+					Expect(version).To(Equal("4.1"))
 				})
 			})
 

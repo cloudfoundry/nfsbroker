@@ -53,6 +53,11 @@ type Broker struct {
 	config  Config
 }
 
+type Configuration struct {
+	Share   string `json:"share"`
+	Version string `json:"version"`
+}
+
 func New(
 	logger lager.Logger,
 	serviceName, serviceId, dataDir string,
@@ -129,9 +134,6 @@ func (b *Broker) Provision(context context.Context, instanceID string, details b
 	logger.Info("start")
 	defer logger.Info("end")
 
-	type Configuration struct {
-		Share string `json:"share"`
-	}
 	var configuration Configuration
 
 	var decoder *json.Decoder = json.NewDecoder(bytes.NewBuffer(details.RawParameters))
@@ -165,7 +167,7 @@ func (b *Broker) Provision(context context.Context, instanceID string, details b
 		details.PlanID,
 		details.OrganizationGUID,
 		details.SpaceGUID,
-		configuration.Share}
+		configuration}
 
 	if b.instanceConflicts(instanceDetails, instanceID) {
 		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrInstanceAlreadyExists
@@ -252,7 +254,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 		return brokerapi.Binding{}, err
 	}
 
-	source := fmt.Sprintf("nfs://%s", instanceDetails.ServiceFingerPrint)
+	source := fmt.Sprintf("nfs://%s", instanceDetails.ServiceFingerPrint.(Configuration).Share)
 
 	// TODO--brokerConfig is not re-entrant because it stores state in SetEntries--we should modify it to
 	// TODO--be stateless.  Until we do that, we will just make a local copy, but we should really
@@ -272,6 +274,12 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 
 	mountConfig := tempConfig.MountConfig()
 	mountConfig["source"] = tempConfig.Share(source)
+
+	version := instanceDetails.ServiceFingerPrint.(Configuration).Version
+	if version != "" {
+		mountConfig["version"] = version
+	}
+
 	if mode == "r" {
 		mountConfig["readonly"] = true
 		mode = "rw"
