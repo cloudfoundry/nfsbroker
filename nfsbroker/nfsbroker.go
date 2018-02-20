@@ -254,7 +254,13 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 		return brokerapi.Binding{}, err
 	}
 
-	source := fmt.Sprintf("nfs://%s", instanceDetails.ServiceFingerPrint.(Configuration).Share)
+	fingerprint, err := getFingerprint(instanceDetails.ServiceFingerPrint)
+
+	if err != nil {
+		return brokerapi.Binding{}, err
+	}
+
+	source := fmt.Sprintf("nfs://%s", fingerprint.Share)
 
 	// TODO--brokerConfig is not re-entrant because it stores state in SetEntries--we should modify it to
 	// TODO--be stateless.  Until we do that, we will just make a local copy, but we should really
@@ -275,7 +281,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 	mountConfig := tempConfig.MountConfig()
 	mountConfig["source"] = tempConfig.Share(source)
 
-	version := instanceDetails.ServiceFingerPrint.(Configuration).Version
+	version := fingerprint.Version
 	if version != "" {
 		mountConfig["version"] = version
 	}
@@ -412,4 +418,25 @@ func readOnlyToMode(ro bool) string {
 		return "r"
 	}
 	return "rw"
+}
+
+func getFingerprint(rawObject interface{}) (*Configuration, error) {
+	fingerprint, ok := rawObject.(*Configuration)
+	if ok {
+		return fingerprint, nil
+	}
+
+	// casting didn't work--try marshalling and unmarshalling as the correct type
+	rawJson, err := json.Marshal(rawObject)
+	if err != nil {
+		return nil, err
+	}
+
+	fingerprint = &Configuration{}
+	err = json.Unmarshal(rawJson, fingerprint)
+	if err != nil {
+		return nil, err
+	}
+
+	return fingerprint, nil
 }

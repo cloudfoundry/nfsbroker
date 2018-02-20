@@ -305,13 +305,16 @@ var _ = Describe("Broker", func() {
 				uid = "1234"
 				gid = "5678"
 
-				fakeStore.RetrieveInstanceDetailsReturns(
-					brokerstore.ServiceInstance{
-						ServiceID: serviceID,
-						ServiceFingerPrint: nfsbroker.Configuration{
+				serviceInstance := brokerstore.ServiceInstance{
+					ServiceID: serviceID,
+					ServiceFingerPrint: createWeaktypedFingerprint(
+						nfsbroker.Configuration{
 							Share: "server:/some-share",
 						},
-					}, nil)
+					),
+				}
+
+				fakeStore.RetrieveInstanceDetailsReturns(serviceInstance, nil)
 				fakeStore.RetrieveBindingDetailsReturns(brokerapi.BindDetails{}, errors.New("yar"))
 
 				bindParameters = map[string]interface{}{
@@ -436,14 +439,18 @@ var _ = Describe("Broker", func() {
 
 			Context("when using nfs version", func() {
 				BeforeEach(func() {
-					fakeStore.RetrieveInstanceDetailsReturns(
-						brokerstore.ServiceInstance{
-							ServiceID: nfsbroker.EXPERIMENTAL_SERVICE_ID,
-							ServiceFingerPrint: nfsbroker.Configuration{
+
+					serviceInstance := brokerstore.ServiceInstance{
+						ServiceID: nfsbroker.EXPERIMENTAL_SERVICE_ID,
+						ServiceFingerPrint: createWeaktypedFingerprint(
+							nfsbroker.Configuration{
 								Share:   "server:/some-share",
 								Version: "4.1",
 							},
-						}, nil)
+						),
+					}
+
+					fakeStore.RetrieveInstanceDetailsReturns(serviceInstance, nil)
 				})
 
 				It("includes version in the service binding mount config", func() {
@@ -723,3 +730,16 @@ var _ = Describe("Broker", func() {
 		})
 	})
 })
+
+// go is unable to de-serialize nested structs into anything other than map[string]interface{}
+// so let's jump thru some hoops in order to create a weakly typed (inner) struct like the one we
+// would really get back from json deserialization
+func createWeaktypedFingerprint(configuration nfsbroker.Configuration) *map[string]interface{} {
+	jsonFingerprint := &map[string]interface{}{}
+	raw, err := json.Marshal(configuration)
+	Expect(err).ToNot(HaveOccurred())
+	err = json.Unmarshal(raw, jsonFingerprint)
+	Expect(err).ToNot(HaveOccurred())
+
+	return jsonFingerprint
+}
