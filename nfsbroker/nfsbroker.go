@@ -25,6 +25,8 @@ const (
 	EXPERIMENTAL_SERVICE_ID = "997f8f26-e10c-11e7-80c1-9a214cf093ae"
 	EXPERIMENTAL_PLAN_ID    = "09a09260-1df5-4445-9ed7-1ba56dadbbc8"
 	EXPERIMENTAL_TAG        = "experimental"
+	SHARE_KEY               = "share"
+	VERSION_KEY             = "version"
 )
 
 const (
@@ -51,11 +53,6 @@ type Broker struct {
 	static  staticState
 	store   brokerstore.Store
 	config  Config
-}
-
-type Configuration struct {
-	Share   string `json:"share"`
-	Version string `json:"version"`
 }
 
 func New(
@@ -134,7 +131,7 @@ func (b *Broker) Provision(context context.Context, instanceID string, details b
 	logger.Info("start")
 	defer logger.Info("end")
 
-	var configuration Configuration
+	var configuration map[string]interface{}
 
 	var decoder *json.Decoder = json.NewDecoder(bytes.NewBuffer(details.RawParameters))
 	err := decoder.Decode(&configuration)
@@ -142,12 +139,13 @@ func (b *Broker) Provision(context context.Context, instanceID string, details b
 		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrRawParamsInvalid
 	}
 
-	if configuration.Share == "" {
+	share := uniformData(configuration[SHARE_KEY], false)
+	if share == "" {
 		return brokerapi.ProvisionedServiceSpec{}, errors.New("config requires a \"share\" key")
 	}
 
 	re := regexp.MustCompile("^[^/]+:/")
-	match := re.MatchString(configuration.Share)
+	match := re.MatchString(share)
 
 	if match {
 		return brokerapi.ProvisionedServiceSpec{}, errors.New("syntax error for share: no colon allowed after server")
@@ -234,10 +232,21 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 		return brokerapi.Binding{}, brokerapi.ErrAppGuidNotProvided
 	}
 
-	var opts map[string]interface{}
-	if err := json.Unmarshal(bindDetails.RawParameters, &opts); err != nil {
+	opts, err := getFingerprint(instanceDetails.ServiceFingerPrint)
+	if err != nil {
 		return brokerapi.Binding{}, err
 	}
+
+	var bindOpts map[string]interface{}
+	if len(bindDetails.RawParameters) > 0 {
+		if err := json.Unmarshal(bindDetails.RawParameters, &bindOpts); err != nil {
+			return brokerapi.Binding{}, err
+		}
+	}
+	for k, v := range bindOpts {
+		opts[k] = v
+	}
+
 	mode, err := evaluateMode(opts)
 	if err != nil {
 		return brokerapi.Binding{}, err
@@ -254,13 +263,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 		return brokerapi.Binding{}, err
 	}
 
-	fingerprint, err := getFingerprint(instanceDetails.ServiceFingerPrint)
-
-	if err != nil {
-		return brokerapi.Binding{}, err
-	}
-
-	source := fmt.Sprintf("nfs://%s", fingerprint.Share)
+	source := fmt.Sprintf("nfs://%s", opts[SHARE_KEY])
 
 	// TODO--brokerConfig is not re-entrant because it stores state in SetEntries--we should modify it to
 	// TODO--be stateless.  Until we do that, we will just make a local copy, but we should really
@@ -280,11 +283,6 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 
 	mountConfig := tempConfig.MountConfig()
 	mountConfig["source"] = tempConfig.Share(source)
-
-	version := fingerprint.Version
-	if version != "" {
-		mountConfig["version"] = version
-	}
 
 	if mode == "r" {
 		mountConfig["readonly"] = true
@@ -420,8 +418,8 @@ func readOnlyToMode(ro bool) string {
 	return "rw"
 }
 
-func getFingerprint(rawObject interface{}) (*Configuration, error) {
-	fingerprint, ok := rawObject.(*Configuration)
+func getFingerprint(rawObject interface{}) (map[string]interface{}, error) {
+	fingerprint, ok := rawObject.(map[string]interface{})
 	if ok {
 		return fingerprint, nil
 	}
@@ -432,8 +430,8 @@ func getFingerprint(rawObject interface{}) (*Configuration, error) {
 		return nil, err
 	}
 
-	fingerprint = &Configuration{}
-	err = json.Unmarshal(rawJson, fingerprint)
+	fingerprint = map[string]interface{}{}
+	err = json.Unmarshal(rawJson, &fingerprint)
 	if err != nil {
 		return nil, err
 	}

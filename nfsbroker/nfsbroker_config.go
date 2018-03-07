@@ -175,20 +175,20 @@ func (m *ConfigDetails) IsSloppyMount() bool {
 	return false
 }
 
-func (m ConfigDetails) uniformKeyData(key string, data interface{}) string {
+func uniformKeyData(key string, data interface{}) string {
 	switch key {
 	case "auto-traverse-mounts":
-		return m.uniformData(data, true)
+		return uniformData(data, true)
 
 	case "dircache":
-		return m.uniformData(data, true)
+		return uniformData(data, true)
 
 	}
 
-	return m.uniformData(data, false)
+	return uniformData(data, false)
 }
 
-func (m ConfigDetails) uniformData(data interface{}, boolAsInt bool) string {
+func uniformData(data interface{}, boolAsInt bool) string {
 
 	switch data.(type) {
 	case int, int8, int16, int32, int64, float32, float64:
@@ -241,7 +241,7 @@ func (m *ConfigDetails) parseUrlParams(urlParams string, ignoreList []string) st
 	}
 
 	if inArray(m.Allowed, op[0]) {
-		m.Options[op[0]] = m.uniformKeyData(op[0], op[1])
+		m.Options[op[0]] = uniformKeyData(op[0], op[1])
 		return ""
 	}
 
@@ -254,7 +254,7 @@ func (m *ConfigDetails) parseMap(logger lager.Logger, entryList map[string]inter
 
 	for k, v := range entryList {
 
-		value := m.uniformKeyData(k, v)
+		value := uniformKeyData(k, v)
 
 		if value == "" || len(k) < 1 || inArray(ignoreList, k) {
 			continue

@@ -39,7 +39,7 @@ var _ = Describe("Broker", func() {
 	Context("when creating first time", func() {
 		BeforeEach(func() {
 			mounts := nfsbroker.NewNfsBrokerConfigDetails()
-			mounts.ReadConf("sloppy_mount,allow_other,allow_root,multithread,default_permissions,fusenfs_uid,fusenfs_gid,uid,gid", "sloppy_mount:true")
+			mounts.ReadConf("sloppy_mount,allow_other,allow_root,multithread,default_permissions,fusenfs_uid,fusenfs_gid,uid,gid,version", "sloppy_mount:false")
 			broker = nfsbroker.New(
 				logger,
 				"service-name", "service-id", "/fake-dir",
@@ -113,6 +113,23 @@ var _ = Describe("Broker", func() {
 				Expect(fakeStore.SaveCallCount()).Should(BeNumerically(">", 0))
 			})
 
+			Context("when create service json contains uid and gid", func(){
+				BeforeEach(func() {
+					configuration := map[string]interface{}{"share": "server/some-share","uid":"1","gid":2}
+					buf := &bytes.Buffer{}
+					_ = json.NewEncoder(buf).Encode(configuration)
+					provisionDetails = brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
+				})
+				It("should write uid and gid into state", func() {
+					count := fakeStore.CreateInstanceDetailsCallCount()
+					Expect(count).To(BeNumerically(">", 0))
+					_, details := fakeStore.CreateInstanceDetailsArgsForCall(count-1)
+					fp := details.ServiceFingerPrint.(map[string]interface{})
+					Expect(fp).NotTo(BeNil())
+					Expect(fp).To(HaveKeyWithValue("uid", "1"))
+					Expect(fp).To(HaveKey("gid"))
+				})
+			})
 			Context("create-service was given invalid JSON", func() {
 				BeforeEach(func() {
 					badJson := []byte("{this is not json")
@@ -202,7 +219,6 @@ var _ = Describe("Broker", func() {
 					Expect(err).To(HaveOccurred())
 				})
 			})
-
 		})
 
 		Context(".Deprovision", func() {
@@ -307,11 +323,9 @@ var _ = Describe("Broker", func() {
 
 				serviceInstance := brokerstore.ServiceInstance{
 					ServiceID: serviceID,
-					ServiceFingerPrint: createWeaktypedFingerprint(
-						nfsbroker.Configuration{
-							Share: "server:/some-share",
-						},
-					),
+					ServiceFingerPrint: map[string]interface{}{
+						nfsbroker.SHARE_KEY: "server:/some-share",
+					},
 				}
 
 				fakeStore.RetrieveInstanceDetailsReturns(serviceInstance, nil)
@@ -415,13 +429,87 @@ var _ = Describe("Broker", func() {
 				Expect(binding.VolumeMounts[0].Device.VolumeId).To(ContainSubstring("some-instance-id"))
 			})
 
+			Context("when the service instance contains uid and gid", func(){
+				BeforeEach(func(){
+					serviceInstance := brokerstore.ServiceInstance{
+						ServiceID: serviceID,
+						ServiceFingerPrint: map[string]interface{}{
+							nfsbroker.SHARE_KEY: "server:/some-share",
+							"uid": "1",
+							"gid": 2,
+						},
+					}
+					fakeStore.RetrieveInstanceDetailsReturns(serviceInstance, nil)
+				})
+				It("should favor the values in the bind configuration", func(){
+					binding, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
+					Expect(err).NotTo(HaveOccurred())
+
+					mc := binding.VolumeMounts[0].Device.MountConfig
+
+					v, ok := mc["uid"].(string)
+					Expect(ok).To(BeTrue())
+					Expect(v).To(Equal(uid))
+					v, ok = mc["gid"].(string)
+					Expect(ok).To(BeTrue())
+					Expect(v).To(Equal(gid))
+				})
+
+				Context("when the bind operation doesn't pass configuration", func(){
+					BeforeEach(func(){
+						bindDetails = brokerapi.BindDetails{
+							AppGUID:       "guid",
+							RawParameters: []byte(""),
+						}
+					})
+
+					It("should use uid and gid from the service instance configuration", func(){
+						binding, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
+						Expect(err).NotTo(HaveOccurred())
+						mc := binding.VolumeMounts[0].Device.MountConfig
+
+						v, ok := mc["uid"].(string)
+						Expect(ok).To(BeTrue())
+						Expect(v).To(Equal("1"))
+						v, ok = mc["gid"].(string)
+						Expect(ok).To(BeTrue())
+						Expect(v).To(Equal("2"))
+					})
+				})
+			})
+			Context("when the bind operation doesn't pass configuration", func(){
+				BeforeEach(func(){
+					bindDetails = brokerapi.BindDetails{
+						AppGUID:       "guid",
+						RawParameters: []byte(""),
+					}
+				})
+
+				It("should succeed", func(){
+					_, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
+					Expect(err).NotTo(HaveOccurred())
+				})
+			})
+			Context("when the bind operation passes empty configuration", func(){
+				BeforeEach(func(){
+					bindDetails = brokerapi.BindDetails{
+						AppGUID:       "guid",
+						RawParameters: []byte("{}"),
+					}
+				})
+
+				It("should succeed", func(){
+					_, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
+					Expect(err).NotTo(HaveOccurred())
+				})
+			})
 			Context("when the service id is an experimental service", func() {
 				BeforeEach(func() {
 					fakeStore.RetrieveInstanceDetailsReturns(
 						brokerstore.ServiceInstance{
 							ServiceID: nfsbroker.EXPERIMENTAL_SERVICE_ID,
-							ServiceFingerPrint: nfsbroker.Configuration{
-								Share: "server:/some-share",
+							ServiceFingerPrint: map[string]interface{}{
+								nfsbroker.SHARE_KEY: "server:/some-share",
 							},
 						}, nil)
 				})
@@ -442,12 +530,10 @@ var _ = Describe("Broker", func() {
 
 					serviceInstance := brokerstore.ServiceInstance{
 						ServiceID: nfsbroker.EXPERIMENTAL_SERVICE_ID,
-						ServiceFingerPrint: createWeaktypedFingerprint(
-							nfsbroker.Configuration{
-								Share:   "server:/some-share",
-								Version: "4.1",
-							},
-						),
+						ServiceFingerPrint: map[string]interface{}{
+							nfsbroker.SHARE_KEY:   "server:/some-share",
+							nfsbroker.VERSION_KEY: "4.1",
+						},
 					}
 
 					fakeStore.RetrieveInstanceDetailsReturns(serviceInstance, nil)
@@ -730,16 +816,3 @@ var _ = Describe("Broker", func() {
 		})
 	})
 })
-
-// go is unable to de-serialize nested structs into anything other than map[string]interface{}
-// so let's jump thru some hoops in order to create a weakly typed (inner) struct like the one we
-// would really get back from json deserialization
-func createWeaktypedFingerprint(configuration nfsbroker.Configuration) *map[string]interface{} {
-	jsonFingerprint := &map[string]interface{}{}
-	raw, err := json.Marshal(configuration)
-	Expect(err).ToNot(HaveOccurred())
-	err = json.Unmarshal(raw, jsonFingerprint)
-	Expect(err).ToNot(HaveOccurred())
-
-	return jsonFingerprint
-}
