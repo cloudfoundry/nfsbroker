@@ -286,7 +286,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 
 	if mode == "r" {
 		mountConfig["readonly"] = true
-		mode = "rw"
+		// mode = "rw"
 	}
 
 	// if this is an experimental service, set EXPERIMENTAL_TAG to true in the mount config
