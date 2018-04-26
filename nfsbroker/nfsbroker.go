@@ -284,11 +284,6 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 	mountConfig := tempConfig.MountConfig()
 	mountConfig["source"] = tempConfig.Share(source)
 
-	if mode == "r" {
-		mountConfig["readonly"] = true
-		mode = "rw"
-	}
-
 	// if this is an experimental service, set EXPERIMENTAL_TAG to true in the mount config
 	var services []brokerapi.Service
 	services = b.Services(context)
