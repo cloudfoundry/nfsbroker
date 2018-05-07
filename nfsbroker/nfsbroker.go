@@ -173,7 +173,7 @@ func (b *Broker) Provision(context context.Context, instanceID string, details b
 
 	err = b.store.CreateInstanceDetails(instanceID, instanceDetails)
 	if err != nil {
-		return brokerapi.ProvisionedServiceSpec{}, fmt.Errorf("failed to store instance details %s", instanceID)
+		return brokerapi.ProvisionedServiceSpec{}, fmt.Errorf("failed to store instance details: %s", err.Error())
 	}
 
 	logger.Info("service-instance-created", lager.Data{"instanceDetails": instanceDetails})
