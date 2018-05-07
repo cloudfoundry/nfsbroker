@@ -130,7 +130,7 @@ var _ = Describe("nfsbroker Main", func() {
 			logger = lagertest.NewTestLogger("test-broker-main")
 		})
 		JustBeforeEach(func() {
-			env:=fmt.Sprintf(`
+			env := fmt.Sprintf(`
 				{
 					"postgresql":[
 						{
@@ -155,8 +155,8 @@ var _ = Describe("nfsbroker Main", func() {
 							"volume_mounts":[]
 						}
 					]
-				}`,port)
-			fakeOs.LookupEnvReturns(env,true)
+				}`, port)
+			fakeOs.LookupEnvReturns(env, true)
 		})
 
 		Context("when port is a string", func() {
@@ -247,6 +247,7 @@ var _ = Describe("nfsbroker Main", func() {
 
 		httpDoWithAuth := func(method, endpoint string, body io.ReadCloser) (*http.Response, error) {
 			req, err := http.NewRequest(method, "http://"+listenAddr+endpoint, body)
+			req.Header.Add("X-Broker-Api-Version", "2.14")
 			Expect(err).NotTo(HaveOccurred())
 
 			req.SetBasicAuth(username, password)
@@ -266,7 +267,7 @@ var _ = Describe("nfsbroker Main", func() {
 				args = append(args, "-serviceId", "someguid")
 			})
 
-			It("should pass arguments though to catalog", func() {
+			It("should pass arguments through to catalog", func() {
 				resp, err := httpDoWithAuth("GET", "/v2/catalog", nil)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(200))
