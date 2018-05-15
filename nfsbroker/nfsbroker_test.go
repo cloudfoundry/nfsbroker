@@ -52,7 +52,8 @@ var _ = Describe("Broker", func() {
 
 		Context(".Services", func() {
 			It("returns the service catalog as appropriate", func() {
-				results := broker.Services(ctx)
+				results, err := broker.Services(ctx)
+				Expect(err).NotTo(HaveOccurred())
 				result := results[0]
 				Expect(result.ID).To(Equal("service-id"))
 				Expect(result.Name).To(Equal("service-name"))
@@ -113,9 +114,9 @@ var _ = Describe("Broker", func() {
 				Expect(fakeStore.SaveCallCount()).Should(BeNumerically(">", 0))
 			})
 
-			Context("when create service json contains uid and gid", func(){
+			Context("when create service json contains uid and gid", func() {
 				BeforeEach(func() {
-					configuration := map[string]interface{}{"share": "server/some-share","uid":"1","gid":2}
+					configuration := map[string]interface{}{"share": "server/some-share", "uid": "1", "gid": 2}
 					buf := &bytes.Buffer{}
 					_ = json.NewEncoder(buf).Encode(configuration)
 					provisionDetails = brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
@@ -123,7 +124,7 @@ var _ = Describe("Broker", func() {
 				It("should write uid and gid into state", func() {
 					count := fakeStore.CreateInstanceDetailsCallCount()
 					Expect(count).To(BeNumerically(">", 0))
-					_, details := fakeStore.CreateInstanceDetailsArgsForCall(count-1)
+					_, details := fakeStore.CreateInstanceDetailsArgsForCall(count - 1)
 					fp := details.ServiceFingerPrint.(map[string]interface{})
 					Expect(fp).NotTo(BeNil())
 					Expect(fp).To(HaveKeyWithValue("uid", "1"))
@@ -429,19 +430,19 @@ var _ = Describe("Broker", func() {
 				Expect(binding.VolumeMounts[0].Device.VolumeId).To(ContainSubstring("some-instance-id"))
 			})
 
-			Context("when the service instance contains uid and gid", func(){
-				BeforeEach(func(){
+			Context("when the service instance contains uid and gid", func() {
+				BeforeEach(func() {
 					serviceInstance := brokerstore.ServiceInstance{
 						ServiceID: serviceID,
 						ServiceFingerPrint: map[string]interface{}{
 							nfsbroker.SHARE_KEY: "server:/some-share",
-							"uid": "1",
-							"gid": 2,
+							"uid":               "1",
+							"gid":               2,
 						},
 					}
 					fakeStore.RetrieveInstanceDetailsReturns(serviceInstance, nil)
 				})
-				It("should favor the values in the bind configuration", func(){
+				It("should favor the values in the bind configuration", func() {
 					binding, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
 					Expect(err).NotTo(HaveOccurred())
 
@@ -455,15 +456,15 @@ var _ = Describe("Broker", func() {
 					Expect(v).To(Equal(gid))
 				})
 
-				Context("when the bind operation doesn't pass configuration", func(){
-					BeforeEach(func(){
+				Context("when the bind operation doesn't pass configuration", func() {
+					BeforeEach(func() {
 						bindDetails = brokerapi.BindDetails{
 							AppGUID:       "guid",
 							RawParameters: []byte(""),
 						}
 					})
 
-					It("should use uid and gid from the service instance configuration", func(){
+					It("should use uid and gid from the service instance configuration", func() {
 						binding, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
 						Expect(err).NotTo(HaveOccurred())
 						mc := binding.VolumeMounts[0].Device.MountConfig
@@ -477,28 +478,28 @@ var _ = Describe("Broker", func() {
 					})
 				})
 			})
-			Context("when the bind operation doesn't pass configuration", func(){
-				BeforeEach(func(){
+			Context("when the bind operation doesn't pass configuration", func() {
+				BeforeEach(func() {
 					bindDetails = brokerapi.BindDetails{
 						AppGUID:       "guid",
 						RawParameters: []byte(""),
 					}
 				})
 
-				It("should succeed", func(){
+				It("should succeed", func() {
 					_, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
 					Expect(err).NotTo(HaveOccurred())
 				})
 			})
-			Context("when the bind operation passes empty configuration", func(){
-				BeforeEach(func(){
+			Context("when the bind operation passes empty configuration", func() {
+				BeforeEach(func() {
 					bindDetails = brokerapi.BindDetails{
 						AppGUID:       "guid",
 						RawParameters: []byte("{}"),
 					}
 				})
 
-				It("should succeed", func(){
+				It("should succeed", func() {
 					_, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
 					Expect(err).NotTo(HaveOccurred())
 				})

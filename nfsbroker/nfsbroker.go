@@ -83,7 +83,7 @@ func New(
 	return &theBroker
 }
 
-func (b *Broker) Services(_ context.Context) []brokerapi.Service {
+func (b *Broker) Services(_ context.Context) ([]brokerapi.Service, error) {
 	logger := b.logger.Session("services")
 	logger.Info("start")
 	defer logger.Info("end")
@@ -122,8 +122,7 @@ func (b *Broker) Services(_ context.Context) []brokerapi.Service {
 				},
 			},
 		},
-	}
-
+	}, nil
 }
 
 func (b *Broker) Provision(context context.Context, instanceID string, details brokerapi.ProvisionDetails, asyncAllowed bool) (_ brokerapi.ProvisionedServiceSpec, e error) {
@@ -285,8 +284,10 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 	mountConfig["source"] = tempConfig.Share(source)
 
 	// if this is an experimental service, set EXPERIMENTAL_TAG to true in the mount config
-	var services []brokerapi.Service
-	services = b.Services(context)
+	services, err := b.Services(context)
+	if err != nil {
+		return brokerapi.Binding{}, err
+	}
 	for _, s := range services {
 		if s.ID == instanceDetails.ServiceID {
 			if inArray(s.Tags, EXPERIMENTAL_TAG) {
