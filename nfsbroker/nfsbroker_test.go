@@ -42,7 +42,9 @@ var _ = Describe("Broker", func() {
 			mounts.ReadConf("sloppy_mount,allow_other,allow_root,multithread,default_permissions,fusenfs_uid,fusenfs_gid,uid,gid,version", "sloppy_mount:false")
 			broker = nfsbroker.New(
 				logger,
-				"service-name", "service-id", "/fake-dir",
+				"service-name",
+				"service-id",
+				"/fake-dir",
 				fakeOs,
 				nil,
 				fakeStore,
@@ -83,8 +85,8 @@ var _ = Describe("Broker", func() {
 				provisionDetails brokerapi.ProvisionDetails
 				asyncAllowed     bool
 
-				spec brokerapi.ProvisionedServiceSpec
-				err  error
+				spec         brokerapi.ProvisionedServiceSpec
+				provisionErr error
 			)
 
 			BeforeEach(func() {
@@ -99,11 +101,11 @@ var _ = Describe("Broker", func() {
 			})
 
 			JustBeforeEach(func() {
-				spec, err = broker.Provision(ctx, instanceID, provisionDetails, asyncAllowed)
+				spec, provisionErr = broker.Provision(ctx, instanceID, provisionDetails, asyncAllowed)
 			})
 
 			It("should not error", func() {
-				Expect(err).NotTo(HaveOccurred())
+				Expect(provisionErr).NotTo(HaveOccurred())
 			})
 
 			It("should provision the service instance synchronously", func() {
@@ -118,9 +120,11 @@ var _ = Describe("Broker", func() {
 				BeforeEach(func() {
 					configuration := map[string]interface{}{"share": "server/some-share", "uid": "1", "gid": 2}
 					buf := &bytes.Buffer{}
-					_ = json.NewEncoder(buf).Encode(configuration)
+					err := json.NewEncoder(buf).Encode(configuration)
+					Expect(err).NotTo(HaveOccurred())
 					provisionDetails = brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
 				})
+
 				It("should write uid and gid into state", func() {
 					count := fakeStore.CreateInstanceDetailsCallCount()
 					Expect(count).To(BeNumerically(">", 0))
@@ -131,6 +135,7 @@ var _ = Describe("Broker", func() {
 					Expect(fp).To(HaveKey("gid"))
 				})
 			})
+
 			Context("create-service was given invalid JSON", func() {
 				BeforeEach(func() {
 					badJson := []byte("{this is not json")
@@ -138,20 +143,21 @@ var _ = Describe("Broker", func() {
 				})
 
 				It("errors", func() {
-					Expect(err).To(Equal(brokerapi.ErrRawParamsInvalid))
+					Expect(provisionErr).To(Equal(brokerapi.ErrRawParamsInvalid))
 				})
-
 			})
+
 			Context("create-service was given valid JSON but no 'share' key", func() {
 				BeforeEach(func() {
 					configuration := map[string]interface{}{"unknown key": "server:/some-share"}
 					buf := &bytes.Buffer{}
-					_ = json.NewEncoder(buf).Encode(configuration)
+					err := json.NewEncoder(buf).Encode(configuration)
+					Expect(err).NotTo(HaveOccurred())
 					provisionDetails = brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
 				})
 
 				It("errors", func() {
-					Expect(err).To(Equal(errors.New("config requires a \"share\" key")))
+					Expect(provisionErr).To(Equal(errors.New("config requires a \"share\" key")))
 				})
 			})
 
@@ -159,12 +165,13 @@ var _ = Describe("Broker", func() {
 				BeforeEach(func() {
 					configuration := map[string]interface{}{"share": "server:/some-share"}
 					buf := &bytes.Buffer{}
-					_ = json.NewEncoder(buf).Encode(configuration)
+					err := json.NewEncoder(buf).Encode(configuration)
+					Expect(err).NotTo(HaveOccurred())
 					provisionDetails = brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
 				})
 
 				It("errors", func() {
-					Expect(err).To(Equal(errors.New("syntax error for share: no colon allowed after server")))
+					Expect(provisionErr).To(Equal(errors.New("syntax error for share: no colon allowed after server")))
 				})
 			})
 
@@ -172,12 +179,13 @@ var _ = Describe("Broker", func() {
 				BeforeEach(func() {
 					configuration := map[string]interface{}{"share": "server/some-share:dir/"}
 					buf := &bytes.Buffer{}
-					_ = json.NewEncoder(buf).Encode(configuration)
+					err := json.NewEncoder(buf).Encode(configuration)
+					Expect(err).NotTo(HaveOccurred())
 					provisionDetails = brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
 				})
 
 				It("should not error", func() {
-					Expect(err).NotTo(HaveOccurred())
+					Expect(provisionErr).NotTo(HaveOccurred())
 				})
 			})
 
@@ -187,7 +195,7 @@ var _ = Describe("Broker", func() {
 				})
 
 				It("should not error", func() {
-					Expect(err).NotTo(HaveOccurred())
+					Expect(provisionErr).NotTo(HaveOccurred())
 				})
 			})
 
@@ -197,7 +205,7 @@ var _ = Describe("Broker", func() {
 				})
 
 				It("should error", func() {
-					Expect(err).To(Equal(brokerapi.ErrInstanceAlreadyExists))
+					Expect(provisionErr).To(Equal(brokerapi.ErrInstanceAlreadyExists))
 				})
 			})
 
@@ -207,7 +215,7 @@ var _ = Describe("Broker", func() {
 				})
 
 				It("should error", func() {
-					Expect(err).To(HaveOccurred())
+					Expect(provisionErr).To(HaveOccurred())
 				})
 			})
 
@@ -217,7 +225,7 @@ var _ = Describe("Broker", func() {
 				})
 
 				It("should error", func() {
-					Expect(err).To(HaveOccurred())
+					Expect(provisionErr).To(HaveOccurred())
 				})
 			})
 		})
