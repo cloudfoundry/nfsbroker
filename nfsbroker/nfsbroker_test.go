@@ -39,7 +39,7 @@ var _ = Describe("Broker", func() {
 	Context("when creating first time", func() {
 		BeforeEach(func() {
 			mounts := nfsbroker.NewNfsBrokerConfigDetails()
-			mounts.ReadConf("sloppy_mount,allow_other,allow_root,multithread,default_permissions,fusenfs_uid,fusenfs_gid,uid,gid,version", "sloppy_mount:false")
+			mounts.ReadConf("sloppy_mount,allow_other,allow_root,multithread,default_permissions,fusenfs_uid,fusenfs_gid,uid,gid,version,username,password", "sloppy_mount:false")
 			broker = nfsbroker.New(
 				logger,
 				"service-name", "service-id", "/fake-dir",
@@ -442,6 +442,7 @@ var _ = Describe("Broker", func() {
 					}
 					fakeStore.RetrieveInstanceDetailsReturns(serviceInstance, nil)
 				})
+
 				It("should favor the values in the bind configuration", func() {
 					binding, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
 					Expect(err).NotTo(HaveOccurred())
@@ -478,6 +479,61 @@ var _ = Describe("Broker", func() {
 					})
 				})
 			})
+
+			Context("when the service instance contains username and password", func() {
+				BeforeEach(func() {
+					serviceInstance := brokerstore.ServiceInstance{
+						ServiceID: serviceID,
+						ServiceFingerPrint: map[string]interface{}{
+							nfsbroker.SHARE_KEY: "server:/some-share",
+							"username":          "some-instance-username",
+							"password":          "some-instance-password",
+						},
+					}
+					fakeStore.RetrieveInstanceDetailsReturns(serviceInstance, nil)
+					bindDetails = brokerapi.BindDetails{
+						AppGUID:       "guid",
+						RawParameters: []byte(`{"username":"some-bind-username","password":"some-bind-password"}`),
+					}
+				})
+
+				It("should favor the values in the bind configuration", func() {
+					binding, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
+					Expect(err).NotTo(HaveOccurred())
+
+					mc := binding.VolumeMounts[0].Device.MountConfig
+
+					v, ok := mc["username"].(string)
+					Expect(ok).To(BeTrue())
+					Expect(v).To(Equal("some-bind-username"))
+					v, ok = mc["password"].(string)
+					Expect(ok).To(BeTrue())
+					Expect(v).To(Equal("some-bind-password"))
+				})
+
+				Context("when the bind operation doesn't pass configuration", func() {
+					BeforeEach(func() {
+						bindDetails = brokerapi.BindDetails{
+							AppGUID:       "guid",
+							RawParameters: []byte(""),
+						}
+					})
+
+					It("should use uid and gid from the service instance configuration", func() {
+						binding, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
+						Expect(err).NotTo(HaveOccurred())
+						mc := binding.VolumeMounts[0].Device.MountConfig
+
+						v, ok := mc["username"].(string)
+						Expect(ok).To(BeTrue())
+						Expect(v).To(Equal("some-instance-username"))
+						v, ok = mc["password"].(string)
+						Expect(ok).To(BeTrue())
+						Expect(v).To(Equal("some-instance-password"))
+					})
+				})
+			})
+
 			Context("when the bind operation doesn't pass configuration", func() {
 				BeforeEach(func() {
 					bindDetails = brokerapi.BindDetails{
@@ -491,6 +547,7 @@ var _ = Describe("Broker", func() {
 					Expect(err).NotTo(HaveOccurred())
 				})
 			})
+
 			Context("when the bind operation passes empty configuration", func() {
 				BeforeEach(func() {
 					bindDetails = brokerapi.BindDetails{
@@ -504,6 +561,7 @@ var _ = Describe("Broker", func() {
 					Expect(err).NotTo(HaveOccurred())
 				})
 			})
+
 			Context("when the service id is an experimental service", func() {
 				BeforeEach(func() {
 					fakeStore.RetrieveInstanceDetailsReturns(

@@ -1,11 +1,12 @@
 package nfsbroker
 
 import (
-	"code.cloudfoundry.org/lager"
 	"errors"
 	"fmt"
 	"strconv"
 	"strings"
+
+	"code.cloudfoundry.org/lager"
 )
 
 type ConfigDetails struct {
