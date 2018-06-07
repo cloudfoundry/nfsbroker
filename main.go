@@ -96,6 +96,18 @@ var defaultOptions = flag.String(
 	"A comma separated list of defaults specified as param:value. If a parameter has a default value and is not in the allowed list, this default value becomes a fixed value that cannot be overridden",
 )
 
+var uaaClientID = flag.String(
+	"uaaClientID",
+	"",
+	"(optional) UAA client ID",
+)
+
+var uaaClientSecret = flag.String(
+	"uaaClientSecret",
+	"",
+	"(optional) UAA client Secret",
+)
+
 var (
 	username   string
 	password   string
@@ -206,7 +218,19 @@ func createServer(logger lager.Logger) ifrit.Runner {
 		parseVcapServices(logger, &osshim.OsShim{})
 	}
 
-	store := brokerstore.NewStore(logger, *dbDriver, dbUsername, dbPassword, *dbHostname, *dbPort, *dbName, *dbCACert, fileName)
+	store := brokerstore.NewStore(
+		logger,
+		*dbDriver,
+		dbUsername,
+		dbPassword,
+		*dbHostname,
+		*dbPort,
+		*dbName,
+		*dbCACert,
+		uaaClientID,
+		uaaClientSecret,
+		fileName,
+	)
 
 	mounts := nfsbroker.NewNfsBrokerConfigDetails()
 	mounts.ReadConf(*allowedOptions, *defaultOptions)
@@ -214,9 +238,16 @@ func createServer(logger lager.Logger) ifrit.Runner {
 
 	config := nfsbroker.NewNfsBrokerConfig(mounts)
 
-	serviceBroker := nfsbroker.New(logger,
-		*serviceName, *serviceId,
-		*dataDir, &osshim.OsShim{}, clock.NewClock(), store, config)
+	serviceBroker := nfsbroker.New(
+		logger,
+		*serviceName,
+		*serviceId,
+		*dataDir,
+		&osshim.OsShim{},
+		clock.NewClock(),
+		store,
+		config,
+	)
 
 	credentials := brokerapi.BrokerCredentials{Username: username, Password: password}
 	handler := brokerapi.New(serviceBroker, logger.Session("broker-api"), credentials)
