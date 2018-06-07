@@ -96,6 +96,24 @@ var defaultOptions = flag.String(
 	"A comma separated list of defaults specified as param:value. If a parameter has a default value and is not in the allowed list, this default value becomes a fixed value that cannot be overridden",
 )
 
+var credhubURL = flag.String(
+	"credhubURL",
+	"",
+	"(optional) CredHub server URL when using CredHub to store broker state",
+)
+
+var uaaClientID = flag.String(
+	"uaaClientID",
+	"",
+	"(optional) UAA client ID when using CredHub to store broker state",
+)
+
+var uaaClientSecret = flag.String(
+	"uaaClientSecret",
+	"",
+	"(optional) UAA client secret when using CredHub to store broker state",
+)
+
 var (
 	username   string
 	password   string
@@ -206,7 +224,20 @@ func createServer(logger lager.Logger) ifrit.Runner {
 		parseVcapServices(logger, &osshim.OsShim{})
 	}
 
-	store := brokerstore.NewStore(logger, *dbDriver, dbUsername, dbPassword, *dbHostname, *dbPort, *dbName, *dbCACert, fileName)
+	store := brokerstore.NewStore(
+		logger,
+		*dbDriver,
+		dbUsername,
+		dbPassword,
+		*dbHostname,
+		*dbPort,
+		*dbName,
+		*dbCACert,
+		credhubURL,
+		uaaClientID,
+		uaaClientSecret,
+		fileName,
+	)
 
 	mounts := nfsbroker.NewNfsBrokerConfigDetails()
 	mounts.ReadConf(*allowedOptions, *defaultOptions)
