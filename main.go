@@ -233,9 +233,9 @@ func createServer(logger lager.Logger) ifrit.Runner {
 		*dbPort,
 		*dbName,
 		*dbCACert,
-		credhubURL,
-		uaaClientID,
-		uaaClientSecret,
+		*credhubURL,
+		*uaaClientID,
+		*uaaClientSecret,
 		fileName,
 	)
 
