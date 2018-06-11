@@ -192,15 +192,25 @@ var _ = Describe("nfsbroker Main", func() {
 
 	Context("Missing required args", func() {
 		var process ifrit.Process
-		It("shows usage", func() {
+
+		It("shows usage when dataDir or dbDriver are not provided", func() {
 			var args []string
 			volmanRunner := failRunner{
 				Name:       "nfsbroker",
 				Command:    exec.Command(binaryPath, args...),
-				StartCheck: "Either dataDir or db parameters must be provided.",
+				StartCheck: "Either dataDir or dbDriver parameters must be provided.",
 			}
 			process = ifrit.Invoke(volmanRunner)
+		})
 
+		It("shows usage when servicesConfig is not provided", func() {
+			args := []string{"-dbDriver", "mysql"}
+			volmanRunner := failRunner{
+				Name:       "nfsbroker",
+				Command:    exec.Command(binaryPath, args...),
+				StartCheck: "servicesConfig parameter must be provided.",
+			}
+			process = ifrit.Invoke(volmanRunner)
 		})
 
 		AfterEach(func() {
@@ -229,7 +239,7 @@ var _ = Describe("nfsbroker Main", func() {
 
 			args = append(args, "-listenAddr", listenAddr)
 			args = append(args, "-dataDir", tempDir)
-
+			args = append(args, "-servicesConfig", "./default_services.json")
 		})
 
 		JustBeforeEach(func() {
@@ -261,30 +271,23 @@ var _ = Describe("nfsbroker Main", func() {
 			Expect(resp.StatusCode).To(Equal(200))
 		})
 
-		Context("given arguments", func() {
-			BeforeEach(func() {
-				args = append(args, "-serviceName", "something")
-				args = append(args, "-serviceId", "someguid")
-			})
+		It("should pass services config through to catalog", func() {
+			resp, err := httpDoWithAuth("GET", "/v2/catalog", nil)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resp.StatusCode).To(Equal(200))
 
-			It("should pass arguments through to catalog", func() {
-				resp, err := httpDoWithAuth("GET", "/v2/catalog", nil)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resp.StatusCode).To(Equal(200))
+			bytes, err := ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
 
-				bytes, err := ioutil.ReadAll(resp.Body)
-				Expect(err).NotTo(HaveOccurred())
+			var catalog brokerapi.CatalogResponse
+			err = json.Unmarshal(bytes, &catalog)
+			Expect(err).NotTo(HaveOccurred())
 
-				var catalog brokerapi.CatalogResponse
-				err = json.Unmarshal(bytes, &catalog)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(catalog.Services[0].Name).To(Equal("something"))
-				Expect(catalog.Services[0].ID).To(Equal("someguid"))
-				Expect(catalog.Services[0].Plans[0].ID).To(Equal("Existing"))
-				Expect(catalog.Services[0].Plans[0].Name).To(Equal("Existing"))
-				Expect(catalog.Services[0].Plans[0].Description).To(Equal("A preexisting filesystem"))
-			})
+			Expect(catalog.Services[0].Name).To(Equal("nfs"))
+			Expect(catalog.Services[0].ID).To(Equal("nfs-service-id"))
+			Expect(catalog.Services[0].Plans[0].ID).To(Equal("Existing"))
+			Expect(catalog.Services[0].Plans[0].Name).To(Equal("Existing"))
+			Expect(catalog.Services[0].Plans[0].Description).To(Equal("A preexisting filesystem"))
 		})
 	})
 })

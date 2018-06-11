@@ -14,6 +14,7 @@ import (
 	"code.cloudfoundry.org/goshims/osshim/os_fake"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/nfsbroker/nfsbroker"
+	"code.cloudfoundry.org/nfsbroker/nfsbroker/nfsbrokerfakes"
 	"code.cloudfoundry.org/service-broker-store/brokerstore"
 	"code.cloudfoundry.org/service-broker-store/brokerstore/brokerstorefakes"
 	. "github.com/onsi/ginkgo"
@@ -22,11 +23,12 @@ import (
 
 var _ = Describe("Broker", func() {
 	var (
-		broker    *nfsbroker.Broker
-		fakeOs    *os_fake.FakeOs
-		logger    lager.Logger
-		ctx       context.Context
-		fakeStore *brokerstorefakes.FakeStore
+		broker       *nfsbroker.Broker
+		fakeOs       *os_fake.FakeOs
+		logger       lager.Logger
+		ctx          context.Context
+		fakeStore    *brokerstorefakes.FakeStore
+		fakeServices *nfsbrokerfakes.FakeServices
 	)
 
 	BeforeEach(func() {
@@ -34,6 +36,41 @@ var _ = Describe("Broker", func() {
 		ctx = context.TODO()
 		fakeOs = &os_fake.FakeOs{}
 		fakeStore = &brokerstorefakes.FakeStore{}
+		fakeServices = &nfsbrokerfakes.FakeServices{}
+		fakeServices.ListReturns([]brokerapi.Service{
+			{
+				ID:            "nfs-service-id",
+				Name:          "nfs",
+				Description:   "Existing NFSv3 volumes",
+				Bindable:      true,
+				PlanUpdatable: false,
+				Tags:          []string{"nfs"},
+				Requires:      []brokerapi.RequiredPermission{"volume_mount"},
+				Plans: []brokerapi.ServicePlan{
+					{
+						Name:        "Existing",
+						ID:          "Existing",
+						Description: "A preexisting filesystem",
+					},
+				},
+			}, {
+				ID:            "nfs-experimental-service-id",
+				Name:          "nfs-experimental",
+				Description:   "Experimental support for NFSv3 and v4",
+				Bindable:      true,
+				PlanUpdatable: false,
+				Tags:          []string{"nfs", "experimental"},
+				Requires:      []brokerapi.RequiredPermission{"volume_mount"},
+
+				Plans: []brokerapi.ServicePlan{
+					{
+						Name:        "Existing",
+						ID:          "Existing",
+						Description: "A preexisting filesystem",
+					},
+				},
+			},
+		})
 	})
 
 	Context("when creating first time", func() {
@@ -42,7 +79,8 @@ var _ = Describe("Broker", func() {
 			mounts.ReadConf("sloppy_mount,allow_other,allow_root,multithread,default_permissions,fusenfs_uid,fusenfs_gid,uid,gid,version,username,password", "sloppy_mount:false")
 			broker = nfsbroker.New(
 				logger,
-				"service-name", "service-id", "/fake-dir",
+				fakeServices,
+				"/fake-dir",
 				fakeOs,
 				nil,
 				fakeStore,
@@ -55,9 +93,9 @@ var _ = Describe("Broker", func() {
 				results, err := broker.Services(ctx)
 				Expect(err).NotTo(HaveOccurred())
 				result := results[0]
-				Expect(result.ID).To(Equal("service-id"))
-				Expect(result.Name).To(Equal("service-name"))
-				Expect(result.Description).To(Equal("Existing NFSv3 volumes (see: https://code.cloudfoundry.org/nfs-volume-release/)"))
+				Expect(result.ID).To(Equal("nfs-service-id"))
+				Expect(result.Name).To(Equal("nfs"))
+				Expect(result.Description).To(Equal("Existing NFSv3 volumes"))
 				Expect(result.Bindable).To(Equal(true))
 				Expect(result.PlanUpdatable).To(Equal(false))
 				Expect(result.Tags).To(ContainElement("nfs"))
@@ -68,7 +106,7 @@ var _ = Describe("Broker", func() {
 				Expect(result.Plans[0].Description).To(Equal("A preexisting filesystem"))
 
 				result = results[1]
-				Expect(result.ID).To(Equal("997f8f26-e10c-11e7-80c1-9a214cf093ae"))
+				Expect(result.ID).To(Equal("nfs-experimental-service-id"))
 				Expect(result.Name).To(Equal("nfs-experimental"))
 				Expect(result.Tags).To(ContainElement("nfs"))
 				Expect(result.Requires).To(ContainElement(brokerapi.RequiredPermission("volume_mount")))
@@ -566,7 +604,7 @@ var _ = Describe("Broker", func() {
 				BeforeEach(func() {
 					fakeStore.RetrieveInstanceDetailsReturns(
 						brokerstore.ServiceInstance{
-							ServiceID: nfsbroker.EXPERIMENTAL_SERVICE_ID,
+							ServiceID: "nfs-experimental-service-id",
 							ServiceFingerPrint: map[string]interface{}{
 								nfsbroker.SHARE_KEY: "server:/some-share",
 							},
@@ -588,7 +626,7 @@ var _ = Describe("Broker", func() {
 				BeforeEach(func() {
 
 					serviceInstance := brokerstore.ServiceInstance{
-						ServiceID: nfsbroker.EXPERIMENTAL_SERVICE_ID,
+						ServiceID: "nfs-experimental-service-id",
 						ServiceFingerPrint: map[string]interface{}{
 							nfsbroker.SHARE_KEY:   "server:/some-share",
 							nfsbroker.VERSION_KEY: "4.1",
@@ -703,7 +741,8 @@ var _ = Describe("Broker", func() {
 					mounts.ReadConf("", "")
 					broker = nfsbroker.New(
 						logger,
-						"service-name", "service-id", "/fake-dir",
+						fakeServices,
+						"/fake-dir",
 						fakeOs,
 						nil,
 						fakeStore,
@@ -736,7 +775,8 @@ var _ = Describe("Broker", func() {
 					mounts.ReadConf("", "sloppy_mount:true")
 					broker = nfsbroker.New(
 						logger,
-						"service-name", "service-id", "/fake-dir",
+						fakeServices,
+						"/fake-dir",
 						fakeOs,
 						nil,
 						fakeStore,
@@ -774,7 +814,8 @@ var _ = Describe("Broker", func() {
 					mounts.ReadConf("allow_root", "")
 					broker = nfsbroker.New(
 						logger,
-						"service-name", "service-id", "/fake-dir",
+						fakeServices,
+						"/fake-dir",
 						fakeOs,
 						nil,
 						fakeStore,

@@ -39,16 +39,12 @@ var atAddress = flag.String(
 	"host:port to serve service broker API",
 )
 
-var serviceName = flag.String(
-	"serviceName",
-	"nfsvolume",
-	"(deprecated) name of the service to register with cloud controller",
+var servicesConfig = flag.String(
+	"servicesConfig",
+	"",
+	"[REQUIRED] - Path to services config to register with cloud controller",
 )
-var serviceId = flag.String(
-	"serviceId",
-	"service-guid",
-	"(deprecated) ID of the service to register with cloud controller",
-)
+
 var dbDriver = flag.String(
 	"dbDriver",
 	"",
@@ -164,7 +160,13 @@ func parseEnvironment() {
 
 func checkParams() {
 	if *dataDir == "" && *dbDriver == "" {
-		fmt.Fprint(os.Stderr, "\nERROR: Either dataDir or db parameters must be provided.\n\n")
+		fmt.Fprint(os.Stderr, "\nERROR: Either dataDir or dbDriver parameters must be provided.\n\n")
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	if *servicesConfig == "" {
+		fmt.Fprint(os.Stderr, "\nERROR: servicesConfig parameter must be provided.\n\n")
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -217,7 +219,7 @@ func getByAlias(data map[string]interface{}, keys ...string) interface{} {
 }
 
 func createServer(logger lager.Logger) ifrit.Runner {
-	fileName := filepath.Join(*dataDir, fmt.Sprintf("%s-services.json", *serviceName))
+	fileName := filepath.Join(*dataDir, fmt.Sprintf("nfs-services.json"))
 
 	// if we are CF pushed
 	if *cfServiceName != "" {
@@ -245,9 +247,20 @@ func createServer(logger lager.Logger) ifrit.Runner {
 
 	config := nfsbroker.NewNfsBrokerConfig(mounts)
 
-	serviceBroker := nfsbroker.New(logger,
-		*serviceName, *serviceId,
-		*dataDir, &osshim.OsShim{}, clock.NewClock(), store, config)
+	services, err := NewServicesFromConfig(*servicesConfig)
+	if err != nil {
+		logger.Fatal("loading-services-config-error", err)
+	}
+
+	serviceBroker := nfsbroker.New(
+		logger,
+		services,
+		*dataDir,
+		&osshim.OsShim{},
+		clock.NewClock(),
+		store,
+		config,
+	)
 
 	credentials := brokerapi.BrokerCredentials{Username: username, Password: password}
 	handler := brokerapi.New(serviceBroker, logger.Session("broker-api"), credentials)

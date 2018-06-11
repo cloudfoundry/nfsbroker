@@ -20,13 +20,10 @@ import (
 )
 
 const (
-	VOLUME_MOUNT_PERMISSION = brokerapi.RequiredPermission("volume_mount")
-	DEFAULT_CONTAINER_PATH  = "/var/vcap/data"
-	EXPERIMENTAL_SERVICE_ID = "997f8f26-e10c-11e7-80c1-9a214cf093ae"
-	EXPERIMENTAL_PLAN_ID    = "09a09260-1df5-4445-9ed7-1ba56dadbbc8"
-	EXPERIMENTAL_TAG        = "experimental"
-	SHARE_KEY               = "share"
-	VERSION_KEY             = "version"
+	DEFAULT_CONTAINER_PATH = "/var/vcap/data"
+	EXPERIMENTAL_TAG       = "experimental"
+	SHARE_KEY              = "share"
+	VERSION_KEY            = "version"
 )
 
 const (
@@ -34,30 +31,31 @@ const (
 	Secret   string = "kerberosKeytab"
 )
 
-type staticState struct {
-	ServiceName string `json:"ServiceName"`
-	ServiceId   string `json:"ServiceId"`
-}
-
 type lock interface {
 	Lock()
 	Unlock()
 }
 
 type Broker struct {
-	logger  lager.Logger
-	dataDir string
-	os      osshim.Os
-	mutex   lock
-	clock   clock.Clock
-	static  staticState
-	store   brokerstore.Store
-	config  Config
+	logger   lager.Logger
+	dataDir  string
+	os       osshim.Os
+	mutex    lock
+	clock    clock.Clock
+	store    brokerstore.Store
+	services Services
+	config   Config
+}
+
+//go:generate counterfeiter -o nfsbrokerfakes/fake_services.go . Services
+type Services interface {
+	List() []brokerapi.Service
 }
 
 func New(
 	logger lager.Logger,
-	serviceName, serviceId, dataDir string,
+	services Services,
+	dataDir string,
 	os osshim.Os,
 	clock clock.Clock,
 	store brokerstore.Store,
@@ -65,17 +63,14 @@ func New(
 ) *Broker {
 
 	theBroker := Broker{
-		logger:  logger,
-		dataDir: dataDir,
-		os:      os,
-		mutex:   &sync.Mutex{},
-		clock:   clock,
-		store:   store,
-		static: staticState{
-			ServiceName: serviceName,
-			ServiceId:   serviceId,
-		},
-		config: *config,
+		logger:   logger,
+		dataDir:  dataDir,
+		os:       os,
+		mutex:    &sync.Mutex{},
+		clock:    clock,
+		store:    store,
+		services: services,
+		config:   *config,
 	}
 
 	theBroker.store.Restore(logger)
@@ -88,41 +83,7 @@ func (b *Broker) Services(_ context.Context) ([]brokerapi.Service, error) {
 	logger.Info("start")
 	defer logger.Info("end")
 
-	return []brokerapi.Service{
-		{
-			ID:            b.static.ServiceId,
-			Name:          b.static.ServiceName,
-			Description:   "Existing NFSv3 volumes (see: https://code.cloudfoundry.org/nfs-volume-release/)",
-			Bindable:      true,
-			PlanUpdatable: false,
-			Tags:          []string{"nfs"},
-			Requires:      []brokerapi.RequiredPermission{VOLUME_MOUNT_PERMISSION},
-
-			Plans: []brokerapi.ServicePlan{
-				{
-					Name:        "Existing",
-					ID:          "Existing",
-					Description: "A preexisting filesystem",
-				},
-			},
-		}, {
-			ID:            EXPERIMENTAL_SERVICE_ID,
-			Name:          "nfs-experimental",
-			Description:   "Experimental support for NFSv3 and v4",
-			Bindable:      true,
-			PlanUpdatable: false,
-			Tags:          []string{"nfs", EXPERIMENTAL_TAG},
-			Requires:      []brokerapi.RequiredPermission{VOLUME_MOUNT_PERMISSION},
-
-			Plans: []brokerapi.ServicePlan{
-				{
-					Name:        "Existing",
-					ID:          EXPERIMENTAL_PLAN_ID,
-					Description: "A preexisting filesystem",
-				},
-			},
-		},
-	}, nil
+	return b.services.List(), nil
 }
 
 func (b *Broker) Provision(context context.Context, instanceID string, details brokerapi.ProvisionDetails, asyncAllowed bool) (_ brokerapi.ProvisionedServiceSpec, e error) {
@@ -160,11 +121,12 @@ func (b *Broker) Provision(context context.Context, instanceID string, details b
 	}()
 
 	instanceDetails := brokerstore.ServiceInstance{
-		details.ServiceID,
-		details.PlanID,
-		details.OrganizationGUID,
-		details.SpaceGUID,
-		configuration}
+		ServiceID:          details.ServiceID,
+		PlanID:             details.PlanID,
+		OrganizationGUID:   details.OrganizationGUID,
+		SpaceGUID:          details.SpaceGUID,
+		ServiceFingerPrint: configuration,
+	}
 
 	if b.instanceConflicts(instanceDetails, instanceID) {
 		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrInstanceAlreadyExists
