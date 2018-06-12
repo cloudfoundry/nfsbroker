@@ -1,6 +1,6 @@
 [
   {
-    "id": "nfs-service-id",
+    "id": "nfsbroker",
     "name": "nfs",
     "description": "Existing NFSv3 volumes (see: https://code.cloudfoundry.org/nfs-volume-release/)",
     "bindable": true,
