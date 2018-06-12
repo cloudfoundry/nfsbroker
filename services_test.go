@@ -23,7 +23,7 @@ var _ = Describe("Services", func() {
 		It("returns the list of services", func() {
 			Expect(services.List()).To(Equal([]brokerapi.Service{
 				{
-					ID:            "nfs-service-id",
+					ID:            "nfsbroker",
 					Name:          "nfs",
 					Description:   "Existing NFSv3 volumes (see: https://code.cloudfoundry.org/nfs-volume-release/)",
 					Bindable:      true,
