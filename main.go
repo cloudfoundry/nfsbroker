@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 
 	"code.cloudfoundry.org/clock"
@@ -71,7 +72,13 @@ var dbName = flag.String(
 var dbCACert = flag.String(
 	"dbCACert",
 	"",
-	"(optional) CA Cert to verify SSL connection",
+	"(optional) CA Cert for database SSL connection",
+)
+
+var dbCACertPath = flag.String(
+	"dbCACertPath",
+	"",
+	"(optional) Path to CA Cert for database SSL connection",
 )
 
 var cfServiceName = flag.String(
@@ -226,6 +233,19 @@ func createServer(logger lager.Logger) ifrit.Runner {
 		parseVcapServices(logger, &osshim.OsShim{})
 	}
 
+	var caCert string
+	if *dbCACert != "" {
+		caCert = *dbCACert
+	} else {
+		if *dbCACertPath != "" {
+			b, err := ioutil.ReadFile(*dbCACertPath)
+			if err != nil {
+				logger.Fatal("cannot-read-ca-cert", err, lager.Data{"path": *dbCACertPath})
+			}
+			caCert = string(b)
+		}
+	}
+
 	store := brokerstore.NewStore(
 		logger,
 		*dbDriver,
@@ -234,7 +254,7 @@ func createServer(logger lager.Logger) ifrit.Runner {
 		*dbHostname,
 		*dbPort,
 		*dbName,
-		*dbCACert,
+		caCert,
 		*credhubURL,
 		*uaaClientID,
 		*uaaClientSecret,
