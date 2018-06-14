@@ -198,7 +198,7 @@ var _ = Describe("nfsbroker Main", func() {
 			volmanRunner := failRunner{
 				Name:       "nfsbroker",
 				Command:    exec.Command(binaryPath, args...),
-				StartCheck: "Either dataDir or dbDriver parameters must be provided.",
+				StartCheck: "Either dataDir, dbDriver or credhubURL parameters must be provided.",
 			}
 			process = ifrit.Invoke(volmanRunner)
 		})

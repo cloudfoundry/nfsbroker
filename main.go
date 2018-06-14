@@ -166,8 +166,8 @@ func parseEnvironment() {
 }
 
 func checkParams() {
-	if *dataDir == "" && *dbDriver == "" {
-		fmt.Fprint(os.Stderr, "\nERROR: Either dataDir or dbDriver parameters must be provided.\n\n")
+	if *dataDir == "" && *dbDriver == "" && *credhubURL == "" {
+		fmt.Fprint(os.Stderr, "\nERROR: Either dataDir, dbDriver or credhubURL parameters must be provided.\n\n")
 		flag.Usage()
 		os.Exit(1)
 	}
