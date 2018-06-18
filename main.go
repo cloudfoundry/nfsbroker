@@ -69,12 +69,6 @@ var dbName = flag.String(
 	"(optional) database name when using SQL to store broker state",
 )
 
-var dbCACert = flag.String(
-	"dbCACert",
-	"",
-	"(optional) CA Cert for database SSL connection",
-)
-
 var dbCACertPath = flag.String(
 	"dbCACertPath",
 	"",
@@ -103,6 +97,12 @@ var credhubURL = flag.String(
 	"credhubURL",
 	"",
 	"(optional) CredHub server URL when using CredHub to store broker state",
+)
+
+var credhubCACertPath = flag.String(
+	"credhubCACertPath",
+	"",
+	"(optional) Path to CA Cert for CredHub",
 )
 
 var uaaClientID = flag.String(
@@ -233,17 +233,22 @@ func createServer(logger lager.Logger) ifrit.Runner {
 		parseVcapServices(logger, &osshim.OsShim{})
 	}
 
-	var caCert string
-	if *dbCACert != "" {
-		caCert = *dbCACert
-	} else {
-		if *dbCACertPath != "" {
-			b, err := ioutil.ReadFile(*dbCACertPath)
-			if err != nil {
-				logger.Fatal("cannot-read-ca-cert", err, lager.Data{"path": *dbCACertPath})
-			}
-			caCert = string(b)
+	var dbCACert string
+	if *dbCACertPath != "" {
+		b, err := ioutil.ReadFile(*dbCACertPath)
+		if err != nil {
+			logger.Fatal("cannot-read-db-ca-cert", err, lager.Data{"path": *dbCACertPath})
 		}
+		dbCACert = string(b)
+	}
+
+	var credhubCACert string
+	if *credhubCACertPath != "" {
+		b, err := ioutil.ReadFile(*dbCACertPath)
+		if err != nil {
+			logger.Fatal("cannot-read-credhub-ca-cert", err, lager.Data{"path": *credhubCACertPath})
+		}
+		credhubCACert = string(b)
 	}
 
 	store := brokerstore.NewStore(
@@ -254,8 +259,9 @@ func createServer(logger lager.Logger) ifrit.Runner {
 		*dbHostname,
 		*dbPort,
 		*dbName,
-		caCert,
+		dbCACert,
 		*credhubURL,
+		credhubCACert,
 		*uaaClientID,
 		*uaaClientSecret,
 		fileName,
