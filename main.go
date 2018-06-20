@@ -117,6 +117,12 @@ var uaaClientSecret = flag.String(
 	"(optional) UAA client secret when using CredHub to store broker state",
 )
 
+var storeID = flag.String(
+	"storeID",
+	"nfsbroker",
+	"(optional) Store ID used to namespace instance details and bindings (credhub only)",
+)
+
 var (
 	username   string
 	password   string
@@ -265,6 +271,7 @@ func createServer(logger lager.Logger) ifrit.Runner {
 		*uaaClientID,
 		*uaaClientSecret,
 		fileName,
+		*storeID,
 	)
 
 	mounts := nfsbroker.NewNfsBrokerConfigDetails()
