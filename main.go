@@ -250,7 +250,7 @@ func createServer(logger lager.Logger) ifrit.Runner {
 
 	var credhubCACert string
 	if *credhubCACertPath != "" {
-		b, err := ioutil.ReadFile(*dbCACertPath)
+		b, err := ioutil.ReadFile(*credhubCACertPath)
 		if err != nil {
 			logger.Fatal("cannot-read-credhub-ca-cert", err, lager.Data{"path": *credhubCACertPath})
 		}
