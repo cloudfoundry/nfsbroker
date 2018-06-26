@@ -117,6 +117,12 @@ var uaaClientSecret = flag.String(
 	"(optional) UAA client secret when using CredHub to store broker state",
 )
 
+var uaaCACertPath = flag.String(
+	"uaaCACertPath",
+	"",
+	"(optional) Path to CA Cert for UAA used for CredHub authorization",
+)
+
 var storeID = flag.String(
 	"storeID",
 	"nfsbroker",
@@ -257,6 +263,15 @@ func createServer(logger lager.Logger) ifrit.Runner {
 		credhubCACert = string(b)
 	}
 
+	var uaaCACert string
+	if *uaaCACertPath != "" {
+		b, err := ioutil.ReadFile(*uaaCACertPath)
+		if err != nil {
+			logger.Fatal("cannot-read-credhub-ca-cert", err, lager.Data{"path": *uaaCACertPath})
+		}
+		uaaCACert = string(b)
+	}
+
 	store := brokerstore.NewStore(
 		logger,
 		*dbDriver,
@@ -270,6 +285,7 @@ func createServer(logger lager.Logger) ifrit.Runner {
 		credhubCACert,
 		*uaaClientID,
 		*uaaClientSecret,
+		uaaCACert,
 		fileName,
 		*storeID,
 	)
