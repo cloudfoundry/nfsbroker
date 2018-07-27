@@ -244,6 +244,11 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 
 	mountConfig := tempConfig.MountConfig()
 	mountConfig["source"] = tempConfig.Share(source)
+	if mode == "r" {
+		// we need this side-channel because volman doesn't share mode information with volume drivers, so we need to
+		// record it in the opts
+		mountConfig["readonly"] = true
+	}
 
 	// if this is an experimental service, set EXPERIMENTAL_TAG to true in the mount config
 	services, err := b.Services(context)
