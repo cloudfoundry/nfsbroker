@@ -262,16 +262,13 @@ var _ = Describe("Broker", func() {
 
 		Context(".Deprovision", func() {
 			var (
-				instanceID       string
-				asyncAllowed     bool
-				provisionDetails brokerapi.ProvisionDetails
-
-				err error
+				instanceID   string
+				asyncAllowed bool
+				err          error
 			)
 
 			BeforeEach(func() {
 				instanceID = "some-instance-id"
-				provisionDetails = brokerapi.ProvisionDetails{PlanID: "Existing"}
 				asyncAllowed = true
 
 			})
@@ -302,7 +299,6 @@ var _ = Describe("Broker", func() {
 					configuration := map[string]interface{}{"share": "server:/some-share"}
 					buf := &bytes.Buffer{}
 					_ = json.NewEncoder(buf).Encode(configuration)
-					provisionDetails = brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
 					asyncAllowed = false
 					fakeStore.RetrieveInstanceDetailsReturns(brokerstore.ServiceInstance{ServiceID: instanceID}, nil)
 					previousSaveCallCount = fakeStore.SaveCallCount()
@@ -851,12 +847,10 @@ var _ = Describe("Broker", func() {
 
 		Context(".Unbind", func() {
 			var (
-				instanceID  string
 				bindDetails brokerapi.BindDetails
 			)
 
 			BeforeEach(func() {
-				instanceID = "some-instance-id"
 				bindParameters := map[string]interface{}{
 					nfsbroker.Username: "principal name",
 					nfsbroker.Secret:   "some keytab data",
