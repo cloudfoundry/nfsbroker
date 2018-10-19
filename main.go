@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/debugserver"
@@ -14,11 +16,6 @@ import (
 	"code.cloudfoundry.org/lager/lagerflags"
 	"code.cloudfoundry.org/nfsbroker/nfsbroker"
 	"code.cloudfoundry.org/nfsbroker/utils"
-
-	"path/filepath"
-
-	"encoding/json"
-
 	"code.cloudfoundry.org/service-broker-store/brokerstore"
 	"github.com/go-sql-driver/mysql"
 	"github.com/lib/pq"
@@ -142,11 +139,7 @@ func main() {
 
 	checkParams()
 
-	sink, err := lager.NewRedactingWriterSink(os.Stdout, lager.DEBUG, nil, nil)
-	if err != nil {
-		panic(err)
-	}
-	logger, logSink := lagerflags.NewFromSink("nfsbroker", sink)
+	logger, logSink := newLogger()
 	logger.Info("starting")
 	defer logger.Info("ends")
 
@@ -189,6 +182,13 @@ func checkParams() {
 		flag.Usage()
 		os.Exit(1)
 	}
+}
+
+func newLogger() (lager.Logger, *lager.ReconfigurableSink) {
+	lagerConfig := lagerflags.ConfigFromFlags()
+	lagerConfig.RedactSecrets = true
+
+	return lagerflags.NewFromConfig("nfsbroker", lagerConfig)
 }
 
 func parseVcapServices(logger lager.Logger, os osshim.Os) {
