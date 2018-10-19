@@ -1,5 +1,8 @@
 ---
-  buildpack: binary_buildpack
+applications:
+- name: nfsbroker
+  buildpacks:
+  - binary_buildpack
   env:
     SERVICENAME: nfs #service name to publish in the marketplace
     USERNAME: admin
@@ -12,9 +15,9 @@
     DBSERVICENAME: p-mysql #service name for db service as seen in `cf marketplace`
     ALLOWED_OPTIONS: "uid,gid,auto_cache,username,password"
 
-#   DBHOST: 10.244.0.30
-#   DBPORT: 3306
-#   DBNAME: something
-#   DB_USERNAME: something
-#   DB_PASSWORD: something
-#   DBCACERT: something
+    # DBHOST: 10.244.0.30
+    # DBPORT: 3306
+    # DBNAME: something
+    # DB_USERNAME: something
+    # DB_PASSWORD: something
+    # DBCACERT: something
