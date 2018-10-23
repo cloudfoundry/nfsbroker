@@ -72,6 +72,12 @@ var dbCACertPath = flag.String(
 	"(optional) Path to CA Cert for database SSL connection",
 )
 
+var dbSkipHostnameValidation = flag.Bool(
+	"dbSkipHostnameValidation",
+	false,
+	"(optional) skip DB server hostname validation when connecting over TLS",
+)
+
 var cfServiceName = flag.String(
 	"cfServiceName",
 	"",
@@ -281,6 +287,7 @@ func createServer(logger lager.Logger) ifrit.Runner {
 		*dbPort,
 		*dbName,
 		dbCACert,
+		*dbSkipHostnameValidation,
 		*credhubURL,
 		credhubCACert,
 		*uaaClientID,
