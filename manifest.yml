@@ -1,7 +1,7 @@
 ---
 applications:
 - name: nfsbroker
-  buildpack: binary_buildpack
+  buildpacks: [ binary_buildpack ]
   env:
     SERVICENAME: nfs #service name to publish in the marketplace
     USERNAME: admin
