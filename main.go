@@ -153,8 +153,8 @@ func main() {
 
 	if dbgAddr := debugserver.DebugAddress(flag.CommandLine); dbgAddr != "" {
 		server = utils.ProcessRunnerFor(grouper.Members{
-			{"debug-server", debugserver.Runner(dbgAddr, logSink)},
-			{"broker-api", server},
+			{Name: "debug-server", Runner: debugserver.Runner(dbgAddr, logSink)},
+			{Name: "broker-api", Runner: server},
 		})
 	}
 
