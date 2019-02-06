@@ -21,7 +21,6 @@ import (
 
 const (
 	DEFAULT_CONTAINER_PATH = "/var/vcap/data"
-	EXPERIMENTAL_TAG       = "experimental"
 	SHARE_KEY              = "share"
 	VERSION_KEY            = "version"
 )
@@ -248,20 +247,6 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 		// we need this side-channel because volman doesn't share mode information with volume drivers, so we need to
 		// record it in the opts
 		mountConfig["readonly"] = true
-	}
-
-	// if this is an experimental service, set EXPERIMENTAL_TAG to true in the mount config
-	services, err := b.Services(context)
-	if err != nil {
-		return brokerapi.Binding{}, err
-	}
-	for _, s := range services {
-		if s.ID == instanceDetails.ServiceID {
-			if inArray(s.Tags, EXPERIMENTAL_TAG) {
-				mountConfig[EXPERIMENTAL_TAG] = true
-			}
-			break
-		}
 	}
 
 	logger.Info("volume-service-binding", lager.Data{"Driver": "nfsv3driver", "mountConfig": mountConfig, "source": source})

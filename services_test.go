@@ -24,7 +24,7 @@ var _ = Describe("Services", func() {
 			Expect(services.List()).To(Equal([]brokerapi.Service{
 				{
 					ID:            "nfsbroker",
-					Name:          "nfs",
+					Name:          "nfs-legacy",
 					Description:   "Existing NFSv3 volumes (see: https://code.cloudfoundry.org/nfs-volume-release/)",
 					Bindable:      true,
 					PlanUpdatable: false,
@@ -41,11 +41,11 @@ var _ = Describe("Services", func() {
 				},
 				{
 					ID:            "997f8f26-e10c-11e7-80c1-9a214cf093ae",
-					Name:          "nfs-experimental",
-					Description:   "Experimental support for NFSv3 and v4",
+					Name:          "nfs",
+					Description:   "Existing NFSv3 and v4 volumes",
 					Bindable:      true,
 					PlanUpdatable: false,
-					Tags:          []string{"nfs", "experimental"},
+					Tags:          []string{"nfs"},
 					Requires:      []brokerapi.RequiredPermission{"volume_mount"},
 
 					Plans: []brokerapi.ServicePlan{

@@ -283,11 +283,19 @@ var _ = Describe("nfsbroker Main", func() {
 			err = json.Unmarshal(bytes, &catalog)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(catalog.Services[0].Name).To(Equal("nfs"))
+			Expect(catalog.Services).To(HaveLen(2))
+
+			Expect(catalog.Services[0].Name).To(Equal("nfs-legacy"))
 			Expect(catalog.Services[0].ID).To(Equal("nfsbroker"))
 			Expect(catalog.Services[0].Plans[0].ID).To(Equal("Existing"))
 			Expect(catalog.Services[0].Plans[0].Name).To(Equal("Existing"))
 			Expect(catalog.Services[0].Plans[0].Description).To(Equal("A preexisting filesystem"))
+
+			Expect(catalog.Services[1].Name).To(Equal("nfs"))
+			Expect(catalog.Services[1].ID).To(Equal("997f8f26-e10c-11e7-80c1-9a214cf093ae"))
+			Expect(catalog.Services[1].Plans[0].ID).To(Equal("09a09260-1df5-4445-9ed7-1ba56dadbbc8"))
+			Expect(catalog.Services[1].Plans[0].Name).To(Equal("Existing"))
+			Expect(catalog.Services[1].Plans[0].Description).To(Equal("A preexisting filesystem"))
 		})
 	})
 })

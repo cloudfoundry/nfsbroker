@@ -53,22 +53,6 @@ var _ = Describe("Broker", func() {
 						Description: "A preexisting filesystem",
 					},
 				},
-			}, {
-				ID:            "nfs-experimental-service-id",
-				Name:          "nfs-experimental",
-				Description:   "Experimental support for NFSv3 and v4",
-				Bindable:      true,
-				PlanUpdatable: false,
-				Tags:          []string{"nfs", "experimental"},
-				Requires:      []brokerapi.RequiredPermission{"volume_mount"},
-
-				Plans: []brokerapi.ServicePlan{
-					{
-						Name:        "Existing",
-						ID:          "Existing",
-						Description: "A preexisting filesystem",
-					},
-				},
 			},
 		})
 	})
@@ -92,6 +76,9 @@ var _ = Describe("Broker", func() {
 			It("returns the service catalog as appropriate", func() {
 				results, err := broker.Services(ctx)
 				Expect(err).NotTo(HaveOccurred())
+
+				Expect(results).To(HaveLen(1))
+
 				result := results[0]
 				Expect(result.ID).To(Equal("nfs-service-id"))
 				Expect(result.Name).To(Equal("nfs"))
@@ -104,14 +91,6 @@ var _ = Describe("Broker", func() {
 				Expect(result.Plans[0].Name).To(Equal("Existing"))
 				Expect(result.Plans[0].ID).To(Equal("Existing"))
 				Expect(result.Plans[0].Description).To(Equal("A preexisting filesystem"))
-
-				result = results[1]
-				Expect(result.ID).To(Equal("nfs-experimental-service-id"))
-				Expect(result.Name).To(Equal("nfs-experimental"))
-				Expect(result.Tags).To(ContainElement("nfs"))
-				Expect(result.Requires).To(ContainElement(brokerapi.RequiredPermission("volume_mount")))
-
-				Expect(results).To(HaveLen(2))
 			})
 		})
 
@@ -596,33 +575,10 @@ var _ = Describe("Broker", func() {
 				})
 			})
 
-			Context("when the service id is an experimental service", func() {
-				BeforeEach(func() {
-					fakeStore.RetrieveInstanceDetailsReturns(
-						brokerstore.ServiceInstance{
-							ServiceID: "nfs-experimental-service-id",
-							ServiceFingerPrint: map[string]interface{}{
-								nfsbroker.SHARE_KEY: "server:/some-share",
-							},
-						}, nil)
-				})
-
-				It("includes 'experimental' in the service binding mount config", func() {
-					binding, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
-					Expect(err).NotTo(HaveOccurred())
-
-					mc := binding.VolumeMounts[0].Device.MountConfig
-					_, ok := mc[nfsbroker.EXPERIMENTAL_TAG]
-
-					Expect(ok).To(BeTrue())
-				})
-			})
-
 			Context("when using nfs version", func() {
 				BeforeEach(func() {
-
 					serviceInstance := brokerstore.ServiceInstance{
-						ServiceID: "nfs-experimental-service-id",
+						ServiceID: "nfs-service-id",
 						ServiceFingerPrint: map[string]interface{}{
 							nfsbroker.SHARE_KEY:   "server:/some-share",
 							nfsbroker.VERSION_KEY: "4.1",
@@ -645,7 +601,6 @@ var _ = Describe("Broker", func() {
 			})
 
 			Context("when the binding already exists", func() {
-
 				It("doesn't error when binding the same details", func() {
 					fakeStore.IsBindingConflictReturns(false)
 					_, err := broker.Bind(ctx, "some-instance-id", "binding-id", bindDetails)
@@ -863,6 +818,7 @@ var _ = Describe("Broker", func() {
 
 				fakeStore.RetrieveBindingDetailsReturns(bindDetails, nil)
 			})
+
 			It("unbinds a bound service instance from an app", func() {
 				err := broker.Unbind(ctx, "some-instance-id", "binding-id", brokerapi.UnbindDetails{})
 				Expect(err).NotTo(HaveOccurred())
@@ -879,6 +835,7 @@ var _ = Describe("Broker", func() {
 				err := broker.Unbind(ctx, "some-instance-id", "some-other-binding-id", brokerapi.UnbindDetails{})
 				Expect(err).To(Equal(brokerapi.ErrBindingDoesNotExist))
 			})
+
 			It("should write state", func() {
 				previousCallCount := fakeStore.SaveCallCount()
 				err := broker.Unbind(ctx, "some-instance-id", "binding-id", brokerapi.UnbindDetails{})
