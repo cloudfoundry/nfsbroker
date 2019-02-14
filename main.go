@@ -139,6 +139,12 @@ var (
 	dbPassword string
 )
 
+//go:generate counterfeiter -o fakes/retired_store_fake.go . RetiredStore
+type RetiredStore interface {
+	IsRetired() (bool, error)
+	brokerstore.Store
+}
+
 func main() {
 	parseCommandLine()
 	parseEnvironment()
@@ -297,6 +303,15 @@ func createServer(logger lager.Logger) ifrit.Runner {
 		*storeID,
 	)
 
+	retired, err := IsRetired(store)
+	if err != nil {
+		logger.Fatal("check-is-retired-failed", err)
+	}
+
+	if retired {
+		logger.Fatal("retired-store", errors.New("Store is retired"))
+	}
+
 	mounts := nfsbroker.NewNfsBrokerConfigDetails()
 	mounts.ReadConf(*allowedOptions, *defaultOptions)
 	logger.Debug("nfsbroker-startup-config", lager.Data{"config": mounts})
@@ -330,4 +345,11 @@ func ConvertPostgresError(err *pq.Error) string {
 
 func ConvertMySqlError(err mysql.MySQLError) string {
 	return ""
+}
+
+func IsRetired(store brokerstore.Store) (bool, error) {
+	if retiredStore, ok := store.(RetiredStore); ok {
+		return retiredStore.IsRetired()
+	}
+	return false, nil
 }

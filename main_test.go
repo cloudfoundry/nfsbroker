@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"io"
 	"net/http"
 	"os/exec"
@@ -20,9 +21,12 @@ import (
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
+	"code.cloudfoundry.org/goshims/ioutilshim"
 	"code.cloudfoundry.org/goshims/osshim/os_fake"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
+	"code.cloudfoundry.org/nfsbroker/fakes"
+	"code.cloudfoundry.org/service-broker-store/brokerstore"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -296,6 +300,67 @@ var _ = Describe("nfsbroker Main", func() {
 			Expect(catalog.Services[1].Plans[0].ID).To(Equal("09a09260-1df5-4445-9ed7-1ba56dadbbc8"))
 			Expect(catalog.Services[1].Plans[0].Name).To(Equal("Existing"))
 			Expect(catalog.Services[1].Plans[0].Description).To(Equal("A preexisting filesystem"))
+		})
+	})
+
+	Context("#IsRetired", func() {
+		var (
+			store   brokerstore.Store
+			retired bool
+			err     error
+		)
+
+		JustBeforeEach(func() {
+			retired, err = IsRetired(store)
+		})
+
+		Context("when the store is not a RetireableStore", func() {
+			BeforeEach(func() {
+				store = brokerstore.NewFileStore("/tmp/foo", &ioutilshim.IoutilShim{})
+			})
+
+			It("should return false", func() {
+				Expect(err).NotTo(HaveOccurred())
+				Expect(retired).To(BeFalse())
+			})
+		})
+
+		Context("when the store is a RetiredStore", func() {
+			BeforeEach(func() {
+				store = &fakes.FakeRetiredStore{}
+			})
+
+			Context("when the store is retired", func() {
+				BeforeEach(func() {
+					store.(*fakes.FakeRetiredStore).IsRetiredReturns(true, nil)
+				})
+
+				It("should return true", func() {
+					Expect(err).NotTo(HaveOccurred())
+					Expect(retired).To(BeTrue())
+				})
+			})
+
+			Context("when the store is not retired", func() {
+				BeforeEach(func() {
+					store.(*fakes.FakeRetiredStore).IsRetiredReturns(false, nil)
+				})
+
+				It("should return false", func() {
+					Expect(err).NotTo(HaveOccurred())
+					Expect(retired).To(BeFalse())
+				})
+			})
+
+			Context("when the IsRetired check fails", func() {
+				BeforeEach(func() {
+					store.(*fakes.FakeRetiredStore).IsRetiredReturns(false, errors.New("is-retired-failed"))
+				})
+
+				It("should return true", func() {
+					Expect(err).To(MatchError("is-retired-failed"))
+				})
+			})
 		})
 	})
 })
