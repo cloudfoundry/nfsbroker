@@ -1,6 +1,7 @@
 package main
 
 import (
+	"code.cloudfoundry.org/existingvolumebroker"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -8,17 +9,17 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/debugserver"
 	"code.cloudfoundry.org/goshims/osshim"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagerflags"
-	"code.cloudfoundry.org/nfsbroker/nfsbroker"
 	"code.cloudfoundry.org/nfsbroker/utils"
 	"code.cloudfoundry.org/service-broker-store/brokerstore"
-	"github.com/go-sql-driver/mysql"
-	"github.com/lib/pq"
+	vmo "code.cloudfoundry.org/volume-mount-options"
+	vmou "code.cloudfoundry.org/volume-mount-options/utils"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
@@ -312,39 +313,41 @@ func createServer(logger lager.Logger) ifrit.Runner {
 		logger.Fatal("retired-store", errors.New("Store is retired"))
 	}
 
-	mounts := nfsbroker.NewNfsBrokerConfigDetails()
-	mounts.ReadConf(*allowedOptions, *defaultOptions)
-	logger.Debug("nfsbroker-startup-config", lager.Data{"config": mounts})
+	configMask, err := vmo.NewMountOptsMask(
+		strings.Split(*allowedOptions, ","),
+		vmou.ParseOptionStringToMap(*defaultOptions, ":"),
+		map[string]string{
+			"readonly": "ro",
+			"share":    "source",
+		},
+		[]string{},
+		[]string{"source"},
+	)
+	if err != nil {
+		logger.Fatal("creating-config-mask-error", err)
+	}
 
-	config := nfsbroker.NewNfsBrokerConfig(mounts)
+	logger.Debug("nfsbroker-startup-config", lager.Data{"config-mask": configMask})
 
 	services, err := NewServicesFromConfig(*servicesConfig)
 	if err != nil {
 		logger.Fatal("loading-services-config-error", err)
 	}
 
-	serviceBroker := nfsbroker.New(
+	serviceBroker := existingvolumebroker.New(
+		existingvolumebroker.BrokerTypeNFS,
 		logger,
 		services,
-		*dataDir,
 		&osshim.OsShim{},
 		clock.NewClock(),
 		store,
-		config,
+		configMask,
 	)
 
 	credentials := brokerapi.BrokerCredentials{Username: username, Password: password}
 	handler := brokerapi.New(serviceBroker, logger.Session("broker-api"), credentials)
 
 	return http_server.New(*atAddress, handler)
-}
-
-func ConvertPostgresError(err *pq.Error) string {
-	return ""
-}
-
-func ConvertMySqlError(err mysql.MySQLError) string {
-	return ""
 }
 
 func IsRetired(store brokerstore.Store) (bool, error) {
