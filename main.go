@@ -317,7 +317,6 @@ func createServer(logger lager.Logger) ifrit.Runner {
 		strings.Split(*allowedOptions, ","),
 		vmou.ParseOptionStringToMap(*defaultOptions, ":"),
 		map[string]string{
-			"readonly": "ro",
 			"share":    "source",
 		},
 		[]string{},
