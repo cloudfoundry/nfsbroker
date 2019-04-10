@@ -514,6 +514,27 @@ var _ = Describe("Broker", func() {
 				})
 			})
 
+			Context("when the service instance contains a legacy service fingerprint", func() {
+				BeforeEach(func() {
+					serviceInstance := brokerstore.ServiceInstance{
+						ServiceID:          serviceID,
+						ServiceFingerPrint: "server:/some-share",
+					}
+
+					fakeStore.RetrieveInstanceDetailsReturns(serviceInstance, nil)
+
+					bindDetails = brokerapi.BindDetails{
+						AppGUID:       "guid",
+						RawParameters: []byte(`{"uid":"1000","gid":"1000"}`),
+					}
+				})
+
+				It("should not error", func() {
+					_, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
+					Expect(err).NotTo(HaveOccurred())
+				})
+			})
+
 			Context("when the service instance contains username and password", func() {
 				BeforeEach(func() {
 					serviceInstance := brokerstore.ServiceInstance{
