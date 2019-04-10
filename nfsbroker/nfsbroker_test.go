@@ -262,16 +262,14 @@ var _ = Describe("Broker", func() {
 
 		Context(".Deprovision", func() {
 			var (
-				instanceID       string
-				asyncAllowed     bool
-				provisionDetails brokerapi.ProvisionDetails
+				instanceID   string
+				asyncAllowed bool
 
 				err error
 			)
 
 			BeforeEach(func() {
 				instanceID = "some-instance-id"
-				provisionDetails = brokerapi.ProvisionDetails{PlanID: "Existing"}
 				asyncAllowed = true
 
 			})
@@ -302,7 +300,6 @@ var _ = Describe("Broker", func() {
 					configuration := map[string]interface{}{"share": "server:/some-share"}
 					buf := &bytes.Buffer{}
 					_ = json.NewEncoder(buf).Encode(configuration)
-					provisionDetails = brokerapi.ProvisionDetails{PlanID: "Existing", RawParameters: json.RawMessage(buf.Bytes())}
 					asyncAllowed = false
 					fakeStore.RetrieveInstanceDetailsReturns(brokerstore.ServiceInstance{ServiceID: instanceID}, nil)
 					previousSaveCallCount = fakeStore.SaveCallCount()
@@ -515,6 +512,27 @@ var _ = Describe("Broker", func() {
 						Expect(ok).To(BeTrue())
 						Expect(v).To(Equal("2"))
 					})
+				})
+			})
+
+			Context("when the service instance contains a legacy service fingerprint", func() {
+				BeforeEach(func() {
+					serviceInstance := brokerstore.ServiceInstance{
+						ServiceID:          serviceID,
+						ServiceFingerPrint: "server:/some-share",
+					}
+
+					fakeStore.RetrieveInstanceDetailsReturns(serviceInstance, nil)
+
+					bindDetails = brokerapi.BindDetails{
+						AppGUID:       "guid",
+						RawParameters: []byte(`{"uid":"1000","gid":"1000"}`),
+					}
+				})
+
+				It("should not error", func() {
+					_, err := broker.Bind(ctx, instanceID, "binding-id", bindDetails)
+					Expect(err).NotTo(HaveOccurred())
 				})
 			})
 
@@ -851,12 +869,10 @@ var _ = Describe("Broker", func() {
 
 		Context(".Unbind", func() {
 			var (
-				instanceID  string
 				bindDetails brokerapi.BindDetails
 			)
 
 			BeforeEach(func() {
-				instanceID = "some-instance-id"
 				bindParameters := map[string]interface{}{
 					nfsbroker.Username: "principal name",
 					nfsbroker.Secret:   "some keytab data",

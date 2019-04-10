@@ -385,19 +385,12 @@ func getFingerprint(rawObject interface{}) (map[string]interface{}, error) {
 	fingerprint, ok := rawObject.(map[string]interface{})
 	if ok {
 		return fingerprint, nil
+	} else {
+		// legacy service instances only store the "share" key in the service fingerprint.
+		share, ok := rawObject.(string)
+		if ok {
+			return map[string]interface{}{"share": share}, nil
+		}
+		return nil, errors.New("unable to deserialize service fingerprint")
 	}
-
-	// casting didn't work--try marshalling and unmarshalling as the correct type
-	rawJson, err := json.Marshal(rawObject)
-	if err != nil {
-		return nil, err
-	}
-
-	fingerprint = map[string]interface{}{}
-	err = json.Unmarshal(rawJson, &fingerprint)
-	if err != nil {
-		return nil, err
-	}
-
-	return fingerprint, nil
 }
