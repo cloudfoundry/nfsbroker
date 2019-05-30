@@ -2,6 +2,7 @@ package main
 
 import (
 	"code.cloudfoundry.org/existingvolumebroker"
+	svc "code.cloudfoundry.org/nfsbroker/services"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -317,7 +318,7 @@ func createServer(logger lager.Logger) ifrit.Runner {
 		strings.Split(*allowedOptions, ","),
 		vmou.ParseOptionStringToMap(*defaultOptions, ":"),
 		map[string]string{
-			"share":    "source",
+			"share": "source",
 		},
 		[]string{},
 		[]string{"source"},
@@ -328,7 +329,7 @@ func createServer(logger lager.Logger) ifrit.Runner {
 
 	logger.Debug("nfsbroker-startup-config", lager.Data{"config-mask": configMask})
 
-	services, err := NewServicesFromConfig(*servicesConfig)
+	services, err := svc.NewServicesFromConfig(*servicesConfig)
 	if err != nil {
 		logger.Fatal("loading-services-config-error", err)
 	}

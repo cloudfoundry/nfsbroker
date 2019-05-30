@@ -1,2 +1,6 @@
 nfs-broker.iml
 bin/*
+vendor/
+.idea/
+.vs/
+.vscode/
