@@ -21,12 +21,10 @@ import (
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
-	"code.cloudfoundry.org/goshims/ioutilshim"
 	"code.cloudfoundry.org/goshims/osshim/os_fake"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/nfsbroker/fakes"
-	"code.cloudfoundry.org/service-broker-store/brokerstore"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -305,18 +303,22 @@ var _ = Describe("nfsbroker Main", func() {
 
 	Context("#IsRetired", func() {
 		var (
-			store   brokerstore.Store
-			retired bool
-			err     error
+			fakeRetiredStore *fakes.FakeRetiredStore
+			retired          bool
+			err              error
 		)
 
 		JustBeforeEach(func() {
-			retired, err = IsRetired(store)
+			retired, err = IsRetired(fakeRetiredStore)
+		})
+
+		BeforeEach(func() {
+			fakeRetiredStore = &fakes.FakeRetiredStore{}
 		})
 
 		Context("when the store is not a RetireableStore", func() {
 			BeforeEach(func() {
-				store = brokerstore.NewFileStore("/tmp/foo", &ioutilshim.IoutilShim{})
+				fakeRetiredStore.IsRetiredReturns(false, nil)
 			})
 
 			It("should return false", func() {
@@ -326,13 +328,9 @@ var _ = Describe("nfsbroker Main", func() {
 		})
 
 		Context("when the store is a RetiredStore", func() {
-			BeforeEach(func() {
-				store = &fakes.FakeRetiredStore{}
-			})
-
 			Context("when the store is retired", func() {
 				BeforeEach(func() {
-					store.(*fakes.FakeRetiredStore).IsRetiredReturns(true, nil)
+					fakeRetiredStore.IsRetiredReturns(true, nil)
 				})
 
 				It("should return true", func() {
@@ -343,7 +341,7 @@ var _ = Describe("nfsbroker Main", func() {
 
 			Context("when the store is not retired", func() {
 				BeforeEach(func() {
-					store.(*fakes.FakeRetiredStore).IsRetiredReturns(false, nil)
+					fakeRetiredStore.IsRetiredReturns(false, nil)
 				})
 
 				It("should return false", func() {
@@ -354,7 +352,7 @@ var _ = Describe("nfsbroker Main", func() {
 
 			Context("when the IsRetired check fails", func() {
 				BeforeEach(func() {
-					store.(*fakes.FakeRetiredStore).IsRetiredReturns(false, errors.New("is-retired-failed"))
+					fakeRetiredStore.IsRetiredReturns(false, errors.New("is-retired-failed"))
 				})
 
 				It("should return true", func() {

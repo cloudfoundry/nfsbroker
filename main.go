@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"code.cloudfoundry.org/clock"
@@ -251,8 +250,6 @@ func getByAlias(data map[string]interface{}, keys ...string) interface{} {
 }
 
 func createServer(logger lager.Logger) ifrit.Runner {
-	fileName := filepath.Join(*dataDir, fmt.Sprintf("nfs-services.json"))
-
 	// if we are CF pushed
 	if *cfServiceName != "" {
 		parseVcapServices(logger, &osshim.OsShim{})
@@ -300,7 +297,6 @@ func createServer(logger lager.Logger) ifrit.Runner {
 		*uaaClientID,
 		*uaaClientSecret,
 		uaaCACert,
-		fileName,
 		*storeID,
 	)
 
