@@ -250,8 +250,7 @@ func getByAlias(data map[string]interface{}, keys ...string) interface{} {
 }
 
 func createServer(logger lager.Logger) ifrit.Runner {
-	// if we are CF pushed
-	if *cfServiceName != "" {
+	if isCfPushed() {
 		parseVcapServices(logger, &osshim.OsShim{})
 	}
 
@@ -313,7 +312,7 @@ func createServer(logger lager.Logger) ifrit.Runner {
 		strings.Split(*allowedOptions, ","),
 		vmou.ParseOptionStringToMap(*defaultOptions, ":"),
 		map[string]string{
-			"share":    "source",
+			"share": "source",
 		},
 		[]string{},
 		[]string{"source"},
@@ -343,6 +342,10 @@ func createServer(logger lager.Logger) ifrit.Runner {
 	handler := brokerapi.New(serviceBroker, logger.Session("broker-api"), credentials)
 
 	return http_server.New(*atAddress, handler)
+}
+
+func isCfPushed() bool {
+	return *cfServiceName != ""
 }
 
 func IsRetired(store brokerstore.Store) (bool, error) {
