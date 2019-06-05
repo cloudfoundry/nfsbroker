@@ -231,7 +231,7 @@ var _ = Describe("nfsbroker Main", func() {
 		)
 
 		BeforeEach(func() {
-			listenAddr = "0.0.0.0:" + strconv.Itoa(8999+GinkgoParallelNode())
+			listenAddr = "0.0.0.0:" + strconv.Itoa(7999+GinkgoParallelNode())
 			username = "admin"
 			password = "password"
 			tempDir = os.TempDir()
@@ -239,6 +239,11 @@ var _ = Describe("nfsbroker Main", func() {
 			os.Setenv("USERNAME", username)
 			os.Setenv("PASSWORD", password)
 
+			args = append(args, "-credhubURL", "https://localhost:9000")
+			args = append(args, "-credhubCACertPath", "/tmp/server_ca_cert.pem")
+
+			args = append(args, "-uaaClientID", "credhub_client")
+			args = append(args, "-uaaClientSecret", "secret")
 			args = append(args, "-listenAddr", listenAddr)
 			args = append(args, "-dataDir", tempDir)
 			args = append(args, "-servicesConfig", "./default_services.json")
