@@ -46,36 +46,36 @@ var servicesConfig = flag.String(
 var dbDriver = flag.String(
 	"dbDriver",
 	"",
-	"(optional) database driver name when using SQL to store broker state",
+	"[DEPRECATED] (optional) database driver name when using SQL to store broker state",
 )
 
 var dbHostname = flag.String(
 	"dbHostname",
 	"",
-	"(optional) database hostname when using SQL to store broker state",
+	"[DEPRECATED] (optional) database hostname when using SQL to store broker state",
 )
 var dbPort = flag.String(
 	"dbPort",
 	"",
-	"(optional) database port when using SQL to store broker state",
+	"[DEPRECATED] (optional) database port when using SQL to store broker state",
 )
 
 var dbName = flag.String(
 	"dbName",
 	"",
-	"(optional) database name when using SQL to store broker state",
+	"[DEPRECATED] (optional) database name when using SQL to store broker state",
 )
 
 var dbCACertPath = flag.String(
 	"dbCACertPath",
 	"",
-	"(optional) Path to CA Cert for database SSL connection",
+	"[DEPRECATED] (optional) Path to CA Cert for database SSL connection",
 )
 
 var dbSkipHostnameValidation = flag.Bool(
 	"dbSkipHostnameValidation",
 	false,
-	"(optional) skip DB server hostname validation when connecting over TLS",
+	"[DEPRECATED] (optional) skip DB server hostname validation when connecting over TLS",
 )
 
 var cfServiceName = flag.String(
