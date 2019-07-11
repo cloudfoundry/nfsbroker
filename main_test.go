@@ -254,6 +254,7 @@ var _ = Describe("nfsbroker Main", func() {
 				Name:       "nfsbroker",
 				Command:    exec.Command(binaryPath, args...),
 				StartCheck: "started",
+				StartCheckTimeout: 20 * time.Second,
 			})
 			process = ginkgomon.Invoke(volmanRunner)
 		})
