@@ -15,7 +15,7 @@ var _ = Describe("Services", func() {
 
 	BeforeEach(func() {
 		var err error
-		services, err = NewServicesFromConfig("./default_services.json")
+		services, err = NewServicesFromConfig("./test_default_services.json")
 		Expect(err).NotTo(HaveOccurred())
 	})
 

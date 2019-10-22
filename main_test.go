@@ -213,7 +213,7 @@ var _ = Describe("nfsbroker Main", func() {
 			args = append(args, "-uaaClientSecret", "secret")
 			args = append(args, "-listenAddr", listenAddr)
 			args = append(args, "-dataDir", tempDir)
-			args = append(args, "-servicesConfig", "./default_services.json")
+			args = append(args, "-servicesConfig", "./test_default_services.json")
 		})
 
 		JustBeforeEach(func() {
