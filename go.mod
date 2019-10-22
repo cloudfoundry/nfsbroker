@@ -26,4 +26,5 @@ require (
 	github.com/tedsuo/ifrit v0.0.0-20191009134036-9a97d0632f00
 	golang.org/x/crypto v0.0.0-20191010185427-af544f31c8ac // indirect
 	google.golang.org/appengine v1.6.5 // indirect
+	gopkg.in/yaml.v2 v2.2.1
 )
