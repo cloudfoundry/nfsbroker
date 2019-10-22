@@ -43,41 +43,6 @@ var servicesConfig = flag.String(
 	"[REQUIRED] - Path to services config to register with cloud controller",
 )
 
-var dbDriver = flag.String(
-	"dbDriver",
-	"",
-	"[DEPRECATED] (optional) database driver name when using SQL to store broker state",
-)
-
-var dbHostname = flag.String(
-	"dbHostname",
-	"",
-	"[DEPRECATED] (optional) database hostname when using SQL to store broker state",
-)
-var dbPort = flag.String(
-	"dbPort",
-	"",
-	"[DEPRECATED] (optional) database port when using SQL to store broker state",
-)
-
-var dbName = flag.String(
-	"dbName",
-	"",
-	"[DEPRECATED] (optional) database name when using SQL to store broker state",
-)
-
-var dbCACertPath = flag.String(
-	"dbCACertPath",
-	"",
-	"[DEPRECATED] (optional) Path to CA Cert for database SSL connection",
-)
-
-var dbSkipHostnameValidation = flag.Bool(
-	"dbSkipHostnameValidation",
-	false,
-	"[DEPRECATED] (optional) skip DB server hostname validation when connecting over TLS",
-)
-
 var cfServiceName = flag.String(
 	"cfServiceName",
 	"",
@@ -135,8 +100,6 @@ var storeID = flag.String(
 var (
 	username   string
 	password   string
-	dbUsername string
-	dbPassword string
 )
 
 //go:generate counterfeiter -o fakes/retired_store_fake.go . RetiredStore
@@ -178,13 +141,11 @@ func parseCommandLine() {
 func parseEnvironment() {
 	username, _ = os.LookupEnv("USERNAME")
 	password, _ = os.LookupEnv("PASSWORD")
-	dbUsername, _ = os.LookupEnv("DB_USERNAME")
-	dbPassword, _ = os.LookupEnv("DB_PASSWORD")
 }
 
 func checkParams() {
-	if *dataDir == "" && *dbDriver == "" && *credhubURL == "" {
-		fmt.Fprint(os.Stderr, "\nERROR: Either dataDir, dbDriver or credhubURL parameters must be provided.\n\n")
+	if *dataDir == "" && *credhubURL == "" {
+		fmt.Fprint(os.Stderr, "\nERROR: Either dataDir or credhubURL parameters must be provided.\n\n")
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -204,10 +165,6 @@ func newLogger() (lager.Logger, *lager.ReconfigurableSink) {
 }
 
 func parseVcapServices(logger lager.Logger, os osshim.Os) {
-	if *dbDriver == "" {
-		logger.Fatal("missing-db-driver-parameter", errors.New("dbDriver parameter is required for cf deployed broker"))
-	}
-
 	// populate db parameters from VCAP_SERVICES and pitch a fit if there isn't one.
 	services, hasValue := os.LookupEnv("VCAP_SERVICES")
 	if !hasValue {
@@ -230,13 +187,6 @@ func parseVcapServices(logger lager.Logger, os osshim.Os) {
 	credentials := stuff3["credentials"].(map[string]interface{})
 	logger.Debug("credentials-parsed", lager.Data{"credentials": credentials})
 
-	dbUsername = getByAlias(credentials, "user", "username").(string)
-	dbPassword = getByAlias(credentials, "pass", "password").(string)
-	*dbHostname = getByAlias(credentials, "host", "hostname").(string)
-	if *dbPort, ok = getByAlias(credentials, "port").(string); !ok {
-		*dbPort = fmt.Sprintf("%.0f", getByAlias(credentials, "port").(float64))
-	}
-	*dbName = getByAlias(credentials, "name", "db_name").(string)
 }
 
 func getByAlias(data map[string]interface{}, keys ...string) interface{} {
@@ -252,15 +202,6 @@ func getByAlias(data map[string]interface{}, keys ...string) interface{} {
 func createServer(logger lager.Logger) ifrit.Runner {
 	if isCfPushed() {
 		parseVcapServices(logger, &osshim.OsShim{})
-	}
-
-	var dbCACert string
-	if *dbCACertPath != "" {
-		b, err := ioutil.ReadFile(*dbCACertPath)
-		if err != nil {
-			logger.Fatal("cannot-read-db-ca-cert", err, lager.Data{"path": *dbCACertPath})
-		}
-		dbCACert = string(b)
 	}
 
 	var credhubCACert string
@@ -283,14 +224,14 @@ func createServer(logger lager.Logger) ifrit.Runner {
 
 	store := brokerstore.NewStore(
 		logger,
-		*dbDriver,
-		dbUsername,
-		dbPassword,
-		*dbHostname,
-		*dbPort,
-		*dbName,
-		dbCACert,
-		*dbSkipHostnameValidation,
+		"",
+		"",
+		"",
+		"",
+		"1",
+		"",
+		"",
+		false,
 		*credhubURL,
 		credhubCACert,
 		*uaaClientID,

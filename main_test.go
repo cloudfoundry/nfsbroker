@@ -23,8 +23,6 @@ import (
 	"github.com/tedsuo/ifrit/ginkgomon"
 
 	"code.cloudfoundry.org/goshims/osshim/os_fake"
-	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/nfsbroker/fakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -124,13 +122,10 @@ var _ = Describe("nfsbroker Main", func() {
 		var (
 			port   string
 			fakeOs os_fake.FakeOs = os_fake.FakeOs{}
-			logger lager.Logger
 		)
 
 		BeforeEach(func() {
-			*dbDriver = "postgres"
 			*cfServiceName = "postgresql"
-			logger = lagertest.NewTestLogger("test-broker-main")
 		})
 		JustBeforeEach(func() {
 			env := fmt.Sprintf(`
@@ -162,35 +157,6 @@ var _ = Describe("nfsbroker Main", func() {
 			fakeOs.LookupEnvReturns(env, true)
 		})
 
-		Context("when port is a string", func() {
-			BeforeEach(func() {
-				port = `"9999"`
-			})
-
-			It("should succeed", func() {
-				Expect(func() { parseVcapServices(logger, &fakeOs) }).NotTo(Panic())
-				Expect(*dbPort).To(Equal("9999"))
-			})
-		})
-		Context("when port is a number", func() {
-			BeforeEach(func() {
-				port = `9999`
-			})
-
-			It("should succeed", func() {
-				Expect(func() { parseVcapServices(logger, &fakeOs) }).NotTo(Panic())
-				Expect(*dbPort).To(Equal("9999"))
-			})
-		})
-		Context("when port is an array", func() {
-			BeforeEach(func() {
-				port = `[9999]`
-			})
-
-			It("should panic", func() {
-				Expect(func() { parseVcapServices(logger, &fakeOs) }).To(Panic())
-			})
-		})
 	})
 
 	Context("Missing required args", func() {
@@ -201,13 +167,13 @@ var _ = Describe("nfsbroker Main", func() {
 			volmanRunner := failRunner{
 				Name:       "nfsbroker",
 				Command:    exec.Command(binaryPath, args...),
-				StartCheck: "Either dataDir, dbDriver or credhubURL parameters must be provided.",
+				StartCheck: "Either dataDir or credhubURL parameters must be provided.",
 			}
 			process = ifrit.Invoke(volmanRunner)
 		})
 
 		It("shows usage when servicesConfig is not provided", func() {
-			args := []string{"-dbDriver", "mysql"}
+			args := []string{"-credhubURL", "some-credhub"}
 			volmanRunner := failRunner{
 				Name:       "nfsbroker",
 				Command:    exec.Command(binaryPath, args...),
