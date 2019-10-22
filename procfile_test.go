@@ -14,6 +14,7 @@ import (
 
 var _ = Describe("Procfile", func() {
 	var session *gexec.Session
+	var command *exec.Cmd
 
 	BeforeEach(func(){
 		compiledPath, err := gexec.Build("code.cloudfoundry.org/nfsbroker")
@@ -36,13 +37,7 @@ var _ = Describe("Procfile", func() {
 
 		_, err = io.Copy(copiedFile, brokerBinary)
 		Expect(err).NotTo(HaveOccurred())
-	})
 
-	AfterEach(func(){
-		session.Kill()
-	})
-
-	It("runs successfully", func(){
 		procFile, err := os.Open("Procfile")
 		Expect(err).NotTo(HaveOccurred())
 
@@ -54,14 +49,21 @@ var _ = Describe("Procfile", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		println(procfile["web"].(string))
-		command := exec.Command("bin/nfsbroker",
+		command = exec.Command("bin/nfsbroker",
 			"-credhubURL",
 			"https://localhost:9000",
 			"-credhubCACertPath",
 			"/tmp/server_ca_cert.pem",
 			"--servicesConfig",
 			"default_services.json")
+	})
 
+	AfterEach(func(){
+		session.Kill()
+	})
+
+	It("runs successfully", func(){
+		var err error
 		session, err = gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session).Should(gbytes.Say("nfsbroker.started"))
