@@ -16,14 +16,11 @@ code.cloudfoundry.org/debugserver
 code.cloudfoundry.org/existingvolumebroker
 # code.cloudfoundry.org/goshims v0.0.0-20190529192408-bb24d2ef71ff
 code.cloudfoundry.org/goshims/osshim
-code.cloudfoundry.org/goshims/ioutilshim
-code.cloudfoundry.org/goshims/mysqlshim
-code.cloudfoundry.org/goshims/sqlshim
 code.cloudfoundry.org/goshims/osshim/os_fake
 # code.cloudfoundry.org/lager v2.0.0+incompatible
 code.cloudfoundry.org/lager
 code.cloudfoundry.org/lager/lagerflags
-# code.cloudfoundry.org/service-broker-store v0.0.0-20190610232902-34215b620ad1
+# code.cloudfoundry.org/service-broker-store v0.0.0-20191022224831-b7b13dc8c343
 code.cloudfoundry.org/service-broker-store/brokerstore
 code.cloudfoundry.org/service-broker-store/brokerstore/credhub_shims
 # code.cloudfoundry.org/volume-mount-options v0.0.0-20190906175603-989332e3b8fa
@@ -33,8 +30,6 @@ code.cloudfoundry.org/volume-mount-options/utils
 github.com/cloudfoundry/go-socks5
 # github.com/cloudfoundry/socks5-proxy v0.2.0
 github.com/cloudfoundry/socks5-proxy
-# github.com/go-sql-driver/mysql v1.4.1
-github.com/go-sql-driver/mysql
 # github.com/gorilla/mux v1.7.3
 github.com/gorilla/mux
 # github.com/hashicorp/go-version v1.2.0
@@ -90,7 +85,7 @@ github.com/tedsuo/ifrit/grouper
 github.com/tedsuo/ifrit/http_server
 github.com/tedsuo/ifrit/sigmon
 github.com/tedsuo/ifrit/ginkgomon
-# golang.org/x/crypto v0.0.0-20191010185427-af544f31c8ac
+# golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/ssh
@@ -128,8 +123,6 @@ golang.org/x/text/runes
 golang.org/x/text/internal/language
 golang.org/x/text/internal/language/compact
 golang.org/x/text/internal/tag
-# google.golang.org/appengine v1.6.5
-google.golang.org/appengine/cloudsql
 # gopkg.in/fsnotify.v1 v1.4.7
 gopkg.in/fsnotify.v1
 # gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7
