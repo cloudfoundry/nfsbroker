@@ -23,8 +23,6 @@ code.cloudfoundry.org/goshims/osshim/os_fake
 # code.cloudfoundry.org/lager v2.0.0+incompatible
 code.cloudfoundry.org/lager
 code.cloudfoundry.org/lager/lagerflags
-code.cloudfoundry.org/lager/lagertest
-code.cloudfoundry.org/lager/lagerctx
 # code.cloudfoundry.org/service-broker-store v0.0.0-20190610232902-34215b620ad1
 code.cloudfoundry.org/service-broker-store/brokerstore
 code.cloudfoundry.org/service-broker-store/brokerstore/credhub_shims
