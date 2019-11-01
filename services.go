@@ -16,6 +16,7 @@ type services struct {
 }
 
 func NewServicesFromConfig(pathToServicesConfig string) (Services, error) {
+	/* #nosec */
 	contents, err := ioutil.ReadFile(pathToServicesConfig)
 	if err != nil {
 		return nil, err
