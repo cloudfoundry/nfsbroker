@@ -29,11 +29,6 @@ const (
 	VERSION_KEY            = "version"
 )
 
-const (
-	Username string = "kerberosPrincipal"
-	Secret   string = "kerberosKeytab"
-)
-
 type lock interface {
 	Lock()
 	Unlock()
