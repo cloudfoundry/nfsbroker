@@ -19,6 +19,8 @@ docker run -t -i -v ~/workspace/nfsbroker:/nfsbroker -v ~/workspace/credhub:/cre
       sleep 10;
   done
 
+> cp credhub/applications/credhub-api/src/test/resources/server_ca_cert.pem /tmp/server_ca_cert.pem
+
 > cd nfsbroker
 > ginkgo -r -keepGoing -p -trace -randomizeAllSpecs -progress .
 ```
