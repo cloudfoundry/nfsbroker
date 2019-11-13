@@ -6,15 +6,14 @@ For details on how to use this broker, please refer to [the nfs-volume-release R
 # Running tests
 
 ```
-docker run -t -i -v ~/workspace/nfsbroker:/nfsbroker -v ~/workspace/credhub:/credhub --privileged  cfpersi/nfs-broker-tests bash
+docker run --name=nfsbroker-dev -t -i -v ~/workspace/nfsbroker:/nfsbroker -v ~/workspace/credhub:/credhub --privileged  cfpersi/nfs-broker-tests bash
 
-> {
-      cd credhub
-      ./scripts/start_server.sh -Dspring.profiles.active=dev,dev-h2 > /tmp/start_credhub.log 2>&1
-      kill -9 "$(ps --pid $$ -oppid=)"; exit
-  }&
+> cd credhub
+  ./scripts/start_server.sh -Dspring.profiles.active=dev,dev-h2
 
+Back on the host machine. (In a separate terminal tab)
 
+> docker exec -it nfsbroker-dev bash
 > until curl -f -v http://localhost:9001/health; do
       sleep 10;
   done
