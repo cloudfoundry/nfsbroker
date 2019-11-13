@@ -16,6 +16,8 @@ code.cloudfoundry.org/service-broker-store v0.0.0-20191022224831-b7b13dc8c343 h1
 code.cloudfoundry.org/service-broker-store v0.0.0-20191022224831-b7b13dc8c343/go.mod h1:phB6wKvj/3t2uwj+XijrMivENH1bpgxFf5uS6qLJeBY=
 code.cloudfoundry.org/volume-mount-options v0.0.0-20190906175603-989332e3b8fa h1:45493Tjlyo0MdnYc8/sqM23EokpcNcmSHQC+gNAW+ZQ=
 code.cloudfoundry.org/volume-mount-options v0.0.0-20190906175603-989332e3b8fa/go.mod h1:O+NYVIDS0y3ckHcTBbuzKOJFOnEMkHmuG9nyfTdNg9Y=
+code.cloudfoundry.org/volume-mount-options v0.0.0-20191112224024-20b5adcd41a3 h1:2vbVc0cMwbr2c92FM8EAEITbY0SVsx+thyqjT/sf7Kw=
+code.cloudfoundry.org/volume-mount-options v0.0.0-20191112224024-20b5adcd41a3/go.mod h1:ydxOg1SOONU1OWEORaW1ovk+XYoMmMKB9wgVOiZuFyA=
 github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 h1:DDGfHa7BWjL4YnC6+E63dPcxHo2sUxDIu8g3QgEJdRY=
 github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869/go.mod h1:Ekp36dRnpXw/yCqJaO+ZrUyxD+3VXMFFr56k5XYrpB4=
 github.com/bmizerany/pat v0.0.0-20170815010413-6226ea591a40 h1:y4B3+GPxKlrigF1ha5FFErxK+sr6sWxQovRMzwMhejo=
