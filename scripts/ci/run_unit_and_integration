@@ -16,5 +16,5 @@ done
 cp credhub/applications/credhub-api/src/test/resources/server_ca_cert.pem /tmp/server_ca_cert.pem
 
 pushd nfsbroker
-    ginkgo -r -keepGoing -p -trace -randomizeAllSpecs -progress
+    ginkgo -mod vendor -r -keepGoing -p -trace -randomizeAllSpecs -progress
 popd
