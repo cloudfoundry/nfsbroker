@@ -6,6 +6,8 @@ code.cloudfoundry.org/debugserver v0.0.0-20180612203758-a3ba348dfede h1:/vMWnzgj
 code.cloudfoundry.org/debugserver v0.0.0-20180612203758-a3ba348dfede/go.mod h1:TotxfVIqTDwSnfxRc2ksk8uFZs5vhIN8Ooy3RdbsQF8=
 code.cloudfoundry.org/existingvolumebroker v0.0.0-20191105200250-b1c4bfa69d43 h1:0nTykiqMAFNFdrWT/Irg6OW7ZtU3/yDgSN5Q+sb8LrQ=
 code.cloudfoundry.org/existingvolumebroker v0.0.0-20191105200250-b1c4bfa69d43/go.mod h1:j9UbMkDFzroIoGCAMkN3CTmkiM/wrJLsisxzJsKKDH8=
+code.cloudfoundry.org/existingvolumebroker v0.0.0-20191202182552-82ecd7769556 h1:3dL7C+0wi7w8hscryTFxYbm2cqw+I51sKlN5KS+hg68=
+code.cloudfoundry.org/existingvolumebroker v0.0.0-20191202182552-82ecd7769556/go.mod h1:HsOQNPrrZ8YTzsktQgsNBk6cJ++e8KIDqk0DMzayBoQ=
 code.cloudfoundry.org/goshims v0.0.0-20190529192408-bb24d2ef71ff h1:mM+PDE9FenEujN8i1CQS6dkN4PgVp269vFxpWkt3op8=
 code.cloudfoundry.org/goshims v0.0.0-20190529192408-bb24d2ef71ff/go.mod h1:p+Q0ZCTdX+nJ5w8bXZjFicVtUEnTX7kRL8viv+DXmR0=
 code.cloudfoundry.org/lager v1.1.1-0.20191008172124-a9afc05ee5be/go.mod h1:O2sS7gKP3HM2iemG+EnwvyNQK7pTSC6Foi4QiMp9sSk=
@@ -16,6 +18,7 @@ code.cloudfoundry.org/service-broker-store v0.0.0-20191022224831-b7b13dc8c343 h1
 code.cloudfoundry.org/service-broker-store v0.0.0-20191022224831-b7b13dc8c343/go.mod h1:phB6wKvj/3t2uwj+XijrMivENH1bpgxFf5uS6qLJeBY=
 code.cloudfoundry.org/volume-mount-options v0.0.0-20190906175603-989332e3b8fa h1:45493Tjlyo0MdnYc8/sqM23EokpcNcmSHQC+gNAW+ZQ=
 code.cloudfoundry.org/volume-mount-options v0.0.0-20190906175603-989332e3b8fa/go.mod h1:O+NYVIDS0y3ckHcTBbuzKOJFOnEMkHmuG9nyfTdNg9Y=
+code.cloudfoundry.org/volume-mount-options v0.0.0-20191112224024-20b5adcd41a3/go.mod h1:ydxOg1SOONU1OWEORaW1ovk+XYoMmMKB9wgVOiZuFyA=
 code.cloudfoundry.org/volume-mount-options v0.0.0-20191114202258-e09e839f17af h1:VfHK+JvyoJ+W/ZZSDysBbZM4IyiA5G2HoRG4Y4ri8DY=
 code.cloudfoundry.org/volume-mount-options v0.0.0-20191114202258-e09e839f17af/go.mod h1:ydxOg1SOONU1OWEORaW1ovk+XYoMmMKB9wgVOiZuFyA=
 github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 h1:DDGfHa7BWjL4YnC6+E63dPcxHo2sUxDIu8g3QgEJdRY=

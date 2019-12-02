@@ -230,7 +230,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 				err := errors.New(fmt.Sprintf("bind configuration contains the following invalid option: ['%s']", k))
 				logger.Error("err-override-not-allowed-in-bind", err, lager.Data{"key": k})
 				return brokerapi.Binding{}, brokerapi.NewFailureResponse(
-					err, http.StatusUnprocessableEntity, "invalid-raw-params",
+					err, http.StatusBadRequest, "invalid-raw-params",
 				)
 
 			}
@@ -247,7 +247,7 @@ func (b *Broker) Bind(context context.Context, instanceID string, bindingID stri
 	mountOpts, err := vmo.NewMountOpts(opts, b.configMask)
 	if err != nil {
 		logger.Error("error-generating-mount-options", err)
-		return brokerapi.Binding{}, err
+		return brokerapi.Binding{}, brokerapi.NewFailureResponse(err, http.StatusBadRequest, "invalid-params")
 	}
 
 	if b.bindingConflicts(bindingID, bindDetails) {
