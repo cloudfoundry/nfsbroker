@@ -11,7 +11,7 @@ require (
 	code.cloudfoundry.org/service-broker-store v0.0.0-20191022224831-b7b13dc8c343
 	code.cloudfoundry.org/volume-mount-options v0.0.0-20191114202258-e09e839f17af
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
-	github.com/onsi/ginkgo v1.10.3
+	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.7.1
 	github.com/pivotal-cf/brokerapi v2.0.5+incompatible
 	github.com/tedsuo/ifrit v0.0.0-20191009134036-9a97d0632f00
