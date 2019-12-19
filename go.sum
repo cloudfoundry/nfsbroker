@@ -25,6 +25,8 @@ code.cloudfoundry.org/volume-mount-options v0.0.0-20191114202258-e09e839f17af h1
 code.cloudfoundry.org/volume-mount-options v0.0.0-20191114202258-e09e839f17af/go.mod h1:ydxOg1SOONU1OWEORaW1ovk+XYoMmMKB9wgVOiZuFyA=
 code.cloudfoundry.org/volume-mount-options v1.0.0 h1:5UOAbadWb+3eTuiOSJB2h1x7bPbY8RlcdnaeooPV8OU=
 code.cloudfoundry.org/volume-mount-options v1.0.0/go.mod h1:mN++KrULBSjlhHK3WptZzm3S4xi5txyHPQaFlb1H2mU=
+code.cloudfoundry.org/volume-mount-options v1.0.1-0.20191219180154-29bfca66bda5 h1:tgP6Db3YRdfGToj1Bh4teD7OyN5tEwsHDki517HXjwo=
+code.cloudfoundry.org/volume-mount-options v1.0.1-0.20191219180154-29bfca66bda5/go.mod h1:P25wuYKuzciDac79anE7Y7YiM130Fer6bsm+04Thw0U=
 github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 h1:DDGfHa7BWjL4YnC6+E63dPcxHo2sUxDIu8g3QgEJdRY=
 github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869/go.mod h1:Ekp36dRnpXw/yCqJaO+ZrUyxD+3VXMFFr56k5XYrpB4=
 github.com/bmizerany/pat v0.0.0-20170815010413-6226ea591a40 h1:y4B3+GPxKlrigF1ha5FFErxK+sr6sWxQovRMzwMhejo=
