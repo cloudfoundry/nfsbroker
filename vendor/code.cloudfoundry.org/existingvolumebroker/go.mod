@@ -8,8 +8,8 @@ require (
 	code.cloudfoundry.org/volume-mount-options v0.0.0-20191112224024-20b5adcd41a3
 	github.com/go-sql-driver/mysql v1.4.1 // indirect
 	github.com/google/gofuzz v1.0.0
-	github.com/onsi/ginkgo v1.10.3
-	github.com/onsi/gomega v1.7.1
+	github.com/onsi/ginkgo v1.11.0
+	github.com/onsi/gomega v1.8.1
 	github.com/pivotal-cf/brokerapi v2.0.5+incompatible
 	github.com/tedsuo/ifrit v0.0.0-20191009134036-9a97d0632f00
 	google.golang.org/appengine v1.6.5 // indirect
