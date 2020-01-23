@@ -5,7 +5,7 @@ go 1.12
 require (
 	code.cloudfoundry.org/clock v0.0.0-20180518195852-02e53af36e6c
 	code.cloudfoundry.org/debugserver v0.0.0-20180612203758-a3ba348dfede
-	code.cloudfoundry.org/existingvolumebroker v0.0.0-20191219181040-fe34de51280e
+	code.cloudfoundry.org/existingvolumebroker v0.0.0-20200123193618-3b99e6eaa29d
 	code.cloudfoundry.org/goshims v0.0.0-20190529192408-bb24d2ef71ff
 	code.cloudfoundry.org/lager v2.0.0+incompatible
 	code.cloudfoundry.org/service-broker-store v0.0.0-20191022224831-b7b13dc8c343

@@ -12,7 +12,7 @@ code.cloudfoundry.org/credhub-cli/credhub/server
 code.cloudfoundry.org/credhub-cli/errors
 # code.cloudfoundry.org/debugserver v0.0.0-20180612203758-a3ba348dfede
 code.cloudfoundry.org/debugserver
-# code.cloudfoundry.org/existingvolumebroker v0.0.0-20191219181040-fe34de51280e
+# code.cloudfoundry.org/existingvolumebroker v0.0.0-20200123193618-3b99e6eaa29d
 code.cloudfoundry.org/existingvolumebroker
 # code.cloudfoundry.org/goshims v0.0.0-20190529192408-bb24d2ef71ff
 code.cloudfoundry.org/goshims/osshim
