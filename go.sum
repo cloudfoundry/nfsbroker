@@ -27,6 +27,8 @@ code.cloudfoundry.org/volume-mount-options v1.0.0 h1:5UOAbadWb+3eTuiOSJB2h1x7bPb
 code.cloudfoundry.org/volume-mount-options v1.0.0/go.mod h1:mN++KrULBSjlhHK3WptZzm3S4xi5txyHPQaFlb1H2mU=
 code.cloudfoundry.org/volume-mount-options v1.0.1-0.20191219180154-29bfca66bda5 h1:tgP6Db3YRdfGToj1Bh4teD7OyN5tEwsHDki517HXjwo=
 code.cloudfoundry.org/volume-mount-options v1.0.1-0.20191219180154-29bfca66bda5/go.mod h1:P25wuYKuzciDac79anE7Y7YiM130Fer6bsm+04Thw0U=
+code.cloudfoundry.org/volume-mount-options v1.0.1-0.20200123185836-689a2edb28f2 h1:EeZzfG3AhyNxEnEBTb53O3Z5Ht5RQWancRNVUmdqmEQ=
+code.cloudfoundry.org/volume-mount-options v1.0.1-0.20200123185836-689a2edb28f2/go.mod h1:1ebS42brXk25Jxi1KdpqqtIYWV7qFm42ohK/+glB6uc=
 github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 h1:DDGfHa7BWjL4YnC6+E63dPcxHo2sUxDIu8g3QgEJdRY=
 github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869/go.mod h1:Ekp36dRnpXw/yCqJaO+ZrUyxD+3VXMFFr56k5XYrpB4=
 github.com/bmizerany/pat v0.0.0-20170815010413-6226ea591a40 h1:y4B3+GPxKlrigF1ha5FFErxK+sr6sWxQovRMzwMhejo=
@@ -45,6 +47,7 @@ github.com/golang/protobuf v1.3.1 h1:YF8+flBXS5eO826T4nzqPrxfhQThhXl0YzfuUPu4SBg
 github.com/golang/protobuf v1.3.1/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/google/gofuzz v1.0.0 h1:A8PeW59pxE9IoFRqBp37U+mSNaQoZ46F1f0f863XSXw=
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
+github.com/google/gofuzz v1.1.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
 github.com/google/uuid v1.0.0 h1:b4Gk+7WdP/d3HZH8EJsZpvV7EtDOgaZLtnaNGIu1adA=
 github.com/google/uuid v1.0.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/gorilla/mux v1.7.3 h1:gnP5JzjVOuiZD07fKKToCAOjS0yOpj/qPETTXCCS6hw=
@@ -80,6 +83,8 @@ github.com/pivotal-cf/brokerapi v2.0.5+incompatible h1:02SRDAtZNaDbdgU9mqRid1SGk
 github.com/pivotal-cf/brokerapi v2.0.5+incompatible/go.mod h1:P+oA8NvkCTkq2t4DohBiyqQo69Ub15RKGcm/vKNP0gg=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
+github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
+github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/tedsuo/ifrit v0.0.0-20191009134036-9a97d0632f00 h1:mujcChM89zOHwgZBBNr5WZ77mBXP1yR+gLThGCYZgAg=
 github.com/tedsuo/ifrit v0.0.0-20191009134036-9a97d0632f00/go.mod h1:eyZnKCc955uh98WQvzOm0dgAeLnf2O0Rz0LPoC5ze+0=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
