@@ -98,8 +98,8 @@ var storeID = flag.String(
 )
 
 var (
-	username   string
-	password   string
+	username string
+	password string
 )
 
 //go:generate counterfeiter -o fakes/retired_store_fake.go . RetiredStore

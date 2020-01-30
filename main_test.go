@@ -218,9 +218,9 @@ var _ = Describe("nfsbroker Main", func() {
 
 		JustBeforeEach(func() {
 			volmanRunner := ginkgomon.New(ginkgomon.Config{
-				Name:       "nfsbroker",
-				Command:    exec.Command(binaryPath, args...),
-				StartCheck: "started",
+				Name:              "nfsbroker",
+				Command:           exec.Command(binaryPath, args...),
+				StartCheck:        "started",
 				StartCheckTimeout: 20 * time.Second,
 			})
 			process = ginkgomon.Invoke(volmanRunner)
