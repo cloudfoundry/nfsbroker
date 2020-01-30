@@ -10,6 +10,6 @@ test:
 	docker exec -it nfsbroker-dev /bin/bash -c "until curl -f -v http://localhost:9001/health; do sleep 10; done && cp credhub/applications/credhub-api/src/test/resources/server_ca_cert.pem /tmp/server_ca_cert.pem && cd nfsbroker && ginkgo -r -keepGoing -p -trace -randomizeAllSpecs -progress ."
 
 fmt:
-	go fmt ./... -v
+	go fmt ./...
 
 .PHONY: install test fmt 
