@@ -170,7 +170,7 @@ var _ = Describe("nfsbroker Main", func() {
 				ginkgomon.Kill(invoke)
 			}()
 
-			Eventually(volmanRunner.ExitCode, "31s", "1s").Should(Equal(2))
+			Eventually(volmanRunner.ExitCode, "35s", "1s").Should(Equal(2))
 			Eventually(volmanRunner.Buffer, "35s", "1s").Should(gbytes.Say(".*Unable to connect to credhub."))
 		})
 	})

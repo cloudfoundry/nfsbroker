@@ -12,6 +12,7 @@ import (
 	vmo "code.cloudfoundry.org/volume-mount-options"
 	vmou "code.cloudfoundry.org/volume-mount-options/utils"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -169,11 +170,11 @@ func newLogger() (lager.Logger, *lager.ReconfigurableSink) {
 }
 
 func verifyCredhubIsReachable(logger lager.Logger) {
-	client := http.Client{
+	var client = &http.Client{
 		Timeout:   30 * time.Second,
-		Transport: http.DefaultTransport,
 	}
-	client.Transport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+	configureCACert(logger, client)
 
 	resp, err := client.Get(*credhubURL + "/info")
 	if err != nil {
@@ -181,6 +182,31 @@ func verifyCredhubIsReachable(logger lager.Logger) {
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		logger.Fatal(fmt.Sprintf("Attempted to connect to credhub. Expected 200. Got %d", resp.StatusCode), nil, lager.Data{"response_headers": fmt.Sprintf("%v", resp.Header)})
+	}
+}
+
+func configureCACert(logger lager.Logger, client *http.Client) {
+	if *credhubCACertPath != "" {
+		certpool := x509.NewCertPool()
+
+		certPEM, err := ioutil.ReadFile(*credhubCACertPath)
+		if err != nil {
+			logger.Fatal("reading credhub ca cert path", err)
+		}
+
+		ok := certpool.AppendCertsFromPEM(certPEM)
+		if !ok {
+			logger.Fatal("appending certs from PEM", err)
+		}
+		clientTLSConf := &tls.Config{
+			RootCAs: certpool,
+		}
+
+		transport := &http.Transport{
+			TLSClientConfig: clientTLSConf,
+		}
+
+		client.Transport = transport
 	}
 }
 
