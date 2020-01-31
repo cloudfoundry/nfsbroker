@@ -16,8 +16,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/onsi/ginkgo/extensions/table"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
+	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
@@ -95,6 +97,81 @@ var _ = Describe("nfsbroker Main", func() {
 
 		AfterEach(func() {
 			ginkgomon.Kill(process) // this is only if incorrect implementation leaves process running
+		})
+	})
+
+	Context("credhub /info returns error", func() {
+		var volmanRunner *ginkgomon.Runner
+		var credhubServer *ghttp.Server
+
+		table.DescribeTable("should log a helpful diagnostic error message ", func(statusCode int) {
+			listenAddr := "0.0.0.0:" + strconv.Itoa(8999+GinkgoParallelNode())
+
+			credhubServer = ghttp.NewServer()
+			credhubServer.AppendHandlers(ghttp.CombineHandlers(
+				ghttp.VerifyRequest("GET", "/info"),
+				ghttp.RespondWith(statusCode, "", http.Header{"X-Squid-Err": []string{"some-error"}}),
+			))
+			defer credhubServer.Close()
+
+			var args []string
+			args = append(args, "-listenAddr", listenAddr)
+			args = append(args, "-credhubURL", credhubServer.URL())
+			args = append(args, "-servicesConfig", "./default_services.json")
+
+			volmanRunner = ginkgomon.New(ginkgomon.Config{
+				Name:       "nfsbroker",
+				Command:    exec.Command(binaryPath, args...),
+				StartCheck: "starting",
+			})
+
+			invoke := ifrit.Invoke(volmanRunner)
+			defer ginkgomon.Kill(invoke)
+
+			time.Sleep(2 * time.Second)
+			Eventually(volmanRunner.ExitCode).Should(Equal(2))
+			Eventually(volmanRunner.Buffer()).Should(gbytes.Say(fmt.Sprintf(".*Attempted to connect to credhub. Expected 200. Got %d.*X-Squid-Err:\\[some-error\\].*", statusCode)))
+
+		},
+			table.Entry("300", http.StatusMultipleChoices),
+			table.Entry("400", http.StatusBadRequest),
+			table.Entry("403", http.StatusForbidden),
+			table.Entry("500", http.StatusInternalServerError))
+
+		It("should timeout after 30 seconds", func() {
+			listenAddr := "0.0.0.0:" + strconv.Itoa(8999+GinkgoParallelNode())
+
+
+			var closeChan = make(chan interface{}, 1)
+
+			credhubServer = ghttp.NewServer()
+			credhubServer.AppendHandlers(ghttp.CombineHandlers(
+				ghttp.VerifyRequest("GET", "/info"),
+				func(w http.ResponseWriter, r *http.Request) {
+					<-closeChan
+				},
+			))
+
+			var args []string
+			args = append(args, "-listenAddr", listenAddr)
+			args = append(args, "-credhubURL", credhubServer.URL())
+			args = append(args, "-servicesConfig", "./default_services.json")
+
+			volmanRunner = ginkgomon.New(ginkgomon.Config{
+				Name:       "nfsbroker",
+				Command:    exec.Command(binaryPath, args...),
+				StartCheck: "starting",
+			})
+
+			invoke := ifrit.Invoke(volmanRunner)
+			defer func() {
+				close(closeChan)
+				credhubServer.Close()
+				ginkgomon.Kill(invoke)
+			}()
+
+			Eventually(volmanRunner.ExitCode, "31s", "1s").Should(Equal(2))
+			Eventually(volmanRunner.Buffer, "35s", "1s").Should(gbytes.Say(".*Unable to connect to credhub."))
 		})
 	})
 

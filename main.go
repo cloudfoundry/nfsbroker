@@ -1,17 +1,9 @@
 package main
 
 import (
-	"code.cloudfoundry.org/existingvolumebroker"
-	"encoding/json"
-	"errors"
-	"flag"
-	"fmt"
-	"io/ioutil"
-	"os"
-	"strings"
-
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/debugserver"
+	"code.cloudfoundry.org/existingvolumebroker"
 	"code.cloudfoundry.org/goshims/osshim"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagerflags"
@@ -19,10 +11,20 @@ import (
 	"code.cloudfoundry.org/service-broker-store/brokerstore"
 	vmo "code.cloudfoundry.org/volume-mount-options"
 	vmou "code.cloudfoundry.org/volume-mount-options/utils"
+	"crypto/tls"
+	"encoding/json"
+	"errors"
+	"flag"
+	"fmt"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/http_server"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"strings"
+	"time"
 )
 
 var dataDir = flag.String(
@@ -118,6 +120,8 @@ func main() {
 	logger.Info("starting")
 	defer logger.Info("ends")
 
+	verifyCredhubIsReachable(logger)
+
 	server := createServer(logger)
 
 	if dbgAddr := debugserver.DebugAddress(flag.CommandLine); dbgAddr != "" {
@@ -162,6 +166,22 @@ func newLogger() (lager.Logger, *lager.ReconfigurableSink) {
 	lagerConfig.RedactSecrets = true
 
 	return lagerflags.NewFromConfig("nfsbroker", lagerConfig)
+}
+
+func verifyCredhubIsReachable(logger lager.Logger) {
+	client := http.Client{
+		Timeout:   30 * time.Second,
+		Transport: http.DefaultTransport,
+	}
+	client.Transport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+	resp, err := client.Get(*credhubURL + "/info")
+	if err != nil {
+		logger.Fatal("Unable to connect to credhub", err)
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		logger.Fatal(fmt.Sprintf("Attempted to connect to credhub. Expected 200. Got %d", resp.StatusCode), nil, lager.Data{"response_headers": fmt.Sprintf("%v", resp.Header)})
+	}
 }
 
 func parseVcapServices(logger lager.Logger, os osshim.Os) {
