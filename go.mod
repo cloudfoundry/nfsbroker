@@ -12,7 +12,7 @@ require (
 	code.cloudfoundry.org/volume-mount-options v1.0.1-0.20200123185836-689a2edb28f2
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
 	github.com/onsi/ginkgo v1.11.0
-	github.com/onsi/gomega v1.8.1
+	github.com/onsi/gomega v1.9.0
 	github.com/pivotal-cf/brokerapi v2.0.5+incompatible
 	github.com/tedsuo/ifrit v0.0.0-20191009134036-9a97d0632f00
 )
