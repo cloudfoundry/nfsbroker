@@ -8,6 +8,8 @@ code.cloudfoundry.org/existingvolumebroker v0.0.0-20200205002327-1b22b3f99c9f h1
 code.cloudfoundry.org/existingvolumebroker v0.0.0-20200205002327-1b22b3f99c9f/go.mod h1:Ajj51F0F8Ii1DLmikPFHCBHXwSUQEVLyrJqj595BxI0=
 code.cloudfoundry.org/existingvolumebroker v0.2.0 h1:vNBoRv3U0gFMvo7R+dnG4UQdtMNleCXdCtNVHzI0DhY=
 code.cloudfoundry.org/existingvolumebroker v0.2.0/go.mod h1:Ajj51F0F8Ii1DLmikPFHCBHXwSUQEVLyrJqj595BxI0=
+code.cloudfoundry.org/existingvolumebroker v0.3.0 h1:wAQul83xH7dIoLpaB24+l6N3yAc7LzPjLuMoZWBs8bY=
+code.cloudfoundry.org/existingvolumebroker v0.3.0/go.mod h1:Ajj51F0F8Ii1DLmikPFHCBHXwSUQEVLyrJqj595BxI0=
 code.cloudfoundry.org/goshims v0.0.0-20190529192408-bb24d2ef71ff h1:mM+PDE9FenEujN8i1CQS6dkN4PgVp269vFxpWkt3op8=
 code.cloudfoundry.org/goshims v0.0.0-20190529192408-bb24d2ef71ff/go.mod h1:p+Q0ZCTdX+nJ5w8bXZjFicVtUEnTX7kRL8viv+DXmR0=
 code.cloudfoundry.org/lager v2.0.0+incompatible h1:WZwDKDB2PLd/oL+USK4b4aEjUymIej9My2nUQ9oWEwQ=
