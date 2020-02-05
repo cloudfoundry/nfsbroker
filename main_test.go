@@ -16,18 +16,17 @@ import (
 	"os"
 	"time"
 
+	"code.cloudfoundry.org/goshims/osshim/os_fake"
+	"code.cloudfoundry.org/nfsbroker/fakes"
+	. "github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
-	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/goshims/osshim/os_fake"
-	"code.cloudfoundry.org/nfsbroker/fakes"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("nfsbroker Main", func() {
@@ -141,7 +140,6 @@ var _ = Describe("nfsbroker Main", func() {
 		It("should timeout after 30 seconds", func() {
 			listenAddr := "0.0.0.0:" + strconv.Itoa(8999+GinkgoParallelNode())
 
-
 			var closeChan = make(chan interface{}, 1)
 
 			credhubServer = ghttp.NewServer()
@@ -181,7 +179,7 @@ var _ = Describe("nfsbroker Main", func() {
 			listenAddr         string
 			tempDir            string
 			username, password string
-			volmanRunner *ginkgomon.Runner
+			volmanRunner       *ginkgomon.Runner
 
 			process ifrit.Process
 		)
@@ -346,56 +344,6 @@ var _ = Describe("nfsbroker Main", func() {
 			})
 		})
 	})
-
-	Context("#IsThereAProxy", func() {
-
-		var proxy bool
-		var fakeOs *os_fake.FakeOs
-		var testLogger *lagertest.TestLogger
-
-		BeforeEach(func() {
-			fakeOs = &os_fake.FakeOs{}
-			testLogger = lagertest.NewTestLogger("testlogger")
-		})
-
-		JustBeforeEach(func() {
-			proxy = IsThereAProxy(fakeOs, testLogger)
-		})
-
-		Context("when proxy environment variables exist", func() {
-			BeforeEach(func(){
-				fakeOs.LookupEnvReturns("someproxy", true)
-			})
-			It("should return true", func() {
-				Expect(fakeOs.LookupEnvArgsForCall(0)).To(Equal("https_proxy"))
-				Expect(proxy).To(Equal(true))
-				Expect(testLogger.Buffer()).To(gbytes.Say("someproxy"))
-			})
-		})
-
-		Context("when proxy environment variables exist but with no value", func() {
-			BeforeEach(func(){
-				fakeOs.LookupEnvReturns("", true)
-			})
-
-			It("should return false", func() {
-				Expect(fakeOs.LookupEnvArgsForCall(0)).To(Equal("https_proxy"))
-				Expect(proxy).To(Equal(false))
-			})
-		})
-
-		Context("when proxy environment variables does not exist", func() {
-			BeforeEach(func(){
-				fakeOs.LookupEnvReturns("", false)
-			})
-
-			It("should return true", func() {
-				Expect(fakeOs.LookupEnvArgsForCall(0)).To(Equal("https_proxy"))
-				Expect(proxy).To(Equal(false))
-			})
-		})
-	})
-
 })
 
 type failRunner struct {

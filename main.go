@@ -4,6 +4,7 @@ import (
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/debugserver"
 	"code.cloudfoundry.org/existingvolumebroker"
+	evbutils "code.cloudfoundry.org/existingvolumebroker/utils"
 	"code.cloudfoundry.org/goshims/osshim"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagerflags"
@@ -171,12 +172,12 @@ func newLogger() (lager.Logger, *lager.ReconfigurableSink) {
 
 func verifyCredhubIsReachable(logger lager.Logger) {
 	var client = &http.Client{
-		Timeout:   30 * time.Second,
+		Timeout: 30 * time.Second,
 	}
 
 	configureCACert(logger, client)
 
-	IsThereAProxy(&osshim.OsShim{}, logger)
+	evbutils.IsThereAProxy(&osshim.OsShim{}, logger)
 
 	resp, err := client.Get(*credhubURL + "/info")
 	if err != nil {
