@@ -116,7 +116,6 @@ func (b *Broker) Provision(context context.Context, instanceID string, details b
 		return brokerapi.ProvisionedServiceSpec{}, errors.New("config requires a \"share\" key")
 	}
 
-
 	if _, ok := configuration[SOURCE_KEY]; ok {
 		return brokerapi.ProvisionedServiceSpec{}, errors.New("create configuration contains the following invalid option: ['" + SOURCE_KEY + "']")
 	}
