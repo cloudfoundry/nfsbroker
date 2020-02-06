@@ -15,6 +15,8 @@ code.cloudfoundry.org/lager v2.0.0+incompatible/go.mod h1:O2sS7gKP3HM2iemG+Enwvy
 code.cloudfoundry.org/service-broker-store v0.0.0-20191022224831-b7b13dc8c343 h1:paJxtdkmRdC5/w1IwD/MV0r2tX2gtvD6CpStZxJwgBc=
 code.cloudfoundry.org/service-broker-store v0.0.0-20191022224831-b7b13dc8c343/go.mod h1:phB6wKvj/3t2uwj+XijrMivENH1bpgxFf5uS6qLJeBY=
 code.cloudfoundry.org/volume-mount-options v0.0.0-20191112224024-20b5adcd41a3/go.mod h1:ydxOg1SOONU1OWEORaW1ovk+XYoMmMKB9wgVOiZuFyA=
+code.cloudfoundry.org/volume-mount-options v0.1.0 h1:uhlyyzeWEZ+6ot2KC8Tc7ebyIgMEboZDZGzG63ZS43c=
+code.cloudfoundry.org/volume-mount-options v0.1.0/go.mod h1:XcdZIipZa0sb3viibTDhGWWfxqP7mt8lkWpQ8vE1HwE=
 code.cloudfoundry.org/volume-mount-options v1.0.1-0.20200203224637-172b961d5e4b h1:JnP5/+RlmT2x5mbYHnbmjlh12+6nNCnC/u9TlRurm3A=
 code.cloudfoundry.org/volume-mount-options v1.0.1-0.20200203224637-172b961d5e4b/go.mod h1:XcdZIipZa0sb3viibTDhGWWfxqP7mt8lkWpQ8vE1HwE=
 github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 h1:DDGfHa7BWjL4YnC6+E63dPcxHo2sUxDIu8g3QgEJdRY=
