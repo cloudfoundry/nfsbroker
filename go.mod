@@ -1,6 +1,6 @@
 module code.cloudfoundry.org/nfsbroker
 
-go 1.12
+go 1.13
 
 require (
 	code.cloudfoundry.org/clock v0.0.0-20180518195852-02e53af36e6c
@@ -15,7 +15,4 @@ require (
 	github.com/onsi/gomega v1.9.0
 	github.com/pivotal-cf/brokerapi v2.0.5+incompatible
 	github.com/tedsuo/ifrit v0.0.0-20191009134036-9a97d0632f00
-	golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3 // indirect
-	golang.org/x/tools v0.0.0-20190524140312-2c0ae7006135 // indirect
-	honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc // indirect
 )
