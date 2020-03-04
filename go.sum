@@ -17,6 +17,8 @@ code.cloudfoundry.org/service-broker-store v0.0.0-20191022224831-b7b13dc8c343 h1
 code.cloudfoundry.org/service-broker-store v0.0.0-20191022224831-b7b13dc8c343/go.mod h1:phB6wKvj/3t2uwj+XijrMivENH1bpgxFf5uS6qLJeBY=
 code.cloudfoundry.org/service-broker-store v0.1.0 h1:U22LfgReGtavvKNpwhE+wGs3Qu692zhqonEfilkpZTM=
 code.cloudfoundry.org/service-broker-store v0.1.0/go.mod h1:phB6wKvj/3t2uwj+XijrMivENH1bpgxFf5uS6qLJeBY=
+code.cloudfoundry.org/service-broker-store v0.2.0 h1:Ym6SZ6ygxoBd6t4R2wVVcQk9lJj+Slw7U5kY/QEhf3Y=
+code.cloudfoundry.org/service-broker-store v0.2.0/go.mod h1:TdleVm7DNP9A8bYM51+6uHbPWBZlXXbs/eiRmwzN5YQ=
 code.cloudfoundry.org/volume-mount-options v0.0.0-20191112224024-20b5adcd41a3/go.mod h1:ydxOg1SOONU1OWEORaW1ovk+XYoMmMKB9wgVOiZuFyA=
 code.cloudfoundry.org/volume-mount-options v0.1.0 h1:uhlyyzeWEZ+6ot2KC8Tc7ebyIgMEboZDZGzG63ZS43c=
 code.cloudfoundry.org/volume-mount-options v0.1.0/go.mod h1:XcdZIipZa0sb3viibTDhGWWfxqP7mt8lkWpQ8vE1HwE=
