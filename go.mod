@@ -15,4 +15,5 @@ require (
 	github.com/onsi/gomega v1.7.0
 	github.com/pivotal-cf/brokerapi v2.0.2+incompatible
 	github.com/tedsuo/ifrit v0.0.0-20191009134036-9a97d0632f00
+	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073 // indirect
 )
