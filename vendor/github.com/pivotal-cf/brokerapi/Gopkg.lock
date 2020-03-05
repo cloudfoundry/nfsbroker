@@ -3,15 +3,16 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e5a6dff65fb1ea477350d48ecd5f92e29be4212ca0a17d2bdb8932ef8149ba45"
+  digest = "1:98a0a95c73a9b62d412530d393f5442bd2145c4bb9a100b6fcc02bbc55298e48"
   name = "code.cloudfoundry.org/lager"
   packages = [
     ".",
+    "internal/truncate",
     "lagerctx",
     "lagertest",
   ]
   pruneopts = ""
-  revision = "a77e1033ba8d8e36597be5c0d384ee6054105bc2"
+  revision = "54c4f2530ddeb742ce9c9ee26f5fa758d6c1b3b6"
 
 [[projects]]
   digest = "1:029f604c64cb13a3e2facee76fd1ae446d343df36fbb280b536bf36f9864ef1f"
@@ -22,28 +23,42 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:20ed7daa9b3b38b6d1d39b48ab3fd31122be5419461470d0c28de3e121c93ecf"
-  name = "github.com/gorilla/context"
+  digest = "1:a25a2c5ae694b01713fb6cd03c3b1ac1ccc1902b9f0a922680a88ec254f968e1"
+  name = "github.com/google/uuid"
   packages = ["."]
   pruneopts = ""
-  revision = "1ea25387ff6f684839d82767c1733ff4d4d15d0a"
-  version = "v1.1"
+  revision = "9b3b1e0f5f99ae461456d768e7d301a7acdaa2d8"
+  version = "v1.1.0"
 
 [[projects]]
-  digest = "1:aa016bbb412f496a7baed9e02787a60cd15c9a3edfa72da9c4a95d6cea610334"
+  digest = "1:883e2fdbdd0e577187bd8106fec775b1176059af267a7f40eba5308955c67d52"
   name = "github.com/gorilla/mux"
   packages = ["."]
   pruneopts = ""
-  revision = "53c1911da2b537f792e7cafcb446b05ffe33b996"
-  version = "v1.6.1"
+  revision = "00bdffe0f3c77e27d2cf6f5c70232a2d3e4d9c15"
+  version = "v1.7.3"
 
 [[projects]]
-  branch = "master"
-  digest = "1:8df8625c851c00c5c55a8cde64323d203fd1221a8ea3e137ad2d05d01945ca55"
+  digest = "1:b3c5b95e56c06f5aa72cb2500e6ee5f44fcd122872d4fec2023a488e561218bc"
+  name = "github.com/hpcloud/tail"
+  packages = [
+    ".",
+    "ratelimiter",
+    "util",
+    "watch",
+    "winfile",
+  ]
+  pruneopts = ""
+  revision = "a30252cb686a21eb2d0b98132633053ec2f7f1e5"
+  version = "v1.0.0"
+
+[[projects]]
+  digest = "1:9e74f6fbb11a09c042218844e2bba95a47cc468c741b80d7c2ffb4067c32b4cc"
   name = "github.com/onsi/ginkgo"
   packages = [
     ".",
     "config",
+    "extensions/table",
     "internal/codelocation",
     "internal/containernode",
     "internal/failer",
@@ -62,11 +77,11 @@
     "types",
   ]
   pruneopts = ""
-  revision = "9008c7b79f9636c46a0a945141020124702f0ecf"
+  revision = "72b6ab036f78c4bf1a9748c3941dd7c3de54917a"
+  version = "v1.10.2"
 
 [[projects]]
-  branch = "master"
-  digest = "1:44c1e18198c748e250810263a25205168c1cb452bdd8b850c40ef93b92ab4c7d"
+  digest = "1:f201278781bbc4a1c20265278c28b80712ef90123563cc0a391d836fc49e0da5"
   name = "github.com/onsi/gomega"
   packages = [
     ".",
@@ -84,23 +99,24 @@
     "types",
   ]
   pruneopts = ""
-  revision = "49e4233a3b46c26dddd43cf84547cf31c92d0f2b"
+  revision = "bdebf9e0ece900259084cfa4121b97ce1a540939"
+  version = "v1.7.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:beeb9206cc21cfeb113066c3dcf4bbb0ba304d73dd441f3244721566f51f44e6"
+  digest = "1:a5484d4fa43127138ae6e7b2299a6a52ae006c7f803d98d717f60abf3e97192e"
   name = "github.com/pborman/uuid"
   packages = ["."]
   pruneopts = ""
-  revision = "c65b2f87fee37d1c7854c9164a450713c28d50cd"
+  revision = "adf5a7427709b9deb95d29d3fa8a2bf9cfd388f1"
+  version = "v1.2"
 
 [[projects]]
-  digest = "1:7365acd48986e205ccb8652cc746f09c8b7876030d53710ea6ef7d0bd0dcd7ca"
+  digest = "1:1d7e1867c49a6dd9856598ef7c3123604ea3daabf5b83f303ff457bcbc410b1d"
   name = "github.com/pkg/errors"
   packages = ["."]
   pruneopts = ""
-  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
-  version = "v0.8.0"
+  revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
+  version = "v0.8.1"
 
 [[projects]]
   branch = "master"
@@ -148,6 +164,23 @@
   version = "v0.3.0"
 
 [[projects]]
+  digest = "1:eb53021a8aa3f599d29c7102e65026242bdedce998a54837dc67f14b6a97c5fd"
+  name = "gopkg.in/fsnotify.v1"
+  packages = ["."]
+  pruneopts = ""
+  revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
+  source = "gopkg.in/fsnotify/fsnotify.v1"
+  version = "v1.4.7"
+
+[[projects]]
+  branch = "v1"
+  digest = "1:a96d16bd088460f2e0685d46c39bcf1208ba46e0a977be2df49864ec7da447dd"
+  name = "gopkg.in/tomb.v1"
+  packages = ["."]
+  pruneopts = ""
+  revision = "dd632973f1e7218eb1089048e0798ec9ae7dceb8"
+
+[[projects]]
   digest = "1:59925e8b791ee90b60e4dc05099d34fd38d0922a2a8f9b4e700cb61fc421e6b2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -163,6 +196,7 @@
     "github.com/drewolson/testflight",
     "github.com/gorilla/mux",
     "github.com/onsi/ginkgo",
+    "github.com/onsi/ginkgo/extensions/table",
     "github.com/onsi/gomega",
     "github.com/onsi/gomega/gbytes",
     "github.com/pborman/uuid",
