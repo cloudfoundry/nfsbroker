@@ -5,7 +5,7 @@ go 1.13
 require (
 	code.cloudfoundry.org/clock v1.0.0
 	code.cloudfoundry.org/debugserver v0.0.0-20200131002057-141d5fa0e064
-	code.cloudfoundry.org/existingvolumebroker v0.6.0
+	code.cloudfoundry.org/existingvolumebroker v0.7.0
 	code.cloudfoundry.org/goshims v0.1.0
 	code.cloudfoundry.org/lager v2.0.0+incompatible
 	code.cloudfoundry.org/service-broker-store v0.3.0
