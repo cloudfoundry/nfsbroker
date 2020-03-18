@@ -8,7 +8,7 @@ require (
 	code.cloudfoundry.org/existingvolumebroker v0.9.0
 	code.cloudfoundry.org/goshims v0.3.0
 	code.cloudfoundry.org/lager v2.0.0+incompatible
-	code.cloudfoundry.org/service-broker-store v0.3.0
+	code.cloudfoundry.org/service-broker-store v0.4.0
 	code.cloudfoundry.org/volume-mount-options v1.1.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/golang/protobuf v1.3.5 // indirect
