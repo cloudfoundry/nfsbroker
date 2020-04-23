@@ -247,14 +247,15 @@ var _ = Describe("nfsbroker Main", func() {
 			args = append(args, "-uaaClientSecret", "secret")
 			args = append(args, "-listenAddr", listenAddr)
 			args = append(args, "-dataDir", tempDir)
+			args = append(args, "-allowedOptions", "source,uid,gid,auto_cache,readonly,version,mount,cache")
 			args = append(args, "-servicesConfig", "./default_services.json")
 		})
 
 		JustBeforeEach(func() {
 			volmanRunner := ginkgomon.New(ginkgomon.Config{
-				Name:       "nfsbroker",
-				Command:    exec.Command(binaryPath, args...),
-				StartCheck: "started",
+				Name:              "nfsbroker",
+				Command:           exec.Command(binaryPath, args...),
+				StartCheck:        "started",
 				StartCheckTimeout: 20 * time.Second,
 			})
 			process = ginkgomon.Invoke(volmanRunner)
@@ -325,6 +326,7 @@ var _ = Describe("nfsbroker Main", func() {
 			})
 
 		})
+
 	})
 
 	Context("#IsRetired", func() {
