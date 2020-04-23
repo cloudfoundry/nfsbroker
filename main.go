@@ -25,6 +25,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -290,6 +291,8 @@ func createServer(logger lager.Logger) ifrit.Runner {
 		logger.Fatal("retired-store", errors.New("Store is retired"))
 	}
 
+	cacheOptsValidator := vmo.UserOptsValidationFunc(validateCache)
+
 	configMask, err := vmo.NewMountOptsMask(
 		strings.Split(*allowedOptions, ","),
 		vmou.ParseOptionStringToMap(*defaultOptions, ":"),
@@ -298,6 +301,7 @@ func createServer(logger lager.Logger) ifrit.Runner {
 		},
 		[]string{},
 		[]string{"source"},
+		cacheOptsValidator,
 	)
 	if err != nil {
 		logger.Fatal("creating-config-mask-error", err)
@@ -335,4 +339,18 @@ func IsRetired(store brokerstore.Store) (bool, error) {
 		return retiredStore.IsRetired()
 	}
 	return false, nil
+}
+
+func validateCache(key string, val string) error {
+
+	if key != "cache" {
+		return nil
+	}
+
+	_, err := strconv.ParseBool(val)
+	if err != nil {
+		return errors.New(fmt.Sprintf("%s is not a valid value for cache", val))
+	}
+
+	return nil
 }

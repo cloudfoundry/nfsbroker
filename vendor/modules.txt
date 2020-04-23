@@ -17,7 +17,6 @@ code.cloudfoundry.org/existingvolumebroker
 code.cloudfoundry.org/existingvolumebroker/utils
 # code.cloudfoundry.org/goshims v0.3.0
 code.cloudfoundry.org/goshims/osshim
-code.cloudfoundry.org/goshims/osshim/os_fake
 # code.cloudfoundry.org/lager v2.0.0+incompatible
 code.cloudfoundry.org/lager
 code.cloudfoundry.org/lager/lagerflags
@@ -33,6 +32,8 @@ github.com/cloudfoundry/go-socks5
 github.com/cloudfoundry/socks5-proxy
 # github.com/golang/protobuf v1.3.5
 github.com/golang/protobuf/proto
+# github.com/google/gofuzz v1.1.0
+github.com/google/gofuzz
 # github.com/google/uuid v1.1.1
 github.com/google/uuid
 # github.com/gorilla/mux v1.7.4
