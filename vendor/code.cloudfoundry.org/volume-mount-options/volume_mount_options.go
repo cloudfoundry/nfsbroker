@@ -14,6 +14,15 @@ func NewMountOpts(userOpts map[string]interface{}, mask MountOptsMask) (MountOpt
 		mountOpts[k] = v
 	}
 
+	if mask.ValidationFunc != nil {
+		for key, val := range userOpts {
+			err := mask.ValidationFunc.Validate(key, fmt.Sprintf("%v", val))
+			if err != nil {
+				return MountOpts{}, fmt.Errorf("failed validation error")
+			}
+		}
+	}
+
 	errorList := []string{}
 
 	for k, v := range userOpts {

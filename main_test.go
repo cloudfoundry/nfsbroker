@@ -1,6 +1,7 @@
 package main
 
 import (
+	fuzz "github.com/google/gofuzz"
 	"errors"
 	"io"
 	"net/http"
@@ -69,10 +70,14 @@ var _ = Describe("nfsbroker Main", func() {
 			args               []string
 			listenAddr         string
 			username, password string
+			planID             = "0da18102-48dc-46d0-98b3-7a4ff6dc9c54"
+			serviceOfferingID  = "9db9cca4-8fd5-4b96-a4c7-0a48f47c3bad"
+			serviceInstanceID  = "service-instance-id"
 
 			process ifrit.Process
 
 			credhubServer *ghttp.Server
+			uaaServer     *ghttp.Server
 		)
 
 		BeforeEach(func() {
@@ -84,6 +89,7 @@ var _ = Describe("nfsbroker Main", func() {
 			os.Setenv("PASSWORD", password)
 
 			credhubServer = ghttp.NewServer()
+			uaaServer = ghttp.NewServer()
 
 			infoResponse := credhubInfoResponse{
 				AuthServer: credhubInfoResponseAuthServer{
@@ -101,6 +107,7 @@ var _ = Describe("nfsbroker Main", func() {
 
 			args = append(args, "-credhubURL", credhubServer.URL())
 			args = append(args, "-listenAddr", listenAddr)
+			args = append(args, "-allowedOptions", "source,uid,gid,auto_cache,readonly,version,mount,cache")
 			args = append(args, "-servicesConfig", "./test_default_services.json")
 		})
 
@@ -116,6 +123,8 @@ var _ = Describe("nfsbroker Main", func() {
 
 		AfterEach(func() {
 			ginkgomon.Kill(process)
+			credhubServer.Close()
+			uaaServer.Close()
 		})
 
 		httpDoWithAuth := func(method, endpoint string, body io.Reader) (*http.Response, error) {
@@ -178,6 +187,125 @@ var _ = Describe("nfsbroker Main", func() {
 				Expect(string(responseBody)).To(ContainSubstring("This service does not support instance updates. Please delete your service instance and create a new one with updated configuration."))
 			})
 
+		})
+
+		Context("#bind", func() {
+			var (
+				bindingID = "456"
+			)
+			BeforeEach(func() {
+				infoResponse := credhubInfoResponse{
+					AuthServer: credhubInfoResponseAuthServer{
+						URL: uaaServer.URL(),
+					},
+				}
+
+				uaaServer.AppendHandlers(ghttp.CombineHandlers(
+					ghttp.VerifyRequest("POST", "/oauth/token"),
+					ghttp.RespondWith(http.StatusOK, `{ "access_token" : "111", "refresh_token" : "", "token_type" : "" }`),
+				))
+
+				credhubServer.RouteToHandler("GET", "/info", ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", "/info"),
+					ghttp.RespondWithJSONEncoded(http.StatusOK, infoResponse),
+				))
+
+				credhubServer.RouteToHandler("GET", "/api/v1/data", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if strings.Contains(r.URL.RawQuery, bindingID) {
+						w.WriteHeader(404)
+					} else if strings.Contains(r.URL.RawQuery, fmt.Sprintf("current=true&name=%%2Fnfsbroker%%2F%s", serviceInstanceID)) {
+						_, err := w.Write([]byte(`{ "data" : [ { "type": "value", "version_created_at": "2019", "id": "1", "name": "/some-name", "value": { "ServiceFingerPrint": "foobar" } } ] }`))
+						if err != nil {
+							w.WriteHeader(500)
+						}
+					}
+				}))
+
+				credhubServer.RouteToHandler("GET", "/version", ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", "/version"),
+					ghttp.RespondWith(http.StatusOK, `{ "version" : "0.0.0" }`),
+				))
+
+				credhubServer.RouteToHandler("PUT", "/api/v1/data", ghttp.CombineHandlers(
+					ghttp.VerifyRequest("PUT", "/api/v1/data"),
+					ghttp.RespondWith(http.StatusCreated, `{ "type" : "json", "version_created_at" : "", "id" : "", "name" : "", "value" : { } }`),
+				))
+			})
+
+			Context("allowed parameters", func() {
+				It("should accept the parameter", func() {
+					rawParametersMap := map[string]string{
+						"uid":   "1",
+						"gid":   "1",
+						"mount":      "somemount",
+						"readonly":   "true",
+						"cache": "true",
+						"version": "4.2",
+					}
+
+					rawParameters, err := json.Marshal(rawParametersMap)
+					Expect(err).NotTo(HaveOccurred())
+					provisionDetailsJsons, err := json.Marshal(brokerapi.BindDetails{
+						ServiceID:     serviceOfferingID,
+						PlanID:        planID,
+						AppGUID:       "222",
+						RawParameters: rawParameters,
+					})
+					Expect(err).NotTo(HaveOccurred())
+					reader := strings.NewReader(string(provisionDetailsJsons))
+					endpoint := fmt.Sprintf("/v2/service_instances/%s/service_bindings/%s", serviceInstanceID, bindingID)
+					resp, err := httpDoWithAuth("PUT", endpoint, reader)
+
+					Expect(err).NotTo(HaveOccurred())
+					Expect(resp.StatusCode).To(Equal(201))
+				})
+			})
+
+			Context("invalid cache", func() {
+				var (
+					bindDetailJson []byte
+					cache     = ""
+				)
+
+				BeforeEach(func() {
+					fuzz.New().Fuzz(&cache)
+					cache = strings.ReplaceAll(cache, "%", "")
+
+					rawParametersMap := map[string]string{
+						"cache": cache,
+					}
+
+					rawParameters, err := json.Marshal(rawParametersMap)
+					Expect(err).NotTo(HaveOccurred())
+
+					bindDetailJson, err = json.Marshal(brokerapi.BindDetails{
+						ServiceID:     serviceOfferingID,
+						PlanID:        planID,
+						AppGUID:       "222",
+						RawParameters: rawParameters,
+					})
+
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("should respond with 400", func() {
+					reader := strings.NewReader(string(bindDetailJson))
+					endpoint := fmt.Sprintf("/v2/service_instances/%s/service_bindings/%s", serviceInstanceID, bindingID)
+					resp, err := httpDoWithAuth("PUT", endpoint, reader)
+
+					Expect(err).NotTo(HaveOccurred())
+					Expect(resp.StatusCode).To(Equal(500))
+
+					expectedResponse := map[string]string{
+						"description": "failed validation error",
+					}
+					expectedJsonResponse, err := json.Marshal(expectedResponse)
+					Expect(err).NotTo(HaveOccurred())
+
+					responseBody, err := ioutil.ReadAll(resp.Body)
+					Expect(string(responseBody)).To(MatchJSON(expectedJsonResponse))
+				})
+			})
 		})
 	})
 
