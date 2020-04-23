@@ -18,145 +18,22 @@ import (
 
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
+	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
-	"code.cloudfoundry.org/goshims/osshim/os_fake"
 	"code.cloudfoundry.org/nfsbroker/fakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-type failRunner struct {
-	Command           *exec.Cmd
-	Name              string
-	AnsiColorCode     string
-	StartCheck        string
-	StartCheckTimeout time.Duration
-	Cleanup           func()
-	session           *gexec.Session
-	sessionReady      chan struct{}
-}
-
-func (r failRunner) Run(sigChan <-chan os.Signal, ready chan<- struct{}) error {
-	defer GinkgoRecover()
-
-	allOutput := gbytes.NewBuffer()
-
-	debugWriter := gexec.NewPrefixedWriter(
-		fmt.Sprintf("\x1b[32m[d]\x1b[%s[%s]\x1b[0m ", r.AnsiColorCode, r.Name),
-		GinkgoWriter,
-	)
-
-	session, err := gexec.Start(
-		r.Command,
-		gexec.NewPrefixedWriter(
-			fmt.Sprintf("\x1b[32m[o]\x1b[%s[%s]\x1b[0m ", r.AnsiColorCode, r.Name),
-			io.MultiWriter(allOutput, GinkgoWriter),
-		),
-		gexec.NewPrefixedWriter(
-			fmt.Sprintf("\x1b[91m[e]\x1b[%s[%s]\x1b[0m ", r.AnsiColorCode, r.Name),
-			io.MultiWriter(allOutput, GinkgoWriter),
-		),
-	)
-
-	Ω(err).ShouldNot(HaveOccurred())
-
-	fmt.Fprintf(debugWriter, "spawned %s (pid: %d)\n", r.Command.Path, r.Command.Process.Pid)
-
-	r.session = session
-	if r.sessionReady != nil {
-		close(r.sessionReady)
-	}
-
-	startCheckDuration := r.StartCheckTimeout
-	if startCheckDuration == 0 {
-		startCheckDuration = 5 * time.Second
-	}
-
-	var startCheckTimeout <-chan time.Time
-	if r.StartCheck != "" {
-		startCheckTimeout = time.After(startCheckDuration)
-	}
-
-	detectStartCheck := allOutput.Detect(r.StartCheck)
-
-	for {
-		select {
-		case <-detectStartCheck: // works even with empty string
-			allOutput.CancelDetects()
-			startCheckTimeout = nil
-			detectStartCheck = nil
-			close(ready)
-
-		case <-startCheckTimeout:
-			// clean up hanging process
-			session.Kill().Wait()
-
-			// fail to start
-			return fmt.Errorf(
-				"did not see %s in command's output within %s. full output:\n\n%s",
-				r.StartCheck,
-				startCheckDuration,
-				string(allOutput.Contents()),
-			)
-
-		case signal := <-sigChan:
-			session.Signal(signal)
-
-		case <-session.Exited:
-			if r.Cleanup != nil {
-				r.Cleanup()
-			}
-
-			Expect(string(allOutput.Contents())).To(ContainSubstring(r.StartCheck))
-			Expect(session.ExitCode()).To(Not(Equal(0)), fmt.Sprintf("Expected process to exit with non-zero, got: 0"))
-			return nil
-		}
-	}
-}
-
 var _ = Describe("nfsbroker Main", func() {
 	Context("Parse VCAP_SERVICES tests", func() {
-		var (
-			port   string
-			fakeOs os_fake.FakeOs = os_fake.FakeOs{}
-		)
 
 		BeforeEach(func() {
 			*cfServiceName = "postgresql"
 		})
-		JustBeforeEach(func() {
-			env := fmt.Sprintf(`
-				{
-					"postgresql":[
-						{
-							"credentials":{
-								"dbType":"postgresql",
-								"hostname":"8.8.8.8",
-								"name":"foo",
-								"password":"foo",
-								"port":%s,
-								"uri":"postgresql://foo:foo@8.8.8.8:9999/foo",
-								"username":"foo"
-							},
-							"label":"postgresql",
-							"name":"foobroker",
-							"plan":"amanaplanacanalpanama",
-							"provider":null,
-							"syslog_drain_url":null,
-							"tags":[
-								"postgresql",
-								"cache"
-							],
-							"volume_mounts":[]
-						}
-					]
-				}`, port)
-			fakeOs.LookupEnvReturns(env, true)
-		})
-
 	})
 
 	Context("Missing required args", func() {
@@ -191,36 +68,47 @@ var _ = Describe("nfsbroker Main", func() {
 		var (
 			args               []string
 			listenAddr         string
-			tempDir            string
 			username, password string
 
 			process ifrit.Process
+
+			credhubServer *ghttp.Server
 		)
 
 		BeforeEach(func() {
 			listenAddr = "0.0.0.0:" + strconv.Itoa(7999+GinkgoParallelNode())
 			username = "admin"
 			password = "password"
-			tempDir = os.TempDir()
 
 			os.Setenv("USERNAME", username)
 			os.Setenv("PASSWORD", password)
 
-			args = append(args, "-credhubURL", "https://localhost:9000")
-			args = append(args, "-credhubCACertPath", "/tmp/server_ca_cert.pem")
+			credhubServer = ghttp.NewServer()
 
-			args = append(args, "-uaaClientID", "credhub_client")
-			args = append(args, "-uaaClientSecret", "secret")
+			infoResponse := credhubInfoResponse{
+				AuthServer: credhubInfoResponseAuthServer{
+					URL: "some-auth-server-url",
+				},
+			}
+
+			credhubServer.AppendHandlers(ghttp.CombineHandlers(
+				ghttp.VerifyRequest("GET", "/info"),
+				ghttp.RespondWithJSONEncoded(http.StatusOK, infoResponse),
+			), ghttp.CombineHandlers(
+				ghttp.VerifyRequest("GET", "/info"),
+				ghttp.RespondWithJSONEncoded(http.StatusOK, infoResponse),
+			))
+
+			args = append(args, "-credhubURL", credhubServer.URL())
 			args = append(args, "-listenAddr", listenAddr)
-			args = append(args, "-dataDir", tempDir)
 			args = append(args, "-servicesConfig", "./test_default_services.json")
 		})
 
 		JustBeforeEach(func() {
 			volmanRunner := ginkgomon.New(ginkgomon.Config{
-				Name:       "nfsbroker",
-				Command:    exec.Command(binaryPath, args...),
-				StartCheck: "started",
+				Name:              "nfsbroker",
+				Command:           exec.Command(binaryPath, args...),
+				StartCheck:        "started",
 				StartCheckTimeout: 20 * time.Second,
 			})
 			process = ginkgomon.Invoke(volmanRunner)
@@ -353,5 +241,101 @@ var _ = Describe("nfsbroker Main", func() {
 			})
 		})
 	})
-
 })
+
+type failRunner struct {
+	Command           *exec.Cmd
+	Name              string
+	AnsiColorCode     string
+	StartCheck        string
+	StartCheckTimeout time.Duration
+	Cleanup           func()
+	session           *gexec.Session
+	sessionReady      chan struct{}
+}
+
+func (r failRunner) Run(sigChan <-chan os.Signal, ready chan<- struct{}) error {
+	defer GinkgoRecover()
+
+	allOutput := gbytes.NewBuffer()
+
+	debugWriter := gexec.NewPrefixedWriter(
+		fmt.Sprintf("\x1b[32m[d]\x1b[%s[%s]\x1b[0m ", r.AnsiColorCode, r.Name),
+		GinkgoWriter,
+	)
+
+	session, err := gexec.Start(
+		r.Command,
+		gexec.NewPrefixedWriter(
+			fmt.Sprintf("\x1b[32m[o]\x1b[%s[%s]\x1b[0m ", r.AnsiColorCode, r.Name),
+			io.MultiWriter(allOutput, GinkgoWriter),
+		),
+		gexec.NewPrefixedWriter(
+			fmt.Sprintf("\x1b[91m[e]\x1b[%s[%s]\x1b[0m ", r.AnsiColorCode, r.Name),
+			io.MultiWriter(allOutput, GinkgoWriter),
+		),
+	)
+
+	Ω(err).ShouldNot(HaveOccurred())
+
+	fmt.Fprintf(debugWriter, "spawned %s (pid: %d)\n", r.Command.Path, r.Command.Process.Pid)
+
+	r.session = session
+	if r.sessionReady != nil {
+		close(r.sessionReady)
+	}
+
+	startCheckDuration := r.StartCheckTimeout
+	if startCheckDuration == 0 {
+		startCheckDuration = 5 * time.Second
+	}
+
+	var startCheckTimeout <-chan time.Time
+	if r.StartCheck != "" {
+		startCheckTimeout = time.After(startCheckDuration)
+	}
+
+	detectStartCheck := allOutput.Detect(r.StartCheck)
+
+	for {
+		select {
+		case <-detectStartCheck: // works even with empty string
+			allOutput.CancelDetects()
+			startCheckTimeout = nil
+			detectStartCheck = nil
+			close(ready)
+
+		case <-startCheckTimeout:
+			// clean up hanging process
+			session.Kill().Wait()
+
+			// fail to start
+			return fmt.Errorf(
+				"did not see %s in command's output within %s. full output:\n\n%s",
+				r.StartCheck,
+				startCheckDuration,
+				string(allOutput.Contents()),
+			)
+
+		case signal := <-sigChan:
+			session.Signal(signal)
+
+		case <-session.Exited:
+			if r.Cleanup != nil {
+				r.Cleanup()
+			}
+
+			Expect(string(allOutput.Contents())).To(ContainSubstring(r.StartCheck))
+			Expect(session.ExitCode()).To(Not(Equal(0)), fmt.Sprintf("Expected process to exit with non-zero, got: 0"))
+			return nil
+		}
+	}
+}
+
+type credhubInfoResponse struct {
+	AuthServer credhubInfoResponseAuthServer `json:"auth-server"`
+}
+
+type credhubInfoResponseAuthServer struct {
+	URL string `json:"url"`
+}
