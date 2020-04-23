@@ -16,7 +16,6 @@ import (
 	"os"
 	"time"
 
-	"code.cloudfoundry.org/goshims/osshim/os_fake"
 	"code.cloudfoundry.org/nfsbroker/fakes"
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/extensions/table"
@@ -31,44 +30,10 @@ import (
 
 var _ = Describe("nfsbroker Main", func() {
 	Context("Parse VCAP_SERVICES tests", func() {
-		var (
-			port   string
-			fakeOs os_fake.FakeOs = os_fake.FakeOs{}
-		)
 
 		BeforeEach(func() {
 			*cfServiceName = "postgresql"
 		})
-		JustBeforeEach(func() {
-			env := fmt.Sprintf(`
-				{
-					"postgresql":[
-						{
-							"credentials":{
-								"dbType":"postgresql",
-								"hostname":"8.8.8.8",
-								"name":"foo",
-								"password":"foo",
-								"port":%s,
-								"uri":"postgresql://foo:foo@8.8.8.8:9999/foo",
-								"username":"foo"
-							},
-							"label":"postgresql",
-							"name":"foobroker",
-							"plan":"amanaplanacanalpanama",
-							"provider":null,
-							"syslog_drain_url":null,
-							"tags":[
-								"postgresql",
-								"cache"
-							],
-							"volume_mounts":[]
-						}
-					]
-				}`, port)
-			fakeOs.LookupEnvReturns(env, true)
-		})
-
 	})
 
 	Context("Missing required args", func() {
@@ -177,29 +142,40 @@ var _ = Describe("nfsbroker Main", func() {
 		var (
 			args               []string
 			listenAddr         string
-			tempDir            string
 			username, password string
 			volmanRunner       *ginkgomon.Runner
 
 			process ifrit.Process
+
+			credhubServer *ghttp.Server
 		)
 
 		BeforeEach(func() {
 			listenAddr = "0.0.0.0:" + strconv.Itoa(7999+GinkgoParallelNode())
 			username = "admin"
 			password = "password"
-			tempDir = os.TempDir()
 
 			os.Setenv("USERNAME", username)
 			os.Setenv("PASSWORD", password)
 
-			args = append(args, "-credhubURL", "https://localhost:9000")
-			args = append(args, "-credhubCACertPath", "/tmp/server_ca_cert.pem")
+			credhubServer = ghttp.NewServer()
 
-			args = append(args, "-uaaClientID", "credhub_client")
-			args = append(args, "-uaaClientSecret", "secret")
+			infoResponse := credhubInfoResponse{
+				AuthServer: credhubInfoResponseAuthServer{
+					URL: "some-auth-server-url",
+				},
+			}
+
+			credhubServer.AppendHandlers(ghttp.CombineHandlers(
+				ghttp.VerifyRequest("GET", "/info"),
+				ghttp.RespondWithJSONEncoded(http.StatusOK, infoResponse),
+			), ghttp.CombineHandlers(
+				ghttp.VerifyRequest("GET", "/info"),
+				ghttp.RespondWithJSONEncoded(http.StatusOK, infoResponse),
+			))
+
+			args = append(args, "-credhubURL", credhubServer.URL())
 			args = append(args, "-listenAddr", listenAddr)
-			args = append(args, "-dataDir", tempDir)
 			args = append(args, "-servicesConfig", "./test_default_services.json")
 		})
 
@@ -433,4 +409,12 @@ func (r failRunner) Run(sigChan <-chan os.Signal, ready chan<- struct{}) error {
 			return nil
 		}
 	}
+}
+
+type credhubInfoResponse struct {
+	AuthServer credhubInfoResponseAuthServer `json:"auth-server"`
+}
+
+type credhubInfoResponseAuthServer struct {
+	URL string `json:"url"`
 }
