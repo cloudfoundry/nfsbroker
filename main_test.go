@@ -1,8 +1,8 @@
 package main
 
 import (
-	fuzz "github.com/google/gofuzz"
 	"errors"
+	fuzz "github.com/google/gofuzz"
 	"io"
 	"net/http"
 	"os/exec"
@@ -235,12 +235,12 @@ var _ = Describe("nfsbroker Main", func() {
 			Context("allowed parameters", func() {
 				It("should accept the parameter", func() {
 					rawParametersMap := map[string]string{
-						"uid":   "1",
-						"gid":   "1",
-						"mount":      "somemount",
-						"readonly":   "true",
-						"cache": "true",
-						"version": "4.2",
+						"uid":      "1",
+						"gid":      "1",
+						"mount":    "somemount",
+						"readonly": "true",
+						"cache":    "true",
+						"version":  "4.2",
 					}
 
 					rawParameters, err := json.Marshal(rawParametersMap)
@@ -264,7 +264,7 @@ var _ = Describe("nfsbroker Main", func() {
 			Context("invalid cache", func() {
 				var (
 					bindDetailJson []byte
-					cache     = ""
+					cache          = ""
 				)
 
 				BeforeEach(func() {
