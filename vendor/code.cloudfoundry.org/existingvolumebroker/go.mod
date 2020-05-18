@@ -2,7 +2,7 @@ module code.cloudfoundry.org/existingvolumebroker
 
 require (
 	code.cloudfoundry.org/clock v1.0.0
-	code.cloudfoundry.org/goshims v0.3.0
+	code.cloudfoundry.org/goshims v0.4.0
 	code.cloudfoundry.org/lager v2.0.0+incompatible
 	code.cloudfoundry.org/service-broker-store v0.4.0
 	code.cloudfoundry.org/volume-mount-options v1.1.0

@@ -12,7 +12,7 @@ code.cloudfoundry.org/credhub-cli/credhub/server
 code.cloudfoundry.org/credhub-cli/errors
 # code.cloudfoundry.org/debugserver v0.0.0-20200131002057-141d5fa0e064
 code.cloudfoundry.org/debugserver
-# code.cloudfoundry.org/existingvolumebroker v0.14.0
+# code.cloudfoundry.org/existingvolumebroker v0.15.0
 code.cloudfoundry.org/existingvolumebroker
 code.cloudfoundry.org/existingvolumebroker/utils
 # code.cloudfoundry.org/goshims v0.4.0
@@ -30,6 +30,8 @@ code.cloudfoundry.org/volume-mount-options/utils
 github.com/cloudfoundry/go-socks5
 # github.com/cloudfoundry/socks5-proxy v0.2.0
 github.com/cloudfoundry/socks5-proxy
+# github.com/fsnotify/fsnotify v1.4.9
+github.com/fsnotify/fsnotify
 # github.com/golang/protobuf v1.3.5
 github.com/golang/protobuf/proto
 # github.com/google/gofuzz v1.1.0
@@ -40,13 +42,13 @@ github.com/google/uuid
 github.com/gorilla/mux
 # github.com/hashicorp/go-version v1.2.0
 github.com/hashicorp/go-version
-# github.com/hpcloud/tail v1.0.0
-github.com/hpcloud/tail
-github.com/hpcloud/tail/ratelimiter
-github.com/hpcloud/tail/util
-github.com/hpcloud/tail/watch
-github.com/hpcloud/tail/winfile
-# github.com/onsi/ginkgo v1.12.0
+# github.com/nxadm/tail v1.4.4
+github.com/nxadm/tail
+github.com/nxadm/tail/ratelimiter
+github.com/nxadm/tail/util
+github.com/nxadm/tail/watch
+github.com/nxadm/tail/winfile
+# github.com/onsi/ginkgo v1.12.1
 github.com/onsi/ginkgo
 github.com/onsi/ginkgo/config
 github.com/onsi/ginkgo/extensions/table
@@ -142,8 +144,6 @@ golang.org/x/text/transform
 # golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 golang.org/x/xerrors
 golang.org/x/xerrors/internal
-# gopkg.in/fsnotify.v1 v1.4.7
-gopkg.in/fsnotify.v1
 # gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7
 gopkg.in/tomb.v1
 # gopkg.in/yaml.v2 v2.2.8
