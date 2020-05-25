@@ -7,6 +7,8 @@ code.cloudfoundry.org/debugserver v0.0.0-20200131002057-141d5fa0e064 h1:FqYe1G3/
 code.cloudfoundry.org/debugserver v0.0.0-20200131002057-141d5fa0e064/go.mod h1:TotxfVIqTDwSnfxRc2ksk8uFZs5vhIN8Ooy3RdbsQF8=
 code.cloudfoundry.org/existingvolumebroker v0.16.0 h1:IIzGTubaujW9FJzKomNPHPApSDbRZ3HpfVLdpmRsb8s=
 code.cloudfoundry.org/existingvolumebroker v0.16.0/go.mod h1:z/7w+XakKg39BNq2cyDRUB4egMn6kdXPHFSB+BePYGc=
+code.cloudfoundry.org/existingvolumebroker v0.18.0 h1:jMHdP+xESiteZGCfdilnLTNmtBBBszgQhVjjqsTva0c=
+code.cloudfoundry.org/existingvolumebroker v0.18.0/go.mod h1:L1kztiL763lY0mmyDezje54MIykTHEZrUur7N/Xc4/Q=
 code.cloudfoundry.org/goshims v0.4.0 h1:DtXAReJn8m+M0RTSNM5aPxoGSyShVCSxa09Cz7YINhI=
 code.cloudfoundry.org/goshims v0.4.0/go.mod h1:HJtjH+UfvHStFlpQ9D4kzc/K4GmOIdQJxz6qmwqx//k=
 code.cloudfoundry.org/lager v2.0.0+incompatible h1:WZwDKDB2PLd/oL+USK4b4aEjUymIej9My2nUQ9oWEwQ=
