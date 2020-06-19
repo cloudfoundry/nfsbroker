@@ -13,6 +13,8 @@ code.cloudfoundry.org/lager v2.0.0+incompatible h1:WZwDKDB2PLd/oL+USK4b4aEjUymIe
 code.cloudfoundry.org/lager v2.0.0+incompatible/go.mod h1:O2sS7gKP3HM2iemG+EnwvyNQK7pTSC6Foi4QiMp9sSk=
 code.cloudfoundry.org/service-broker-store v0.4.0 h1:62/3MpXbwuMWwLig1WbgUdhZAx7kUaECNe/y3SUUEYg=
 code.cloudfoundry.org/service-broker-store v0.4.0/go.mod h1:aVYC3pj1iG2JMh6ndABgb7P8yeoI6sZV4i63Rdm8GjQ=
+code.cloudfoundry.org/service-broker-store v0.6.0 h1:XUyENtfEvAwR5zWL6bC3/c7y2YSH7AeRxiHGKoJ1oW0=
+code.cloudfoundry.org/service-broker-store v0.6.0/go.mod h1:5jeE+w85BZopO16JyiKTCenmT9TiNQFx7BCNP7+g7QA=
 code.cloudfoundry.org/volume-mount-options v1.1.0 h1:75hyXkRqPfNASxidauhpNCho9vsXwbU5c2ck8hFoNPI=
 code.cloudfoundry.org/volume-mount-options v1.1.0/go.mod h1:jYveqE1DELyeimEDe3KYAs+4sSC/bLZ3dA8/uEyIyZE=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
