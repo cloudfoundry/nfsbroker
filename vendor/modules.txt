@@ -34,8 +34,9 @@ github.com/cloudfoundry/socks5-proxy
 github.com/fsnotify/fsnotify
 # github.com/golang/protobuf v1.4.2
 github.com/golang/protobuf/proto
-# github.com/google/gofuzz v1.1.0
+# github.com/google/gofuzz v1.2.0
 github.com/google/gofuzz
+github.com/google/gofuzz/bytesource
 # github.com/google/uuid v1.1.1
 github.com/google/uuid
 # github.com/gorilla/mux v1.7.4
