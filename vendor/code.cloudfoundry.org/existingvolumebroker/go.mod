@@ -7,8 +7,8 @@ require (
 	code.cloudfoundry.org/service-broker-store v0.7.0
 	code.cloudfoundry.org/volume-mount-options v1.1.0
 	github.com/google/gofuzz v1.2.0
-	github.com/onsi/ginkgo v1.14.1
-	github.com/onsi/gomega v1.10.2
+	github.com/onsi/ginkgo v1.14.2
+	github.com/onsi/gomega v1.10.3
 	github.com/pivotal-cf/brokerapi v6.4.2+incompatible
 	github.com/tedsuo/ifrit v0.0.0-20191009134036-9a97d0632f00
 )
