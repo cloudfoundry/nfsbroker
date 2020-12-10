@@ -12,7 +12,7 @@ code.cloudfoundry.org/credhub-cli/credhub/server
 code.cloudfoundry.org/credhub-cli/errors
 # code.cloudfoundry.org/debugserver v0.0.0-20200131002057-141d5fa0e064
 code.cloudfoundry.org/debugserver
-# code.cloudfoundry.org/existingvolumebroker v0.28.0
+# code.cloudfoundry.org/existingvolumebroker v0.30.0
 code.cloudfoundry.org/existingvolumebroker
 code.cloudfoundry.org/existingvolumebroker/utils
 # code.cloudfoundry.org/goshims v0.4.0
@@ -20,7 +20,7 @@ code.cloudfoundry.org/goshims/osshim
 # code.cloudfoundry.org/lager v2.0.0+incompatible
 code.cloudfoundry.org/lager
 code.cloudfoundry.org/lager/lagerflags
-# code.cloudfoundry.org/service-broker-store v0.9.0
+# code.cloudfoundry.org/service-broker-store v0.10.0
 code.cloudfoundry.org/service-broker-store/brokerstore
 code.cloudfoundry.org/service-broker-store/brokerstore/credhub_shims
 # code.cloudfoundry.org/volume-mount-options v1.1.0
