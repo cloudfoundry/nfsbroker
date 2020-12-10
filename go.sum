@@ -17,6 +17,8 @@ code.cloudfoundry.org/service-broker-store v0.7.0 h1:q68/cogUdW29U0mmsMED4jjJwxi
 code.cloudfoundry.org/service-broker-store v0.7.0/go.mod h1:rGOl8X6Hh6Wjf5pqFZnthrWLGyARvXdluUvn9uMPcMo=
 code.cloudfoundry.org/service-broker-store v0.9.0 h1:oAW3M8LhI1I+c/ppUNf97rH6f72VLVzOTjgRCIEKki0=
 code.cloudfoundry.org/service-broker-store v0.9.0/go.mod h1:shiW/E+WmQ3zcksnOngsZrp9AsKlsrS5M49T8LTNWDA=
+code.cloudfoundry.org/service-broker-store v0.10.0 h1:3dHRBuAAr4hautXR2ntNIRc7vEuEG/M68Q2Arkzj5pI=
+code.cloudfoundry.org/service-broker-store v0.10.0/go.mod h1:gr51Efmvut4IGA7XdZseGZ4HPovZkTOae4XVaNyKQFk=
 code.cloudfoundry.org/volume-mount-options v1.1.0 h1:75hyXkRqPfNASxidauhpNCho9vsXwbU5c2ck8hFoNPI=
 code.cloudfoundry.org/volume-mount-options v1.1.0/go.mod h1:jYveqE1DELyeimEDe3KYAs+4sSC/bLZ3dA8/uEyIyZE=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
