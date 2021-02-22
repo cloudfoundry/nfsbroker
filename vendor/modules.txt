@@ -20,7 +20,7 @@ code.cloudfoundry.org/goshims/osshim
 # code.cloudfoundry.org/lager v2.0.0+incompatible
 code.cloudfoundry.org/lager
 code.cloudfoundry.org/lager/lagerflags
-# code.cloudfoundry.org/service-broker-store v0.12.0
+# code.cloudfoundry.org/service-broker-store v0.13.0
 code.cloudfoundry.org/service-broker-store/brokerstore
 code.cloudfoundry.org/service-broker-store/brokerstore/credhub_shims
 # code.cloudfoundry.org/volume-mount-options v1.1.0
