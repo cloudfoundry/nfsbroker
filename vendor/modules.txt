@@ -32,7 +32,7 @@ github.com/cloudfoundry/go-socks5
 github.com/cloudfoundry/socks5-proxy
 # github.com/fsnotify/fsnotify v1.4.9
 github.com/fsnotify/fsnotify
-# github.com/golang/protobuf v1.4.2
+# github.com/golang/protobuf v1.4.3
 github.com/golang/protobuf/proto
 # github.com/google/gofuzz v1.2.0
 github.com/google/gofuzz
@@ -70,7 +70,7 @@ github.com/onsi/ginkgo/reporters/stenographer
 github.com/onsi/ginkgo/reporters/stenographer/support/go-colorable
 github.com/onsi/ginkgo/reporters/stenographer/support/go-isatty
 github.com/onsi/ginkgo/types
-# github.com/onsi/gomega v1.10.5
+# github.com/onsi/gomega v1.11.0
 github.com/onsi/gomega
 github.com/onsi/gomega/format
 github.com/onsi/gomega/gbytes
@@ -174,5 +174,5 @@ google.golang.org/protobuf/runtime/protoiface
 google.golang.org/protobuf/runtime/protoimpl
 # gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7
 gopkg.in/tomb.v1
-# gopkg.in/yaml.v2 v2.3.0
+# gopkg.in/yaml.v2 v2.4.0
 gopkg.in/yaml.v2
