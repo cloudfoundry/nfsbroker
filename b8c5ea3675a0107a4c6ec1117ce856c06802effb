@@ -1,0 +1,7 @@
+{
+  "pr": "99",
+  "repository": "cloudfoundry/nfsbroker",
+  "base_branch": "master",
+  "head_branch": "dependabot/go_modules/code.cloudfoundry.org/existingvolumebroker-0.58.0",
+  "branch_tip": "b8c5ea3675a0107a4c6ec1117ce856c06802effb"
+}
