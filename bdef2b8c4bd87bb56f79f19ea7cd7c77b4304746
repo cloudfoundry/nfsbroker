@@ -1,0 +1,7 @@
+{
+  "pr": "98",
+  "repository": "cloudfoundry/nfsbroker",
+  "base_branch": "master",
+  "head_branch": "dependabot/go_modules/github.com/onsi/ginkgo-1.16.5",
+  "branch_tip": "bdef2b8c4bd87bb56f79f19ea7cd7c77b4304746"
+}
