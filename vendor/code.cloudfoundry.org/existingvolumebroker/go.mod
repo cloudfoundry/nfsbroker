@@ -4,7 +4,7 @@ require (
 	code.cloudfoundry.org/clock v1.0.0
 	code.cloudfoundry.org/goshims v0.10.0
 	code.cloudfoundry.org/lager v2.0.0+incompatible
-	code.cloudfoundry.org/service-broker-store v0.29.0
+	code.cloudfoundry.org/service-broker-store v0.30.0
 	code.cloudfoundry.org/volume-mount-options v1.1.0
 	github.com/google/gofuzz v1.2.0
 	github.com/onsi/ginkgo v1.16.5
