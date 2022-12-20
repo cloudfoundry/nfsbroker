@@ -3,6 +3,8 @@
 
 set -e -x
 
+go install github.com/onsi/ginkgo/ginkgo@latest
+
 pushd nfsbroker
     ginkgo -mod vendor -r -keepGoing -p -trace -randomizeAllSpecs -progress
 popd
