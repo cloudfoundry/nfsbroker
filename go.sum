@@ -5,8 +5,8 @@ code.cloudfoundry.org/credhub-cli v0.0.0-20200227190202-0fffecb4557e h1:88nKJNrY
 code.cloudfoundry.org/credhub-cli v0.0.0-20200227190202-0fffecb4557e/go.mod h1:fYV7w87yLyFJRPhvmunFy5ReY2mNFag16LValVzM67I=
 code.cloudfoundry.org/debugserver v0.0.0-20200131002057-141d5fa0e064 h1:FqYe1G3/W/ukk/wsIMor+2moGZ7roj34fcUvL07cgEY=
 code.cloudfoundry.org/debugserver v0.0.0-20200131002057-141d5fa0e064/go.mod h1:TotxfVIqTDwSnfxRc2ksk8uFZs5vhIN8Ooy3RdbsQF8=
-code.cloudfoundry.org/existingvolumebroker v0.77.0 h1:7NtPPUwgYLtIYcinBiDTtAbmDyHuoXTXmCuDJqkfWtw=
-code.cloudfoundry.org/existingvolumebroker v0.77.0/go.mod h1:Y2ZOK+3LKyc5g505bFUT3fXch0Ac8MQRQQ89sDUdInE=
+code.cloudfoundry.org/existingvolumebroker v0.78.0 h1:NK+vYCYSgl/KvFGRMvUkaTJiveYPtnR0sycijCr8b3Y=
+code.cloudfoundry.org/existingvolumebroker v0.78.0/go.mod h1:r3VEySzmvkIwZlpqcAR+OFVz9qgR5MHsJ0X6+0lQ9FA=
 code.cloudfoundry.org/goshims v0.11.0 h1:8Q6Zb/XoAdhVszB2iB2G7dqxMkQ/2QGIk45ObGZ6IsY=
 code.cloudfoundry.org/goshims v0.11.0/go.mod h1:HhosINKwluPIS8VjXVABKfbcmmjQl9ybSrqIoaLilx4=
 code.cloudfoundry.org/lager v2.0.0+incompatible h1:WZwDKDB2PLd/oL+USK4b4aEjUymIej9My2nUQ9oWEwQ=
