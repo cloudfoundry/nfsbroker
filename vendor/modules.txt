@@ -26,7 +26,7 @@ code.cloudfoundry.org/goshims/osshim
 ## explicit
 code.cloudfoundry.org/lager
 code.cloudfoundry.org/lager/lagerflags
-# code.cloudfoundry.org/service-broker-store v0.38.0
+# code.cloudfoundry.org/service-broker-store v0.39.0
 ## explicit; go 1.19
 code.cloudfoundry.org/service-broker-store/brokerstore
 code.cloudfoundry.org/service-broker-store/brokerstore/credhub_shims
@@ -96,7 +96,7 @@ github.com/onsi/ginkgo/reporters/stenographer
 github.com/onsi/ginkgo/reporters/stenographer/support/go-colorable
 github.com/onsi/ginkgo/reporters/stenographer/support/go-isatty
 github.com/onsi/ginkgo/types
-# github.com/onsi/gomega v1.27.0
+# github.com/onsi/gomega v1.27.1
 ## explicit; go 1.18
 github.com/onsi/gomega
 github.com/onsi/gomega/format
