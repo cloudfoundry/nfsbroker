@@ -26,7 +26,7 @@ code.cloudfoundry.org/goshims/osshim
 ## explicit
 code.cloudfoundry.org/lager
 code.cloudfoundry.org/lager/lagerflags
-# code.cloudfoundry.org/service-broker-store v0.40.0
+# code.cloudfoundry.org/service-broker-store v0.41.0
 ## explicit; go 1.19
 code.cloudfoundry.org/service-broker-store/brokerstore
 code.cloudfoundry.org/service-broker-store/brokerstore/credhub_shims
