@@ -12,7 +12,7 @@ require (
 	code.cloudfoundry.org/volume-mount-options v1.1.0
 	github.com/google/gofuzz v1.2.0
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.27.2
+	github.com/onsi/gomega v1.27.3
 	github.com/pivotal-cf/brokerapi v6.4.2+incompatible
 	github.com/tedsuo/ifrit v0.0.0-20191009134036-9a97d0632f00
 )
@@ -22,7 +22,7 @@ require (
 	github.com/cloudfoundry/go-socks5 v0.0.0-20180221174514-54f73bdb8a8e // indirect
 	github.com/cloudfoundry/socks5-proxy v0.2.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
-	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/gorilla/mux v1.7.4 // indirect
