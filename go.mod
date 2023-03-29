@@ -1,6 +1,6 @@
 module code.cloudfoundry.org/nfsbroker
 
-go 1.19
+go 1.20
 
 require (
 	code.cloudfoundry.org/clock v0.0.0-20180518195852-02e53af36e6c
