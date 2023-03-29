@@ -142,6 +142,15 @@ func parseCommandLine() {
 func parseEnvironment() {
 	username, _ = os.LookupEnv("USERNAME")
 	password, _ = os.LookupEnv("PASSWORD")
+	uaaClientSecretString, _ := os.LookupEnv("UAA_CLIENT_SECRET")
+	if uaaClientSecretString != "" {
+		uaaClientSecret = &uaaClientSecretString
+	}
+	uaaClientIDString, _ := os.LookupEnv("UAA_CLIENT_ID")
+	if uaaClientIDString != "" {
+		uaaClientSecret = &uaaClientIDString
+	}
+
 }
 
 func checkParams() {
