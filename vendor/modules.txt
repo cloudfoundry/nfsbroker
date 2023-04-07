@@ -1,5 +1,5 @@
-# code.cloudfoundry.org/clock v1.0.0
-## explicit
+# code.cloudfoundry.org/clock v1.1.0
+## explicit; go 1.20
 code.cloudfoundry.org/clock
 # code.cloudfoundry.org/credhub-cli v0.0.0-20200227190202-0fffecb4557e
 ## explicit; go 1.13
@@ -126,7 +126,7 @@ github.com/pivotal-cf/brokerapi/utils
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
-# github.com/tedsuo/ifrit v0.0.0-20191009134036-9a97d0632f00
+# github.com/tedsuo/ifrit v0.0.0-20230330192023-5cba443a66c4
 ## explicit
 github.com/tedsuo/ifrit
 github.com/tedsuo/ifrit/ginkgomon
