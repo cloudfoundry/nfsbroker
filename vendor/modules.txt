@@ -19,8 +19,8 @@ code.cloudfoundry.org/debugserver
 ## explicit; go 1.20
 code.cloudfoundry.org/existingvolumebroker
 code.cloudfoundry.org/existingvolumebroker/utils
-# code.cloudfoundry.org/goshims v0.14.0
-## explicit; go 1.13
+# code.cloudfoundry.org/goshims v0.15.0
+## explicit; go 1.20
 code.cloudfoundry.org/goshims/osshim
 # code.cloudfoundry.org/lager v2.0.0+incompatible
 ## explicit
