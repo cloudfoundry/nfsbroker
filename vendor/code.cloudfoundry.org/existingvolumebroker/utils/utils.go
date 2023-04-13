@@ -1,10 +1,10 @@
 package utils
 
 import (
-	"code.cloudfoundry.org/goshims/osshim"
 	"os"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/existingvolumebroker/fakes/osshim"
+	"code.cloudfoundry.org/lager/v3"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/sigmon"

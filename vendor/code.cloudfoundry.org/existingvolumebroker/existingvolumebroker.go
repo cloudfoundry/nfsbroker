@@ -3,24 +3,23 @@ package existingvolumebroker
 import (
 	"bytes"
 	"context"
+	"crypto/md5"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/pivotal-cf/brokerapi/domain"
-	"github.com/pivotal-cf/brokerapi/domain/apiresponses"
 	"net/http"
 	"path"
 	"regexp"
 	"sync"
 
-	"crypto/md5"
-
 	"code.cloudfoundry.org/clock"
-	"code.cloudfoundry.org/goshims/osshim"
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/existingvolumebroker/fakes/osshim"
+	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/service-broker-store/brokerstore"
 	vmo "code.cloudfoundry.org/volume-mount-options"
 	vmou "code.cloudfoundry.org/volume-mount-options/utils"
+	"github.com/pivotal-cf/brokerapi/v9/domain"
+	"github.com/pivotal-cf/brokerapi/v9/domain/apiresponses"
 )
 
 const (
@@ -54,7 +53,10 @@ type Broker struct {
 	DisallowedBindOverrides []string
 }
 
-//go:generate counterfeiter -o fakes/fake_services.go . Services
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
+//counterfeiter:generate -p -o fakes/osshim/os.go os
+
+//counterfeiter:generate -o fakes/fake_services.go . Services
 type Services interface {
 	List() []domain.Service
 }
@@ -90,7 +92,6 @@ func (b *Broker) isNFSBroker() bool {
 func (b *Broker) isSMBBroker() bool {
 	return b.brokerType == BrokerTypeSMB
 }
-
 
 func (b *Broker) Services(_ context.Context) ([]domain.Service, error) {
 	logger := b.logger.Session("services")
@@ -364,7 +365,7 @@ func (b *Broker) LastOperation(_ context.Context, instanceID string, _ domain.Po
 	return domain.LastOperation{}, errors.New("unrecognized operationData")
 }
 
-func (b *Broker) GetInstance(ctx context.Context, instanceID string) (domain.GetInstanceDetailsSpec, error) {
+func (b *Broker) GetInstance(ctx context.Context, instanceID string, details domain.FetchInstanceDetails) (domain.GetInstanceDetailsSpec, error) {
 	panic("implement me")
 }
 
@@ -372,8 +373,7 @@ func (b *Broker) LastBindingOperation(ctx context.Context, instanceID, bindingID
 	panic("implement me")
 }
 
-
-func (b *Broker) GetBinding(ctx context.Context, instanceID, bindingID string) (domain.GetBindingSpec, error) {
+func (b *Broker) GetBinding(ctx context.Context, instanceID, bindingID string, details domain.FetchBindingDetails) (domain.GetBindingSpec, error) {
 	panic("implement me")
 }
 
@@ -427,4 +427,3 @@ func stringifyShare(data interface{}) string {
 
 	return ""
 }
-
