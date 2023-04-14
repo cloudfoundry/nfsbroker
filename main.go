@@ -1,33 +1,34 @@
 package main
 
 import (
-	"code.cloudfoundry.org/clock"
-	"code.cloudfoundry.org/debugserver"
-	"code.cloudfoundry.org/existingvolumebroker"
-	evbutils "code.cloudfoundry.org/existingvolumebroker/utils"
-	"code.cloudfoundry.org/goshims/osshim"
-	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/lager/lagerflags"
-	"code.cloudfoundry.org/nfsbroker/utils"
-	"code.cloudfoundry.org/service-broker-store/brokerstore"
-	vmo "code.cloudfoundry.org/volume-mount-options"
-	vmou "code.cloudfoundry.org/volume-mount-options/utils"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/pivotal-cf/brokerapi"
-	"github.com/tedsuo/ifrit"
-	"github.com/tedsuo/ifrit/grouper"
-	"github.com/tedsuo/ifrit/http_server"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"code.cloudfoundry.org/clock"
+	"code.cloudfoundry.org/debugserver"
+	"code.cloudfoundry.org/existingvolumebroker"
+	evbutils "code.cloudfoundry.org/existingvolumebroker/utils"
+	"code.cloudfoundry.org/goshims/osshim"
+	"code.cloudfoundry.org/lager/v3"
+	"code.cloudfoundry.org/lager/v3/lagerflags"
+	"code.cloudfoundry.org/nfsbroker/utils"
+	"code.cloudfoundry.org/service-broker-store/brokerstore"
+	vmo "code.cloudfoundry.org/volume-mount-options"
+	vmou "code.cloudfoundry.org/volume-mount-options/utils"
+	"github.com/pivotal-cf/brokerapi/v9"
+	"github.com/tedsuo/ifrit"
+	"github.com/tedsuo/ifrit/grouper"
+	"github.com/tedsuo/ifrit/http_server"
 )
 
 var dataDir = flag.String(
@@ -107,7 +108,8 @@ var (
 	password string
 )
 
-//go:generate counterfeiter -o fakes/retired_store_fake.go . RetiredStore
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
+//counterfeiter:generate -o fakes/retired_store_fake.go . RetiredStore
 type RetiredStore interface {
 	IsRetired() (bool, error)
 	brokerstore.Store
@@ -212,7 +214,7 @@ func configureCACert(logger lager.Logger, client *http.Client) {
 			logger.Fatal("appending certs from PEM", err)
 		}
 		// disable "G402 (CWE-295): TLS MinVersion too low. (Confidence: HIGH, Severity: HIGH)"
- 		// #nosec G402 - Enforcing a MinVersion for TLS could break numerous existing systems
+		// #nosec G402 - Enforcing a MinVersion for TLS could break numerous existing systems
 		clientTLSConf := &tls.Config{
 			RootCAs: certpool,
 		}

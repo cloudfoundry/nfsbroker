@@ -1,10 +1,5 @@
-all: install
-
-install:
-	go install -v
-
 test:
-	ginkgo -v -r -keepGoing -p -trace -randomizeAllSpecs -progress .
+	go run github.com/onsi/ginkgo/v2/ginkgo -v -r --keep-going -p --trace --randomize-all .
 
 fmt:
 	go fmt ./...

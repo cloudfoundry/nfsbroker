@@ -1,32 +1,28 @@
 package main
 
 import (
-	fuzz "github.com/google/gofuzz"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
-
-	"encoding/json"
-	"io/ioutil"
-
-	"fmt"
-
-	"os"
 	"time"
 
 	"code.cloudfoundry.org/nfsbroker/fakes"
-	. "github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/extensions/table"
+	fuzz "github.com/google/gofuzz"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/onsi/gomega/ghttp"
-	"github.com/pivotal-cf/brokerapi"
+	"github.com/pivotal-cf/brokerapi/v9"
 	"github.com/tedsuo/ifrit"
-	"github.com/tedsuo/ifrit/ginkgomon"
+	ginkgomon "github.com/tedsuo/ifrit/ginkgomon_v2"
 )
 
 var _ = Describe("nfsbroker Main", func() {
@@ -69,8 +65,8 @@ var _ = Describe("nfsbroker Main", func() {
 		var volmanRunner *ginkgomon.Runner
 		var credhubServer *ghttp.Server
 
-		table.DescribeTable("should log a helpful diagnostic error message ", func(statusCode int) {
-			listenAddr := "0.0.0.0:" + strconv.Itoa(8999+GinkgoParallelNode())
+		DescribeTable("should log a helpful diagnostic error message ", func(statusCode int) {
+			listenAddr := "0.0.0.0:" + strconv.Itoa(8999+GinkgoParallelProcess())
 
 			credhubServer = ghttp.NewServer()
 			credhubServer.AppendHandlers(ghttp.CombineHandlers(
@@ -98,13 +94,13 @@ var _ = Describe("nfsbroker Main", func() {
 			Eventually(volmanRunner.Buffer()).Should(gbytes.Say(fmt.Sprintf(".*Attempted to connect to credhub. Expected 200. Got %d.*X-Squid-Err:\\[some-error\\].*", statusCode)))
 
 		},
-			table.Entry("300", http.StatusMultipleChoices),
-			table.Entry("400", http.StatusBadRequest),
-			table.Entry("403", http.StatusForbidden),
-			table.Entry("500", http.StatusInternalServerError))
+			Entry("300", http.StatusMultipleChoices),
+			Entry("400", http.StatusBadRequest),
+			Entry("403", http.StatusForbidden),
+			Entry("500", http.StatusInternalServerError))
 
 		It("should timeout after 30 seconds", func() {
-			listenAddr := "0.0.0.0:" + strconv.Itoa(8999+GinkgoParallelNode())
+			listenAddr := "0.0.0.0:" + strconv.Itoa(8999+GinkgoParallelProcess())
 
 			var closeChan = make(chan interface{}, 1)
 
@@ -156,7 +152,7 @@ var _ = Describe("nfsbroker Main", func() {
 		)
 
 		BeforeEach(func() {
-			listenAddr = "0.0.0.0:" + strconv.Itoa(7999+GinkgoParallelNode())
+			listenAddr = "0.0.0.0:" + strconv.Itoa(7999+GinkgoParallelProcess())
 			username = "admin"
 			password = "password"
 
@@ -314,12 +310,12 @@ var _ = Describe("nfsbroker Main", func() {
 			Context("allowed parameters", func() {
 				It("should accept the parameter", func() {
 					rawParametersMap := map[string]string{
-						"uid":   "1",
-						"gid":   "1",
-						"mount":      "somemount",
-						"readonly":   "true",
-						"cache": "true",
-						"version": "4.2",
+						"uid":      "1",
+						"gid":      "1",
+						"mount":    "somemount",
+						"readonly": "true",
+						"cache":    "true",
+						"version":  "4.2",
 					}
 
 					rawParameters, err := json.Marshal(rawParametersMap)
@@ -343,7 +339,7 @@ var _ = Describe("nfsbroker Main", func() {
 			Context("invalid cache", func() {
 				var (
 					bindDetailJson []byte
-					cache     = ""
+					cache          = ""
 				)
 
 				BeforeEach(func() {
