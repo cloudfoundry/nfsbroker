@@ -15,7 +15,7 @@ code.cloudfoundry.org/credhub-cli/errors
 # code.cloudfoundry.org/debugserver v0.0.0-20230411203424-7d38b2728d52
 ## explicit; go 1.19
 code.cloudfoundry.org/debugserver
-# code.cloudfoundry.org/existingvolumebroker v0.88.0
+# code.cloudfoundry.org/existingvolumebroker v0.89.0
 ## explicit; go 1.20
 code.cloudfoundry.org/existingvolumebroker
 code.cloudfoundry.org/existingvolumebroker/utils
@@ -31,8 +31,8 @@ code.cloudfoundry.org/lager/v3/lagerflags
 ## explicit; go 1.20
 code.cloudfoundry.org/service-broker-store/brokerstore
 code.cloudfoundry.org/service-broker-store/brokerstore/credhub_shims
-# code.cloudfoundry.org/volume-mount-options v1.1.0
-## explicit; go 1.13
+# code.cloudfoundry.org/volume-mount-options v0.54.0
+## explicit; go 1.20
 code.cloudfoundry.org/volume-mount-options
 code.cloudfoundry.org/volume-mount-options/utils
 # github.com/cloudfoundry/go-socks5 v0.0.0-20180221174514-54f73bdb8a8e
