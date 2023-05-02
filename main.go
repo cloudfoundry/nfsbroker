@@ -5,20 +5,16 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-
-	"code.cloudfoundry.org/existingvolumebroker"
-
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
 
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/debugserver"
+	"code.cloudfoundry.org/existingvolumebroker"
 	"code.cloudfoundry.org/goshims/osshim"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagerflags"
-	"code.cloudfoundry.org/nfsbroker/utils"
 	"code.cloudfoundry.org/service-broker-store/brokerstore"
 	vmo "code.cloudfoundry.org/volume-mount-options"
 	vmou "code.cloudfoundry.org/volume-mount-options/utils"
@@ -26,6 +22,8 @@ import (
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/http_server"
+
+	"code.cloudfoundry.org/nfsbroker/utils"
 )
 
 var dataDir = flag.String(
@@ -144,17 +142,26 @@ func parseCommandLine() {
 func parseEnvironment() {
 	username, _ = os.LookupEnv("USERNAME")
 	password, _ = os.LookupEnv("PASSWORD")
+	uaaClientSecretString, _ := os.LookupEnv("UAA_CLIENT_SECRET")
+	if uaaClientSecretString != "" {
+		uaaClientSecret = &uaaClientSecretString
+	}
+	uaaClientIDString, _ := os.LookupEnv("UAA_CLIENT_ID")
+	if uaaClientIDString != "" {
+		uaaClientSecret = &uaaClientIDString
+	}
+
 }
 
 func checkParams() {
 	if *dataDir == "" && *credhubURL == "" {
-		fmt.Fprint(os.Stderr, "\nERROR: Either dataDir or credhubURL parameters must be provided.\n\n")
+		_, _ = fmt.Fprint(os.Stderr, "\nERROR: Either dataDir or credhubURL parameters must be provided.\n\n")
 		flag.Usage()
 		os.Exit(1)
 	}
 
 	if *servicesConfig == "" {
-		fmt.Fprint(os.Stderr, "\nERROR: servicesConfig parameter must be provided.\n\n")
+		_, _ = fmt.Fprint(os.Stderr, "\nERROR: servicesConfig parameter must be provided.\n\n")
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -192,16 +199,6 @@ func parseVcapServices(logger lager.Logger, os osshim.Os) {
 
 }
 
-func getByAlias(data map[string]interface{}, keys ...string) interface{} {
-	for _, key := range keys {
-		value, ok := data[key]
-		if ok {
-			return value
-		}
-	}
-	return nil
-}
-
 func createServer(logger lager.Logger) ifrit.Runner {
 	if isCfPushed() {
 		parseVcapServices(logger, &osshim.OsShim{})
@@ -209,7 +206,7 @@ func createServer(logger lager.Logger) ifrit.Runner {
 
 	var credhubCACert string
 	if *credhubCACertPath != "" {
-		b, err := ioutil.ReadFile(*credhubCACertPath)
+		b, err := os.ReadFile(*credhubCACertPath)
 		if err != nil {
 			logger.Fatal("cannot-read-credhub-ca-cert", err, lager.Data{"path": *credhubCACertPath})
 		}
@@ -218,7 +215,7 @@ func createServer(logger lager.Logger) ifrit.Runner {
 
 	var uaaCACert string
 	if *uaaCACertPath != "" {
-		b, err := ioutil.ReadFile(*uaaCACertPath)
+		b, err := os.ReadFile(*uaaCACertPath)
 		if err != nil {
 			logger.Fatal("cannot-read-credhub-ca-cert", err, lager.Data{"path": *uaaCACertPath})
 		}
@@ -241,7 +238,7 @@ func createServer(logger lager.Logger) ifrit.Runner {
 	}
 
 	if retired {
-		logger.Fatal("retired-store", errors.New("Store is retired"))
+		logger.Fatal("retired-store", errors.New("store is retired"))
 	}
 
 	cacheOptsValidator := vmo.ValidationFunc(validateCache)
