@@ -12,7 +12,7 @@ require (
 	code.cloudfoundry.org/volume-mount-options v0.55.0
 	github.com/google/gofuzz v1.2.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.6.1
-	github.com/onsi/ginkgo/v2 v2.9.2
+	github.com/onsi/ginkgo/v2 v2.9.3
 	github.com/onsi/gomega v1.27.6
 	github.com/pivotal-cf/brokerapi/v9 v9.0.1
 	github.com/tedsuo/ifrit v0.0.0-20230330192023-5cba443a66c4
@@ -22,7 +22,7 @@ require (
 	code.cloudfoundry.org/credhub-cli v0.0.0-20230410130651-444cd52cc23d // indirect
 	github.com/cloudfoundry/go-socks5 v0.0.0-20180221174514-54f73bdb8a8e // indirect
 	github.com/cloudfoundry/socks5-proxy v0.2.87 // indirect
-	github.com/go-logr/logr v1.2.3 // indirect
+	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
