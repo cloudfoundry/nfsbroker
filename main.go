@@ -148,7 +148,7 @@ func parseEnvironment() {
 	}
 	uaaClientIDString, _ := os.LookupEnv("UAA_CLIENT_ID")
 	if uaaClientIDString != "" {
-		uaaClientSecret = &uaaClientIDString
+		uaaClientID = &uaaClientIDString
 	}
 
 }
