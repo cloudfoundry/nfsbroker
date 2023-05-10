@@ -14,7 +14,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.9.4
 	github.com/onsi/gomega v1.27.6
 	github.com/pivotal-cf/brokerapi v2.0.2+incompatible
-	github.com/tedsuo/ifrit v0.0.0-20191009134036-9a97d0632f00
+	github.com/tedsuo/ifrit v0.0.0-20230330192023-5cba443a66c4
 )
 
 require (
@@ -28,7 +28,6 @@ require (
 	github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38 // indirect
 	github.com/gorilla/mux v1.7.3 // indirect
 	github.com/hashicorp/go-version v1.2.0 // indirect
-	github.com/hpcloud/tail v1.0.0 // indirect
 	github.com/onsi/ginkgo v1.12.0 // indirect
 	github.com/pkg/errors v0.8.1 // indirect
 	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073 // indirect
@@ -37,7 +36,5 @@ require (
 	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/tools v0.8.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
-	gopkg.in/fsnotify.v1 v1.4.7 // indirect
-	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

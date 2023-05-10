@@ -23,7 +23,7 @@ import (
 	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/tedsuo/ifrit"
-	"github.com/tedsuo/ifrit/ginkgomon"
+	ginkgomon "github.com/tedsuo/ifrit/ginkgomon_v2"
 
 	"code.cloudfoundry.org/nfsbroker/fakes"
 	. "github.com/onsi/ginkgo/v2"
