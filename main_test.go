@@ -2,12 +2,13 @@ package main
 
 import (
 	"errors"
-	fuzz "github.com/google/gofuzz"
 	"io"
 	"net/http"
 	"os/exec"
 	"strconv"
 	"strings"
+
+	fuzz "github.com/google/gofuzz"
 
 	"encoding/json"
 	"io/ioutil"
@@ -22,10 +23,10 @@ import (
 	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/tedsuo/ifrit"
-	"github.com/tedsuo/ifrit/ginkgomon"
+	ginkgomon "github.com/tedsuo/ifrit/ginkgomon_v2"
 
 	"code.cloudfoundry.org/nfsbroker/fakes"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

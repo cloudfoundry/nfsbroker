@@ -11,26 +11,30 @@ require (
 	code.cloudfoundry.org/service-broker-store v0.0.0-20191022224831-b7b13dc8c343
 	code.cloudfoundry.org/volume-mount-options v1.0.1-0.20191111181440-dc86bc1b622e
 	github.com/google/gofuzz v1.1.0
-	github.com/onsi/ginkgo v1.12.0
-	github.com/onsi/gomega v1.7.1
+	github.com/onsi/ginkgo/v2 v2.9.4
+	github.com/onsi/gomega v1.27.6
 	github.com/pivotal-cf/brokerapi v2.0.2+incompatible
-	github.com/tedsuo/ifrit v0.0.0-20191009134036-9a97d0632f00
+	github.com/tedsuo/ifrit v0.0.0-20230330192023-5cba443a66c4
 )
 
 require (
 	code.cloudfoundry.org/credhub-cli v0.0.0-20190923163340-a6d1ba3b23bd // indirect
 	github.com/cloudfoundry/go-socks5 v0.0.0-20180221174514-54f73bdb8a8e // indirect
 	github.com/cloudfoundry/socks5-proxy v0.2.0 // indirect
-	github.com/golang/protobuf v1.3.1 // indirect
+	github.com/go-logr/logr v1.2.4 // indirect
+	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
+	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38 // indirect
 	github.com/gorilla/mux v1.7.3 // indirect
 	github.com/hashicorp/go-version v1.2.0 // indirect
-	github.com/hpcloud/tail v1.0.0 // indirect
+	github.com/onsi/ginkgo v1.12.0 // indirect
 	github.com/pkg/errors v0.8.1 // indirect
 	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073 // indirect
-	golang.org/x/net v0.0.0-20190603091049-60506f45cf65 // indirect
-	golang.org/x/sys v0.0.0-20191120155948-bd437916bb0e // indirect
-	golang.org/x/text v0.3.2 // indirect
-	gopkg.in/fsnotify.v1 v1.4.7 // indirect
-	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
-	gopkg.in/yaml.v2 v2.2.4 // indirect
+	golang.org/x/net v0.9.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/text v0.9.0 // indirect
+	golang.org/x/tools v0.8.0 // indirect
+	google.golang.org/protobuf v1.28.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
