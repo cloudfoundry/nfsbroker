@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/pivotal-cf/brokerapi/v9"
+	"github.com/pivotal-cf/brokerapi/v10"
 )
 
 type Services interface {

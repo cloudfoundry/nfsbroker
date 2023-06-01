@@ -4,14 +4,14 @@ code.cloudfoundry.org/credhub-cli v0.0.0-20230410130651-444cd52cc23d h1:pI4PaCMp
 code.cloudfoundry.org/credhub-cli v0.0.0-20230410130651-444cd52cc23d/go.mod h1:7zAmd/M8Is+fydOUzw3Lme618N0REV623H8Dgl1t0NQ=
 code.cloudfoundry.org/debugserver v0.0.0-20230411203424-7d38b2728d52 h1:ztSeThqWpOvEmsf+owl/dC1k4SkE8t1KshoqIUsmjmI=
 code.cloudfoundry.org/debugserver v0.0.0-20230411203424-7d38b2728d52/go.mod h1:f/K8F14k3YpWZfPm+08GDmPJ0J1pyT8AgEY8A9WCvRo=
-code.cloudfoundry.org/existingvolumebroker v0.94.0 h1:Bsi1wPOJomKziIfmYawgTDKs1YErLu21FQOo8mIBs+I=
-code.cloudfoundry.org/existingvolumebroker v0.94.0/go.mod h1:HhLuS0iPGhEyezm7FuAB5WGIsFkaV0jFQD8Dz9YbBrA=
+code.cloudfoundry.org/existingvolumebroker v0.95.0 h1:Xq6qlK+Bupvmia/nCkp2yw+e4M9fAp7owbgSSrYHdtE=
+code.cloudfoundry.org/existingvolumebroker v0.95.0/go.mod h1:d93RqIriskuLagFx9ijyADVnk3utkqtTkLC1Z7sJNhU=
 code.cloudfoundry.org/goshims v0.17.0 h1:MFnBQ9Av3037202lXeWt/JtplyUy1mThskcpXzmWHuI=
 code.cloudfoundry.org/goshims v0.17.0/go.mod h1:W/+6Vbhv7uwJHnN7VxBPmgz+I6YLlGmQhSCld+wqW7Y=
 code.cloudfoundry.org/lager/v3 v3.0.1 h1:AI7h0EgCa4bJCCq0N8JV8EBP+tbJUIovqKc4hB4wZsA=
 code.cloudfoundry.org/lager/v3 v3.0.1/go.mod h1:zA6tOIWhr5uZUez+PGpdfBHDWQOfhOrr0cgKDagZPwk=
-code.cloudfoundry.org/service-broker-store v0.51.0 h1:wmkFXMvjjDbF3teYpuTVCJERvyUTYXtU5Go00wgG6yg=
-code.cloudfoundry.org/service-broker-store v0.51.0/go.mod h1:eWyxKueH3cAn2bMMj6VflmIfPLOLFF7s0hD5oVnB0FU=
+code.cloudfoundry.org/service-broker-store v0.52.0 h1:HCJuJA9tj5ZVNMF1KfAaQ20KVudKUtaBdbBrmQBXs6E=
+code.cloudfoundry.org/service-broker-store v0.52.0/go.mod h1:VRw21LbEiQuoyzPxpeCSNXNLBtVizhawMoi//gdW2aU=
 code.cloudfoundry.org/volume-mount-options v0.57.0 h1:n+qPS8WBkWHRZjNhUTCOkJNHWr1zyQSZXm00+pKmdP8=
 code.cloudfoundry.org/volume-mount-options v0.57.0/go.mod h1:ZXUg/p9Mmw/M60rk/KnWcMfDIWv+9GTSjFFJodY3Pmk=
 github.com/cloudfoundry/go-socks5 v0.0.0-20180221174514-54f73bdb8a8e h1:FQdRViaoDphGRfgrotl2QGsX1gbloe57dbGBS5CG6KY=
@@ -23,6 +23,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/drewolson/testflight v1.0.0 h1:jgA0pHcFIPnXoBmyFzrdoR2ka4UvReMDsjYc7Jcvl80=
 github.com/fsnotify/fsnotify v1.6.0 h1:n+5WquG0fcWoWp6xPWfHdbskMCQaFnG6PfBrh1Ky4HY=
+github.com/go-chi/chi/v5 v5.0.8 h1:lD+NLqFcAi1ovnVZpsnObHGW4xb4J8lNmoYVfECH1Y0=
+github.com/go-chi/chi/v5 v5.0.8/go.mod h1:DslCQbL2OYiznFReuXYUmQ2hGd1aDpCnlMNITLSKoi8=
 github.com/go-logr/logr v1.2.4 h1:g01GSCwiDw2xSZfjJ2/T9M+S6pFdcNtFYsp+Y43HYDQ=
 github.com/go-logr/logr v1.2.4/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=
 github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 h1:tfuBGBXKqDEevZMzYi5KSi8KkcZtzBcTgAUUtapy0OI=
@@ -40,8 +42,6 @@ github.com/google/pprof v0.0.0-20230406165453-00490a63f317/go.mod h1:79YE0hCXdHa
 github.com/google/uuid v1.0.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
 github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
-github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
 github.com/hashicorp/go-version v1.6.0 h1:feTTfFNnjP967rlCxM/I9g701jU+RN74YKx2mOkIeek=
 github.com/hashicorp/go-version v1.6.0/go.mod h1:fltr4n8CU8Ke44wwGCBoEymUuxUHl09ZGVZPK5anwXA=
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
@@ -58,8 +58,8 @@ github.com/openzipkin/zipkin-go v0.4.1 h1:kNd/ST2yLLWhaWrkgchya40TJabe8Hioj9udfP
 github.com/openzipkin/zipkin-go v0.4.1/go.mod h1:qY0VqDSN1pOBN94dBc6w2GJlWLiovAyg7Qt6/I9HecM=
 github.com/pborman/uuid v1.2.1 h1:+ZZIw58t/ozdjRaXh/3awHfmWRbzYxJoAdNJxe/3pvw=
 github.com/pborman/uuid v1.2.1/go.mod h1:X/NO0urCmaxf9VXbdlT7C2Yzkj2IKimNn4k+gtPdI/k=
-github.com/pivotal-cf/brokerapi/v9 v9.0.1 h1:RCFVI88hL7OoeAmpqH3a/oh+QWVSDV9vjXxT+cJQkFo=
-github.com/pivotal-cf/brokerapi/v9 v9.0.1/go.mod h1:8tU05vMehQWHfkmjiLdo9QoQ+K5FWinN07f8O3MZ7Vw=
+github.com/pivotal-cf/brokerapi/v10 v10.0.0 h1:cC2zdIF1jh1twD196xWpHjiX2JEbU+RMLH2jpmLDRT8=
+github.com/pivotal-cf/brokerapi/v10 v10.0.0/go.mod h1:LVexXnzj0Zj7lxIJXnDqc794/XHwEzkOPzAZdEaKM5M=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

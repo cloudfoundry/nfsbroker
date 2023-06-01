@@ -20,7 +20,7 @@ import (
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/onsi/gomega/ghttp"
-	"github.com/pivotal-cf/brokerapi/v9"
+	"github.com/pivotal-cf/brokerapi/v10"
 	"github.com/tedsuo/ifrit"
 	ginkgomon "github.com/tedsuo/ifrit/ginkgomon_v2"
 )
