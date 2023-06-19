@@ -6,8 +6,8 @@ code.cloudfoundry.org/debugserver v0.0.0-20230411203424-7d38b2728d52 h1:ztSeThqW
 code.cloudfoundry.org/debugserver v0.0.0-20230411203424-7d38b2728d52/go.mod h1:f/K8F14k3YpWZfPm+08GDmPJ0J1pyT8AgEY8A9WCvRo=
 code.cloudfoundry.org/existingvolumebroker v0.96.0 h1:B8nRYhS85/7MH8KWItOzHopC99WzpfDr0HbZx5svT04=
 code.cloudfoundry.org/existingvolumebroker v0.96.0/go.mod h1:xoxj2YarcQPN/hfyw8AAbne5ZzyrXBcUcCXqdFQA2rE=
-code.cloudfoundry.org/goshims v0.17.0 h1:MFnBQ9Av3037202lXeWt/JtplyUy1mThskcpXzmWHuI=
-code.cloudfoundry.org/goshims v0.17.0/go.mod h1:W/+6Vbhv7uwJHnN7VxBPmgz+I6YLlGmQhSCld+wqW7Y=
+code.cloudfoundry.org/goshims v0.18.0 h1:+h+zi6y81UFQSFfQWvQ8pjH+y1/GFDntu4V/N0p390U=
+code.cloudfoundry.org/goshims v0.18.0/go.mod h1:9XPBN5F/N0vd4OHF+kHDQsZtnpNe92G06HbYLfEQATM=
 code.cloudfoundry.org/lager/v3 v3.0.2 h1:H0dcQY+814G1Ea0e5K/AMaMpcr+Pe5Iv+AALJEwrP9U=
 code.cloudfoundry.org/lager/v3 v3.0.2/go.mod h1:zA6tOIWhr5uZUez+PGpdfBHDWQOfhOrr0cgKDagZPwk=
 code.cloudfoundry.org/service-broker-store v0.54.0 h1:6MZ82hbhDxa7dxEqkwmw5RQD9FgZC9QPU0txCKGxEEI=
