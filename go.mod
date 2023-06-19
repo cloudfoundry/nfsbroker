@@ -8,11 +8,11 @@ require (
 	code.cloudfoundry.org/existingvolumebroker v0.96.0
 	code.cloudfoundry.org/goshims v0.17.0
 	code.cloudfoundry.org/lager/v3 v3.0.2
-	code.cloudfoundry.org/service-broker-store v0.53.0
+	code.cloudfoundry.org/service-broker-store v0.54.0
 	code.cloudfoundry.org/volume-mount-options v0.59.0
 	github.com/google/gofuzz v1.2.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.6.2
-	github.com/onsi/ginkgo/v2 v2.10.0
+	github.com/onsi/ginkgo/v2 v2.11.0
 	github.com/onsi/gomega v1.27.8
 	github.com/pivotal-cf/brokerapi/v10 v10.0.0
 	github.com/tedsuo/ifrit v0.0.0-20230330192023-5cba443a66c4
