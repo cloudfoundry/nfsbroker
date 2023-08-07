@@ -9,7 +9,7 @@ require (
 	code.cloudfoundry.org/goshims v0.19.0
 	code.cloudfoundry.org/lager/v3 v3.0.2
 	code.cloudfoundry.org/service-broker-store v0.57.0
-	code.cloudfoundry.org/volume-mount-options v0.62.0
+	code.cloudfoundry.org/volume-mount-options v0.63.0
 	github.com/google/gofuzz v1.2.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.6.2
 	github.com/onsi/ginkgo/v2 v2.11.0
