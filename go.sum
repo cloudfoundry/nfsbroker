@@ -10,8 +10,8 @@ code.cloudfoundry.org/goshims v0.23.0 h1:bsJVjOEz2Jn8/WvwXSGmzMYvDqogKwM6yO5O5Z3
 code.cloudfoundry.org/goshims v0.23.0/go.mod h1:L2VBklGSlw0Vl/CIBJWunqiNEmhE1/CG3SqlBoqQzzk=
 code.cloudfoundry.org/lager/v3 v3.0.2 h1:H0dcQY+814G1Ea0e5K/AMaMpcr+Pe5Iv+AALJEwrP9U=
 code.cloudfoundry.org/lager/v3 v3.0.2/go.mod h1:zA6tOIWhr5uZUez+PGpdfBHDWQOfhOrr0cgKDagZPwk=
-code.cloudfoundry.org/service-broker-store v0.63.0 h1:AdifrcKAtPy1dbCdJ5FArgDxsmOBLk6qv9vSfDxybs8=
-code.cloudfoundry.org/service-broker-store v0.63.0/go.mod h1:G0rGoUw8EjfSjrj6aRE8sVge020y8gxkaifK2Zklzv8=
+code.cloudfoundry.org/service-broker-store v0.64.0 h1:cMjHfuI6tOZxQL5JFxIgvcUfR3zuFj3ydyjWbj0n6Mo=
+code.cloudfoundry.org/service-broker-store v0.64.0/go.mod h1:G0rGoUw8EjfSjrj6aRE8sVge020y8gxkaifK2Zklzv8=
 code.cloudfoundry.org/volume-mount-options v0.69.0 h1:LHdqEttEH91ybihFXMylhzeNTBExSs8W/w/qRxToP4c=
 code.cloudfoundry.org/volume-mount-options v0.69.0/go.mod h1:h7Dgs7WCBq0utp8Wgmcg/qNC+wFo9hbpDGJMeH8xw/M=
 github.com/cloudfoundry/go-socks5 v0.0.0-20180221174514-54f73bdb8a8e h1:FQdRViaoDphGRfgrotl2QGsX1gbloe57dbGBS5CG6KY=
