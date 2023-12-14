@@ -1,33 +1,29 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
-
-	fuzz "github.com/google/gofuzz"
-
-	"encoding/json"
-	"io/ioutil"
-
-	"fmt"
-
-	"os"
 	"time"
 
+	fuzz "github.com/google/gofuzz"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/onsi/gomega/ghttp"
-	"github.com/pivotal-cf/brokerapi"
+	"github.com/pivotal-cf/brokerapi/v10"
 	"github.com/tedsuo/ifrit"
 	ginkgomon "github.com/tedsuo/ifrit/ginkgomon_v2"
 
 	"code.cloudfoundry.org/nfsbroker/fakes"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("nfsbroker Main", func() {
@@ -82,7 +78,7 @@ var _ = Describe("nfsbroker Main", func() {
 		)
 
 		BeforeEach(func() {
-			listenAddr = "0.0.0.0:" + strconv.Itoa(7999+GinkgoParallelNode())
+			listenAddr = "0.0.0.0:" + strconv.Itoa(7999+GinkgoParallelProcess())
 			username = "admin"
 			password = "password"
 
@@ -295,7 +291,7 @@ var _ = Describe("nfsbroker Main", func() {
 					resp, err := httpDoWithAuth("PUT", endpoint, reader)
 
 					Expect(err).NotTo(HaveOccurred())
-					Expect(resp.StatusCode).To(Equal(500))
+					Expect(resp.StatusCode).To(Equal(400))
 
 					expectedResponse := map[string]string{
 						"description": "failed validation error",
@@ -303,7 +299,7 @@ var _ = Describe("nfsbroker Main", func() {
 					expectedJsonResponse, err := json.Marshal(expectedResponse)
 					Expect(err).NotTo(HaveOccurred())
 
-					responseBody, err := ioutil.ReadAll(resp.Body)
+					responseBody, err := io.ReadAll(resp.Body)
 					Expect(string(responseBody)).To(MatchJSON(expectedJsonResponse))
 				})
 			})
