@@ -16,14 +16,12 @@ require (
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.7.0
 	github.com/onsi/ginkgo/v2 v2.13.2
 	github.com/onsi/gomega v1.30.0
-	github.com/pivotal-cf/brokerapi v2.0.2+incompatible
 	github.com/pivotal-cf/brokerapi/v10 v10.1.1
 	github.com/tedsuo/ifrit v0.0.0-20230330192023-5cba443a66c4
 )
 
 require (
 	code.cloudfoundry.org/credhub-cli v0.0.0-20230410130651-444cd52cc23d // indirect
-	code.cloudfoundry.org/lager v2.0.0+incompatible // indirect
 	github.com/cloudfoundry/go-socks5 v0.0.0-20180221174514-54f73bdb8a8e // indirect
 	github.com/cloudfoundry/socks5-proxy v0.2.87 // indirect
 	github.com/go-chi/chi/v5 v5.0.10 // indirect
@@ -33,7 +31,6 @@ require (
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/pprof v0.0.0-20230406165453-00490a63f317 // indirect
 	github.com/google/uuid v1.3.0 // indirect
-	github.com/gorilla/mux v1.7.3 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/nxadm/tail v1.4.11 // indirect
 	github.com/openzipkin/zipkin-go v0.4.2 // indirect

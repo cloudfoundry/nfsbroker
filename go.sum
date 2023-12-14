@@ -8,8 +8,6 @@ code.cloudfoundry.org/existingvolumebroker v0.120.0 h1:ZZRyeffxVaRsxVr8rrZH1di79
 code.cloudfoundry.org/existingvolumebroker v0.120.0/go.mod h1:xSWXTsg0PPFLNP1RHKEX8zH1A4U71CuxTaCXZPzM/us=
 code.cloudfoundry.org/goshims v0.28.0 h1:3c/1qdseReJ07XLVjQW7Lx0ekz3fG3rcCx4lQ3WsB5g=
 code.cloudfoundry.org/goshims v0.28.0/go.mod h1:9t+jSJejcxqHoP2EFU4uerDNxtIOkE6LuISZVAs+Gy8=
-code.cloudfoundry.org/lager v2.0.0+incompatible h1:WZwDKDB2PLd/oL+USK4b4aEjUymIej9My2nUQ9oWEwQ=
-code.cloudfoundry.org/lager v2.0.0+incompatible/go.mod h1:O2sS7gKP3HM2iemG+EnwvyNQK7pTSC6Foi4QiMp9sSk=
 code.cloudfoundry.org/lager/v3 v3.0.3 h1:/UTmadZfIaKuT/whEinSxK1mzRfNu1uPfvjFfGqiwzM=
 code.cloudfoundry.org/lager/v3 v3.0.3/go.mod h1:Zn5q1SrIuuHjEUE7xerMKt3ztunrJQCZETAo7rV0CH8=
 code.cloudfoundry.org/service-broker-store v0.71.0 h1:ghkKJbmDV7C1sPZY2dKGLXr+v1QCOCcX08eUOApbHIE=
@@ -49,8 +47,6 @@ github.com/google/pprof v0.0.0-20230406165453-00490a63f317/go.mod h1:79YE0hCXdHa
 github.com/google/uuid v1.0.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
 github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/gorilla/mux v1.7.3 h1:gnP5JzjVOuiZD07fKKToCAOjS0yOpj/qPETTXCCS6hw=
-github.com/gorilla/mux v1.7.3/go.mod h1:1lud6UwP+6orDFRuTfBEV8e9/aOM/c4fVVCaMa2zaAs=
 github.com/hashicorp/go-version v1.6.0 h1:feTTfFNnjP967rlCxM/I9g701jU+RN74YKx2mOkIeek=
 github.com/hashicorp/go-version v1.6.0/go.mod h1:fltr4n8CU8Ke44wwGCBoEymUuxUHl09ZGVZPK5anwXA=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
@@ -75,8 +71,6 @@ github.com/openzipkin/zipkin-go v0.4.2 h1:zjqfqHjUpPmB3c1GlCvvgsM1G4LkvqQbBDueDO
 github.com/openzipkin/zipkin-go v0.4.2/go.mod h1:ZeVkFjuuBiSy13y8vpSDCjMi9GoI3hPpCJSBx/EYFhY=
 github.com/pborman/uuid v1.2.1 h1:+ZZIw58t/ozdjRaXh/3awHfmWRbzYxJoAdNJxe/3pvw=
 github.com/pborman/uuid v1.2.1/go.mod h1:X/NO0urCmaxf9VXbdlT7C2Yzkj2IKimNn4k+gtPdI/k=
-github.com/pivotal-cf/brokerapi v2.0.2+incompatible h1:iyVCGWTwT1lsYboZ+ogaOtNt98wATsOtNUxQSqd43q0=
-github.com/pivotal-cf/brokerapi v2.0.2+incompatible/go.mod h1:P+oA8NvkCTkq2t4DohBiyqQo69Ub15RKGcm/vKNP0gg=
 github.com/pivotal-cf/brokerapi/v10 v10.1.1 h1:ZVNgqnS7iA5FP6Z2azRPrcnj7k1Pwy/0C+n9zPGWtZk=
 github.com/pivotal-cf/brokerapi/v10 v10.1.1/go.mod h1:qmw79bGqYF5TnXMBni0My7PrPHOi7/CtTo+U3eFIYPo=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
