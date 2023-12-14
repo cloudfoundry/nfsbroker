@@ -6,7 +6,7 @@ toolchain go1.21.0
 
 require (
 	code.cloudfoundry.org/clock v1.1.0
-	code.cloudfoundry.org/debugserver v0.0.0-20230411203424-7d38b2728d52
+	code.cloudfoundry.org/debugserver v0.0.0-20231206170715-fd2d2aa39d90
 	code.cloudfoundry.org/existingvolumebroker v0.120.0
 	code.cloudfoundry.org/goshims v0.28.0
 	code.cloudfoundry.org/lager/v3 v3.0.3
