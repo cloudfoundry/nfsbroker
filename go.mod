@@ -15,7 +15,7 @@ require (
 	github.com/google/gofuzz v1.2.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.8.1
 	github.com/onsi/ginkgo/v2 v2.14.0
-	github.com/onsi/gomega v1.30.0
+	github.com/onsi/gomega v1.31.0
 	github.com/pivotal-cf/brokerapi/v10 v10.1.1
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26
 )
