@@ -27,8 +27,8 @@ code.cloudfoundry.org/goshims/osshim
 code.cloudfoundry.org/lager/v3
 code.cloudfoundry.org/lager/v3/internal/truncate
 code.cloudfoundry.org/lager/v3/lagerflags
-# code.cloudfoundry.org/service-broker-store v0.74.0
-## explicit; go 1.21
+# code.cloudfoundry.org/service-broker-store v0.75.0
+## explicit; go 1.22.0
 code.cloudfoundry.org/service-broker-store/brokerstore
 code.cloudfoundry.org/service-broker-store/brokerstore/credhub_shims
 # code.cloudfoundry.org/volume-mount-options v0.79.0
