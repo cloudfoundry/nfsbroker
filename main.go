@@ -236,7 +236,7 @@ func createServer(logger lager.Logger) ifrit.Runner {
 		logger.Fatal("retired-store", errors.New("store is retired"))
 	}
 
-	cacheOptsValidator := vmo.ValidationFunc(validateCache)
+	cacheOptsValidator := vmo.UserOptsValidationFunc(validateCache)
 
 	configMask, err := vmo.NewMountOptsMask(
 		strings.Split(*allowedOptions, ","),
