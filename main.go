@@ -1,6 +1,7 @@
 package main
 
 import (
+	"code.cloudfoundry.org/nfsbroker/stores"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -13,13 +14,12 @@ import (
 	"code.cloudfoundry.org/debugserver"
 	"code.cloudfoundry.org/existingvolumebroker"
 	"code.cloudfoundry.org/goshims/osshim"
-	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/lager/lagerflags"
-	lagerv3 "code.cloudfoundry.org/lager/v3"
+	"code.cloudfoundry.org/lager/v3"
+	"code.cloudfoundry.org/lager/v3/lagerflags"
 	"code.cloudfoundry.org/service-broker-store/brokerstore"
 	vmo "code.cloudfoundry.org/volume-mount-options"
 	vmou "code.cloudfoundry.org/volume-mount-options/utils"
-	"github.com/pivotal-cf/brokerapi"
+	"github.com/pivotal-cf/brokerapi/v10"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/http_server"
@@ -104,12 +104,6 @@ var (
 	password string
 )
 
-//go:generate counterfeiter -o fakes/retired_store_fake.go . RetiredStore
-type RetiredStore interface {
-	IsRetired() (bool, error)
-	brokerstore.Store
-}
-
 func main() {
 	parseCommandLine()
 	parseEnvironment()
@@ -124,7 +118,7 @@ func main() {
 
 	if dbgAddr := debugserver.DebugAddress(flag.CommandLine); dbgAddr != "" {
 		server = utils.ProcessRunnerFor(grouper.Members{
-			{Name: "debug-server", Runner: debugserver.Runner(dbgAddr, newLogSinkShim(logSink))},
+			{Name: "debug-server", Runner: debugserver.Runner(dbgAddr, logSink)},
 			{Name: "broker-api", Runner: server},
 		})
 	}
@@ -286,7 +280,7 @@ func isCfPushed() bool {
 }
 
 func IsRetired(store brokerstore.Store) (bool, error) {
-	if retiredStore, ok := store.(RetiredStore); ok {
+	if retiredStore, ok := store.(stores.RetiredStore); ok {
 		return retiredStore.IsRetired()
 	}
 	return false, nil
@@ -304,26 +298,4 @@ func validateCache(key string, val string) error {
 	}
 
 	return nil
-}
-
-type logSinkShim struct {
-	sink *lager.ReconfigurableSink
-}
-
-func (s *logSinkShim) Log(logFormat lagerv3.LogFormat) {
-	s.sink.Log(lager.LogFormat{
-		Timestamp: logFormat.Timestamp,
-		Source:    logFormat.Source,
-		Message:   logFormat.Message,
-		LogLevel:  lager.LogLevel(logFormat.LogLevel),
-		Data:      lager.Data(logFormat.Data),
-		Error:     logFormat.Error,
-	})
-}
-
-func newLogSinkShim(sink *lager.ReconfigurableSink) *lagerv3.ReconfigurableSink {
-	return lagerv3.NewReconfigurableSink(
-		&logSinkShim{sink},
-		lagerv3.LogLevel(sink.GetMinLevel()),
-	)
 }
