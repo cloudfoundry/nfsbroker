@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/pivotal-cf/brokerapi"
+	"github.com/pivotal-cf/brokerapi/v10/domain"
 )
 
 type Services interface {
-	List() []brokerapi.Service
+	List() []domain.Service
 }
 
 type services struct {
-	services []brokerapi.Service
+	services []domain.Service
 }
 
 func NewServicesFromConfig(pathToServicesConfig string) (Services, error) {
@@ -22,7 +22,7 @@ func NewServicesFromConfig(pathToServicesConfig string) (Services, error) {
 		return nil, err
 	}
 
-	var s []brokerapi.Service
+	var s []domain.Service
 	err = json.Unmarshal(contents, &s)
 	if err != nil {
 		return nil, err
@@ -31,6 +31,6 @@ func NewServicesFromConfig(pathToServicesConfig string) (Services, error) {
 	return &services{s}, nil
 }
 
-func (s *services) List() []brokerapi.Service {
+func (s *services) List() []domain.Service {
 	return s.services
 }
