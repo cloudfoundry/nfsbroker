@@ -15,6 +15,7 @@ import (
 	"code.cloudfoundry.org/goshims/osshim"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagerflags"
+	lagerv3 "code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/service-broker-store/brokerstore"
 	vmo "code.cloudfoundry.org/volume-mount-options"
 	vmou "code.cloudfoundry.org/volume-mount-options/utils"
@@ -123,7 +124,7 @@ func main() {
 
 	if dbgAddr := debugserver.DebugAddress(flag.CommandLine); dbgAddr != "" {
 		server = utils.ProcessRunnerFor(grouper.Members{
-			{Name: "debug-server", Runner: debugserver.Runner(dbgAddr, logSink)},
+			{Name: "debug-server", Runner: debugserver.Runner(dbgAddr, newLogSinkShim(logSink))},
 			{Name: "broker-api", Runner: server},
 		})
 	}
@@ -303,4 +304,26 @@ func validateCache(key string, val string) error {
 	}
 
 	return nil
+}
+
+type logSinkShim struct {
+	sink *lager.ReconfigurableSink
+}
+
+func (s *logSinkShim) Log(logFormat lagerv3.LogFormat) {
+	s.sink.Log(lager.LogFormat{
+		Timestamp: logFormat.Timestamp,
+		Source:    logFormat.Source,
+		Message:   logFormat.Message,
+		LogLevel:  lager.LogLevel(logFormat.LogLevel),
+		Data:      lager.Data(logFormat.Data),
+		Error:     logFormat.Error,
+	})
+}
+
+func newLogSinkShim(sink *lager.ReconfigurableSink) *lagerv3.ReconfigurableSink {
+	return lagerv3.NewReconfigurableSink(
+		&logSinkShim{sink},
+		lagerv3.LogLevel(sink.GetMinLevel()),
+	)
 }
