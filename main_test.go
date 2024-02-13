@@ -294,7 +294,7 @@ var _ = Describe("nfsbroker Main", func() {
 					Expect(resp.StatusCode).To(Equal(400))
 
 					expectedResponse := map[string]string{
-						"description": "failed validation error",
+						"description": fmt.Sprintf("- validation mount options failed: %s is not a valid value for cache\n", cache),
 					}
 					expectedJsonResponse, err := json.Marshal(expectedResponse)
 					Expect(err).NotTo(HaveOccurred())
