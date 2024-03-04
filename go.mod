@@ -8,7 +8,7 @@ require (
 	code.cloudfoundry.org/existingvolumebroker v0.129.0
 	code.cloudfoundry.org/goshims v0.30.0
 	code.cloudfoundry.org/lager/v3 v3.0.3
-	code.cloudfoundry.org/service-broker-store v0.76.0
+	code.cloudfoundry.org/service-broker-store v0.77.0
 	code.cloudfoundry.org/volume-mount-options v0.80.0
 	github.com/google/gofuzz v1.2.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.8.1
@@ -33,7 +33,7 @@ require (
 	github.com/openzipkin/zipkin-go v0.4.2 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	golang.org/x/crypto v0.19.0 // indirect
+	golang.org/x/crypto v0.20.0 // indirect
 	golang.org/x/mod v0.15.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
