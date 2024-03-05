@@ -1,6 +1,6 @@
 module code.cloudfoundry.org/nfsbroker
 
-go 1.22.0
+go 1.22.1
 
 require (
 	code.cloudfoundry.org/clock v1.1.0
@@ -12,7 +12,7 @@ require (
 	code.cloudfoundry.org/volume-mount-options v0.80.0
 	github.com/google/gofuzz v1.2.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.8.1
-	github.com/onsi/ginkgo/v2 v2.15.0
+	github.com/onsi/ginkgo/v2 v2.16.0
 	github.com/onsi/gomega v1.31.1
 	github.com/pivotal-cf/brokerapi/v10 v10.2.0
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26
