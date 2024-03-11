@@ -31,8 +31,8 @@ code.cloudfoundry.org/lager/v3/lagerflags
 ## explicit; go 1.22.1
 code.cloudfoundry.org/service-broker-store/brokerstore
 code.cloudfoundry.org/service-broker-store/brokerstore/credhub_shims
-# code.cloudfoundry.org/volume-mount-options v0.80.0
-## explicit; go 1.22.0
+# code.cloudfoundry.org/volume-mount-options v0.81.0
+## explicit; go 1.22.1
 code.cloudfoundry.org/volume-mount-options
 code.cloudfoundry.org/volume-mount-options/utils
 # github.com/cloudfoundry/go-socks5 v0.0.0-20180221174514-54f73bdb8a8e
