@@ -4,7 +4,7 @@ go 1.22.1
 
 require (
 	code.cloudfoundry.org/clock v1.1.0
-	code.cloudfoundry.org/debugserver v0.0.0-20240301143847-7967b4b03e2b
+	code.cloudfoundry.org/debugserver v0.0.0-20240308143924-cdf7d6ade8bb
 	code.cloudfoundry.org/existingvolumebroker v0.131.0
 	code.cloudfoundry.org/goshims v0.31.0
 	code.cloudfoundry.org/lager/v3 v3.0.3
@@ -34,11 +34,11 @@ require (
 	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	golang.org/x/crypto v0.21.0 // indirect
-	golang.org/x/mod v0.15.0 // indirect
+	golang.org/x/mod v0.16.0 // indirect
 	golang.org/x/net v0.22.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	golang.org/x/tools v0.18.0 // indirect
+	golang.org/x/tools v0.19.0 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
