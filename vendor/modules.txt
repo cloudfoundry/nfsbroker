@@ -1,7 +1,7 @@
 # code.cloudfoundry.org/clock v1.1.0
 ## explicit; go 1.20
 code.cloudfoundry.org/clock
-# code.cloudfoundry.org/credhub-cli v0.0.0-20240219140155-ce3a46ae0b03
+# code.cloudfoundry.org/credhub-cli v0.0.0-20240304140253-6509c0be552d
 ## explicit; go 1.21.6
 code.cloudfoundry.org/credhub-cli/credhub
 code.cloudfoundry.org/credhub-cli/credhub/auth
@@ -27,7 +27,7 @@ code.cloudfoundry.org/goshims/osshim
 code.cloudfoundry.org/lager/v3
 code.cloudfoundry.org/lager/v3/internal/truncate
 code.cloudfoundry.org/lager/v3/lagerflags
-# code.cloudfoundry.org/service-broker-store v0.78.0
+# code.cloudfoundry.org/service-broker-store v0.79.0
 ## explicit; go 1.22.1
 code.cloudfoundry.org/service-broker-store/brokerstore
 code.cloudfoundry.org/service-broker-store/brokerstore/credhub_shims
@@ -38,7 +38,7 @@ code.cloudfoundry.org/volume-mount-options/utils
 # github.com/cloudfoundry/go-socks5 v0.0.0-20180221174514-54f73bdb8a8e
 ## explicit
 github.com/cloudfoundry/go-socks5
-# github.com/cloudfoundry/socks5-proxy v0.2.113
+# github.com/cloudfoundry/socks5-proxy v0.2.114
 ## explicit; go 1.21.0
 github.com/cloudfoundry/socks5-proxy
 # github.com/go-chi/chi/v5 v5.0.11
@@ -68,7 +68,7 @@ github.com/google/gofuzz/bytesource
 # github.com/google/pprof v0.0.0-20240227163752-401108e1b7e7
 ## explicit; go 1.19
 github.com/google/pprof/profile
-# github.com/google/uuid v1.5.0
+# github.com/google/uuid v1.6.0
 ## explicit
 github.com/google/uuid
 # github.com/hashicorp/go-version v1.6.0
