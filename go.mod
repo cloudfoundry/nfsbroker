@@ -8,7 +8,7 @@ require (
 	code.cloudfoundry.org/existingvolumebroker v0.132.0
 	code.cloudfoundry.org/goshims v0.32.0
 	code.cloudfoundry.org/lager/v3 v3.0.3
-	code.cloudfoundry.org/service-broker-store v0.79.0
+	code.cloudfoundry.org/service-broker-store v0.80.0
 	code.cloudfoundry.org/volume-mount-options v0.81.0
 	github.com/google/gofuzz v1.2.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.8.1
@@ -19,9 +19,9 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/credhub-cli v0.0.0-20240304140253-6509c0be552d // indirect
+	code.cloudfoundry.org/credhub-cli v0.0.0-20240311141218-4307372180c7 // indirect
 	github.com/cloudfoundry/go-socks5 v0.0.0-20180221174514-54f73bdb8a8e // indirect
-	github.com/cloudfoundry/socks5-proxy v0.2.114 // indirect
+	github.com/cloudfoundry/socks5-proxy v0.2.115 // indirect
 	github.com/go-chi/chi/v5 v5.0.11 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
