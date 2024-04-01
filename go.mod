@@ -6,7 +6,7 @@ require (
 	code.cloudfoundry.org/clock v1.1.0
 	code.cloudfoundry.org/debugserver v0.0.0-20240322144150-c027090c075f
 	code.cloudfoundry.org/existingvolumebroker v0.133.0
-	code.cloudfoundry.org/goshims v0.32.0
+	code.cloudfoundry.org/goshims v0.33.0
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/service-broker-store v0.80.0
 	code.cloudfoundry.org/volume-mount-options v0.82.0
