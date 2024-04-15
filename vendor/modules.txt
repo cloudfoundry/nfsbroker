@@ -1,7 +1,7 @@
 # code.cloudfoundry.org/clock v1.1.0
 ## explicit; go 1.20
 code.cloudfoundry.org/clock
-# code.cloudfoundry.org/credhub-cli v0.0.0-20240325130311-cdbb1ac98b29
+# code.cloudfoundry.org/credhub-cli v0.0.0-20240401130341-7d037f0ebac5
 ## explicit; go 1.21.6
 code.cloudfoundry.org/credhub-cli/credhub
 code.cloudfoundry.org/credhub-cli/credhub/auth
@@ -26,7 +26,7 @@ code.cloudfoundry.org/goshims/osshim
 code.cloudfoundry.org/lager/v3
 code.cloudfoundry.org/lager/v3/internal/truncate
 code.cloudfoundry.org/lager/v3/lagerflags
-# code.cloudfoundry.org/service-broker-store v0.82.0
+# code.cloudfoundry.org/service-broker-store v0.83.0
 ## explicit; go 1.22.2
 code.cloudfoundry.org/service-broker-store/brokerstore
 code.cloudfoundry.org/service-broker-store/brokerstore/credhub_shims
