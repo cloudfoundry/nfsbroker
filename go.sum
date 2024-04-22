@@ -606,8 +606,8 @@ code.cloudfoundry.org/lager/v3 v3.0.3 h1:/UTmadZfIaKuT/whEinSxK1mzRfNu1uPfvjFfGq
 code.cloudfoundry.org/lager/v3 v3.0.3/go.mod h1:Zn5q1SrIuuHjEUE7xerMKt3ztunrJQCZETAo7rV0CH8=
 code.cloudfoundry.org/service-broker-store v0.83.0 h1:9sMM43Tbq+CjVkHmX0j7pT4Onl7WM8XGb+D3V8CfZjA=
 code.cloudfoundry.org/service-broker-store v0.83.0/go.mod h1:LejdEMffAvdqBoGvyuvztg9rkz63h5Xb6AKEO6ZCF7g=
-code.cloudfoundry.org/volume-mount-options v0.84.0 h1:YpXpPsb1aI0uRhzjlAgJ31XRW1f7KuPQ02CJe8HYEJU=
-code.cloudfoundry.org/volume-mount-options v0.84.0/go.mod h1:ZyuUa7mOorPCc0IPk1DS5eF5rayQFAEo5YsXbTI+CPo=
+code.cloudfoundry.org/volume-mount-options v0.85.0 h1:cm08hUL/o5JSeRub0aFpqCkuKVAn0PFAD9r20SWYbJM=
+code.cloudfoundry.org/volume-mount-options v0.85.0/go.mod h1:Pt+kZFgQhcrNRqHeWC/SsmJFHzvJjYkR+DUbk5f54x0=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 gioui.org v0.0.0-20210308172011-57750fc8a0a6/go.mod h1:RSH6KIUZ0p2xy5zHDxgAM4zumjgTw83q2ge/PI+yyw8=
 git.sr.ht/~sbinet/gg v0.3.1/go.mod h1:KGYtlADtqsqANL9ueOFkWymvzUvLMQllU5Ixo+8v3pc=
