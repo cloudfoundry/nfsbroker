@@ -1,7 +1,7 @@
 # code.cloudfoundry.org/clock v1.1.0
 ## explicit; go 1.20
 code.cloudfoundry.org/clock
-# code.cloudfoundry.org/credhub-cli v0.0.0-20240401130341-7d037f0ebac5
+# code.cloudfoundry.org/credhub-cli v0.0.0-20240408130546-41a93a2e6319
 ## explicit; go 1.21.6
 code.cloudfoundry.org/credhub-cli/credhub
 code.cloudfoundry.org/credhub-cli/credhub/auth
@@ -14,7 +14,7 @@ code.cloudfoundry.org/credhub-cli/credhub/server
 # code.cloudfoundry.org/debugserver v0.0.0-20240415163122-773208e977a2
 ## explicit; go 1.19
 code.cloudfoundry.org/debugserver
-# code.cloudfoundry.org/existingvolumebroker v0.136.0
+# code.cloudfoundry.org/existingvolumebroker v0.138.0
 ## explicit; go 1.22.2
 code.cloudfoundry.org/existingvolumebroker
 code.cloudfoundry.org/existingvolumebroker/utils
@@ -26,7 +26,7 @@ code.cloudfoundry.org/goshims/osshim
 code.cloudfoundry.org/lager/v3
 code.cloudfoundry.org/lager/v3/internal/truncate
 code.cloudfoundry.org/lager/v3/lagerflags
-# code.cloudfoundry.org/service-broker-store v0.83.0
+# code.cloudfoundry.org/service-broker-store v0.84.0
 ## explicit; go 1.22.2
 code.cloudfoundry.org/service-broker-store/brokerstore
 code.cloudfoundry.org/service-broker-store/brokerstore/credhub_shims
@@ -37,10 +37,10 @@ code.cloudfoundry.org/volume-mount-options/utils
 # github.com/cloudfoundry/go-socks5 v0.0.0-20180221174514-54f73bdb8a8e
 ## explicit
 github.com/cloudfoundry/go-socks5
-# github.com/cloudfoundry/socks5-proxy v0.2.115
+# github.com/cloudfoundry/socks5-proxy v0.2.116
 ## explicit; go 1.21.0
 github.com/cloudfoundry/socks5-proxy
-# github.com/go-chi/chi/v5 v5.0.11
+# github.com/go-chi/chi/v5 v5.0.12
 ## explicit; go 1.14
 github.com/go-chi/chi/v5
 # github.com/go-logr/logr v1.4.1
@@ -129,6 +129,16 @@ github.com/pivotal-cf/brokerapi/v10/domain/apiresponses
 github.com/pivotal-cf/brokerapi/v10/handlers
 github.com/pivotal-cf/brokerapi/v10/middlewares
 github.com/pivotal-cf/brokerapi/v10/utils
+# github.com/pivotal-cf/brokerapi/v11 v11.0.0
+## explicit; go 1.21
+github.com/pivotal-cf/brokerapi/v11
+github.com/pivotal-cf/brokerapi/v11/auth
+github.com/pivotal-cf/brokerapi/v11/domain
+github.com/pivotal-cf/brokerapi/v11/domain/apiresponses
+github.com/pivotal-cf/brokerapi/v11/handlers
+github.com/pivotal-cf/brokerapi/v11/internal/blog
+github.com/pivotal-cf/brokerapi/v11/middlewares
+github.com/pivotal-cf/brokerapi/v11/utils
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
