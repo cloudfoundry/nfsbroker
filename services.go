@@ -2,27 +2,27 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 
-	"github.com/pivotal-cf/brokerapi/v10"
+	"github.com/pivotal-cf/brokerapi/v11/domain"
 )
 
 type Services interface {
-	List() []brokerapi.Service
+	List() []domain.Service
 }
 
 type services struct {
-	services []brokerapi.Service
+	services []domain.Service
 }
 
 func NewServicesFromConfig(pathToServicesConfig string) (Services, error) {
 	/* #nosec */
-	contents, err := ioutil.ReadFile(pathToServicesConfig)
+	contents, err := os.ReadFile(pathToServicesConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	var s []brokerapi.Service
+	var s []domain.Service
 	err = json.Unmarshal(contents, &s)
 	if err != nil {
 		return nil, err
@@ -31,6 +31,6 @@ func NewServicesFromConfig(pathToServicesConfig string) (Services, error) {
 	return &services{s}, nil
 }
 
-func (s *services) List() []brokerapi.Service {
+func (s *services) List() []domain.Service {
 	return s.services
 }
