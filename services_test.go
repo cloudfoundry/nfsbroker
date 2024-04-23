@@ -4,7 +4,7 @@ import (
 	. "code.cloudfoundry.org/nfsbroker"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf/brokerapi/v10"
+	`github.com/pivotal-cf/brokerapi/v11/domain`
 )
 
 var _ = Describe("Services", func() {
@@ -20,7 +20,7 @@ var _ = Describe("Services", func() {
 
 	Describe("List", func() {
 		It("returns the list of services", func() {
-			Expect(services.List()).To(Equal([]brokerapi.Service{
+			Expect(services.List()).To(Equal([]domain.Service{
 				{
 					ID:            "nfsbroker",
 					Name:          "nfs-legacy",
@@ -28,9 +28,9 @@ var _ = Describe("Services", func() {
 					Bindable:      true,
 					PlanUpdatable: false,
 					Tags:          []string{"nfs"},
-					Requires:      []brokerapi.RequiredPermission{"volume_mount"},
+					Requires:      []domain.RequiredPermission{"volume_mount"},
 
-					Plans: []brokerapi.ServicePlan{
+					Plans: []domain.ServicePlan{
 						{
 							Name:        "Existing",
 							ID:          "Existing",
@@ -45,9 +45,9 @@ var _ = Describe("Services", func() {
 					Bindable:      true,
 					PlanUpdatable: false,
 					Tags:          []string{"nfs"},
-					Requires:      []brokerapi.RequiredPermission{"volume_mount"},
+					Requires:      []domain.RequiredPermission{"volume_mount"},
 
-					Plans: []brokerapi.ServicePlan{
+					Plans: []domain.ServicePlan{
 						{
 							Name:        "Existing",
 							ID:          "09a09260-1df5-4445-9ed7-1ba56dadbbc8",
