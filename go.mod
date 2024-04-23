@@ -14,7 +14,7 @@ require (
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.8.1
 	github.com/onsi/ginkgo/v2 v2.17.1
 	github.com/onsi/gomega v1.33.0
-	github.com/pivotal-cf/brokerapi/v10 v10.2.0
+	github.com/pivotal-cf/brokerapi/v11 v11.0.0
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26
 )
 
@@ -31,7 +31,6 @@ require (
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/openzipkin/zipkin-go v0.4.2 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
-	github.com/pivotal-cf/brokerapi/v11 v11.0.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	golang.org/x/crypto v0.22.0 // indirect
 	golang.org/x/mod v0.17.0 // indirect
