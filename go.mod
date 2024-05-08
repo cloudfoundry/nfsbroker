@@ -4,14 +4,14 @@ go 1.22.0
 
 require (
 	code.cloudfoundry.org/clock v1.1.0
-	code.cloudfoundry.org/debugserver v0.0.0-20240430164510-a9b5a70328ed
+	code.cloudfoundry.org/debugserver v0.0.0-20240507165104-fb56dd559b10
 	code.cloudfoundry.org/existingvolumebroker v0.127.0
 	code.cloudfoundry.org/goshims v0.30.0
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/service-broker-store v0.75.0
 	code.cloudfoundry.org/volume-mount-options v0.80.0
 	github.com/google/gofuzz v1.2.0
-	github.com/onsi/ginkgo/v2 v2.17.2
+	github.com/onsi/ginkgo/v2 v2.17.3
 	github.com/onsi/gomega v1.33.1
 	github.com/pivotal-cf/brokerapi/v10 v10.2.0
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26
@@ -31,11 +31,11 @@ require (
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	golang.org/x/crypto v0.22.0 // indirect
-	golang.org/x/net v0.24.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
-	golang.org/x/tools v0.20.0 // indirect
+	golang.org/x/crypto v0.23.0 // indirect
+	golang.org/x/net v0.25.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
+	golang.org/x/tools v0.21.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
