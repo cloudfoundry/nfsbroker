@@ -1,7 +1,6 @@
 module code.cloudfoundry.org/nfsbroker
 
 go 1.22.3
-
 require (
 	code.cloudfoundry.org/clock v1.1.0
 	code.cloudfoundry.org/debugserver v0.0.0-20240510172920-2e46c6dc69d9
@@ -9,7 +8,7 @@ require (
 	code.cloudfoundry.org/goshims v0.35.0
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/service-broker-store v0.87.0
-	code.cloudfoundry.org/volume-mount-options v0.90.0
+	code.cloudfoundry.org/volume-mount-options v0.91.0
 	github.com/google/gofuzz v1.2.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.8.1
 	github.com/onsi/ginkgo/v2 v2.19.0
