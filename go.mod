@@ -4,7 +4,7 @@ go 1.22.0
 
 require (
 	code.cloudfoundry.org/clock v1.1.0
-	code.cloudfoundry.org/debugserver v0.0.0-20240625174232-b3229b6daea3
+	code.cloudfoundry.org/debugserver v0.0.0-20240708175632-eff029929d18
 	code.cloudfoundry.org/existingvolumebroker v0.127.0
 	code.cloudfoundry.org/goshims v0.30.0
 	code.cloudfoundry.org/lager/v3 v3.0.3
@@ -31,11 +31,11 @@ require (
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	golang.org/x/crypto v0.24.0 // indirect
-	golang.org/x/net v0.26.0 // indirect
-	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/crypto v0.25.0 // indirect
+	golang.org/x/net v0.27.0 // indirect
+	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
-	golang.org/x/tools v0.22.0 // indirect
+	golang.org/x/tools v0.23.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
