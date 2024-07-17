@@ -12,7 +12,7 @@ code.cloudfoundry.org/credhub-cli/credhub/credentials/values
 code.cloudfoundry.org/credhub-cli/credhub/permissions
 code.cloudfoundry.org/credhub-cli/credhub/server
 code.cloudfoundry.org/credhub-cli/errors
-# code.cloudfoundry.org/debugserver v0.0.0-20240708175632-eff029929d18
+# code.cloudfoundry.org/debugserver v0.0.0-20240711175828-bd4bb5559e42
 ## explicit; go 1.19
 code.cloudfoundry.org/debugserver
 # code.cloudfoundry.org/existingvolumebroker v0.127.0
@@ -61,7 +61,7 @@ github.com/google/go-cmp/cmp/internal/value
 ## explicit; go 1.12
 github.com/google/gofuzz
 github.com/google/gofuzz/bytesource
-# github.com/google/pprof v0.0.0-20240625030939-27f56978b8b0
+# github.com/google/pprof v0.0.0-20240711041743-f6c9dda6c6da
 ## explicit; go 1.19
 github.com/google/pprof/profile
 # github.com/google/uuid v1.3.0
