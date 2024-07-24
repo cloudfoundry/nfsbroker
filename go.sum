@@ -596,8 +596,8 @@ code.cloudfoundry.org/clock v1.1.0 h1:XLzC6W3Ah/Y7ht1rmZ6+QfPdt1iGWEAAtIZXgiaj57
 code.cloudfoundry.org/clock v1.1.0/go.mod h1:yA3fxddT9RINQL2XHS7PS+OXxKCGhfrZmlNUCIM6AKo=
 code.cloudfoundry.org/credhub-cli v0.0.0-20230410130651-444cd52cc23d h1:pI4PaCMptEWCbvHuOAwfVVBFuYbwh97q2ACwHEH40p0=
 code.cloudfoundry.org/credhub-cli v0.0.0-20230410130651-444cd52cc23d/go.mod h1:7zAmd/M8Is+fydOUzw3Lme618N0REV623H8Dgl1t0NQ=
-code.cloudfoundry.org/debugserver v0.0.0-20240711175828-bd4bb5559e42 h1:LMUlKTN+af4hV9NZ30yxXBm5iT47aE50wweBtA+76DI=
-code.cloudfoundry.org/debugserver v0.0.0-20240711175828-bd4bb5559e42/go.mod h1:AMfAvhgIf09xcO86oUxE1TzLHLzFRvHRbwffLZPmwDI=
+code.cloudfoundry.org/debugserver v0.0.0-20240722180655-b2525cf2b25a h1:Tu40bZkGMR7N6MkyJeCFHk2KFUZ5IUauFnvrKG2qyhU=
+code.cloudfoundry.org/debugserver v0.0.0-20240722180655-b2525cf2b25a/go.mod h1:fVhhoXRFKV704yRxNRjlXQ/oYYUC2QUE+7MwtrpJ5X0=
 code.cloudfoundry.org/existingvolumebroker v0.127.0 h1:GcQmd3mz0hLgBTRJppLE0UujgfO0Ai3MWp4JR4WDOjw=
 code.cloudfoundry.org/existingvolumebroker v0.127.0/go.mod h1:nJKejNGY96ael9peHhLzcbOZMW3gYB+KydHUqK3EI/s=
 code.cloudfoundry.org/goshims v0.30.0 h1:hVYXO5vcCTxW5mcmtrNi/r3lPr1LyVAPZ8MX4heWz7k=
@@ -787,8 +787,8 @@ github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38/go.mod h1:kpwsk12EmLe
 github.com/google/pprof v0.0.0-20210601050228-01bbb1931b22/go.mod h1:kpwsk12EmLew5upagYY7GY0pfYCcupk39gWOCRROcvE=
 github.com/google/pprof v0.0.0-20210609004039-a478d1d731e9/go.mod h1:kpwsk12EmLew5upagYY7GY0pfYCcupk39gWOCRROcvE=
 github.com/google/pprof v0.0.0-20210720184732-4bb14d4b1be1/go.mod h1:kpwsk12EmLew5upagYY7GY0pfYCcupk39gWOCRROcvE=
-github.com/google/pprof v0.0.0-20240711041743-f6c9dda6c6da h1:xRmpO92tb8y+Z85iUOMOicpCfaYcv7o3Cg3wKrIpg8g=
-github.com/google/pprof v0.0.0-20240711041743-f6c9dda6c6da/go.mod h1:K1liHPHnj73Fdn/EKuT8nrFqBihUSKXoLYU0BuatOYo=
+github.com/google/pprof v0.0.0-20240722153945-304e4f0156b8 h1:ssNFCCVmib/GQSzx3uCWyfMgOamLGWuGqlMS77Y1m3Y=
+github.com/google/pprof v0.0.0-20240722153945-304e4f0156b8/go.mod h1:K1liHPHnj73Fdn/EKuT8nrFqBihUSKXoLYU0BuatOYo=
 github.com/google/renameio v0.1.0/go.mod h1:KWCgfxg9yswjAJkECMjeO8J8rahYeXnNhOm40UhjYkI=
 github.com/google/uuid v1.0.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.1.2/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
