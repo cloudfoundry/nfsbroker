@@ -1,10 +1,3 @@
-# nfsbroker
-A Cloud Foundry service broker for existing nfsv3 shares.
+# Archived
 
-For details on how to use this broker, please refer to [the nfs-volume-release README](https://github.com/cloudfoundry/nfs-volume-release)
-
-# Running tests
-
-```
-make test
-```
+The code for this repo now lives under code.cloudfoundry.org/nfs-volume-release
